@@ -2,21 +2,40 @@
 title: "标量与向量"
 ---
 
-# 学习目标
+# 本页要回答的问题
 
-完成本章后，你应当能够：
+读完并动手验算后，我希望能回答：
 
 1. 区分标量与向量；
 2. 读取向量的维数、形状和分量；
 3. 逐分量计算向量加法与标量乘法；
 4. 展开线性组合；
-5. 使用标准基向量表示任意向量；
+5. 使用标准坐标向量表示任意向量；
 6. 初步计算内积与 Euclidean 范数；
 7. 对照数学向量与 NumPy 一维数组的差异。
 
+# 直观导入
+
+在二维平面上画一个从原点出发的箭头，指向 $(3,2)$。这个箭头就是一个向量。$3$ 告诉你向右走多远，$2$ 告诉你向上走多远。
+
+在机器学习中，向量无处不在：
+
+- 一个 token 的 embedding 是一个向量（例如 768 维）；
+- 一张图通常表示为矩阵或张量，按固定顺序展平后也可以写成向量；
+- 一个 token 的隐藏状态还是向量。
+
+本页讨论的是 $\mathbb{R}^n$ 中的坐标向量，可以把它理解为“一组有序的实数”。数字的个数称为维数，第 $i$ 个数字称为第 $i$ 个分量。更一般的向量还可以是多项式、函数或矩阵，后面讨论抽象向量空间时再扩展。
+
+构成向量空间结构的两种基本运算是：
+
+1. **加法**：两个同维向量，逐分量相加；
+2. **标量乘法**：用一个数去缩放向量的每个分量。
+
+这两种运算会产生线性组合，并进一步连接到基、矩阵乘法和线性映射。内积与范数则是在此基础上增加的额外结构。
+
 # 标量
 
-标量是单个数。本书现阶段主要使用实数标量：
+标量是单个数。本文现阶段主要使用实数标量：
 
 $$
 x\in\mathbb{R}.
@@ -40,7 +59,7 @@ $$
 
 # 向量
 
-一个 $n$ 维实向量是 $\mathbb{R}^{n}$ 中的元素。默认把它写成列向量：
+一个 $n$ 维实坐标向量是 $\mathbb{R}^{n}$ 中的元素。它本质上是有序 $n$ 元组；为了进行矩阵运算，本文默认把它写成列形式：
 
 $$
 \mathbf{x}
@@ -110,7 +129,7 @@ $$
 
 # 形状
 
-列向量严格地可以视为 $n\times1$ 矩阵：
+列形式与 $n\times1$ 矩阵自然一一对应，计算中通常将二者作自然识别：
 
 $$
 \mathbf{x}\in\mathbb{R}^{n\times1}.
@@ -127,13 +146,15 @@ x_1 & x_2 & \cdots & x_n
 \in\mathbb{R}^{1\times n}.
 $$
 
-因此列向量与行向量具有不同形状：
+当 $n>1$ 时，列向量与行向量具有不同形状：
 
 $$
 (n\times1)\neq(1\times n).
 $$
 
-在不引起歧义时，本书把列向量的类型简写为 $\mathbb{R}^{n}$。
+当 $n=1$ 时，两者形状都是 $1\times1$，但转置记号仍可保留对象在公式中的角色。
+
+在不引起歧义时，本文把列向量的类型简写为 $\mathbb{R}^{n}$。
 
 # 向量加法
 
@@ -256,6 +277,54 @@ $$
 \mathbf{x}+(-\mathbf{y}).
 $$
 
+## 推导备忘：向量空间的八条公理
+
+上面定义的向量加法和标量乘法使 $\mathbb{R}^{n}$ 成为一个**向量空间**。具体来说，对任意 $\mathbf{x},\mathbf{y},\mathbf{z}\in\mathbb{R}^{n}$ 和 $\alpha,\beta\in\mathbb{R}$，以下八条性质成立：
+
+**加法公理**：
+
+1. **交换律**：$\mathbf{x}+\mathbf{y}=\mathbf{y}+\mathbf{x}$
+2. **结合律**：$(\mathbf{x}+\mathbf{y})+\mathbf{z}=\mathbf{x}+(\mathbf{y}+\mathbf{z})$
+3. **零向量**：$\mathbf{x}+\mathbf{0}=\mathbf{x}$
+4. **负向量**：$\mathbf{x}+(-\mathbf{x})=\mathbf{0}$
+
+**标量乘法公理**：
+
+5. **单位元**：$1\cdot\mathbf{x}=\mathbf{x}$
+6. **结合律**：$\alpha(\beta\mathbf{x})=(\alpha\beta)\mathbf{x}$
+
+**分配律**：
+
+7. $\alpha(\mathbf{x}+\mathbf{y})=\alpha\mathbf{x}+\alpha\mathbf{y}$
+8. $(\alpha+\beta)\mathbf{x}=\alpha\mathbf{x}+\beta\mathbf{x}$
+
+所有这些性质都可以从分量定义直接验证。以交换律为例：
+
+$$
+(\mathbf{x}+\mathbf{y})_i
+= x_i + y_i
+= y_i + x_i
+= (\mathbf{y}+\mathbf{x})_i,
+\qquad i=1,\ldots,n.
+$$
+
+由于每个分量都相等，向量也相等。$\square$
+
+其他公理的验证完全类似：这些向量运算律都能逐分量归结为实数加法和乘法的相应运算律。
+
+::: {.callout-tip title="零向量的唯一性"}
+零向量是唯一的。假设 $\mathbf{0}'$ 也满足 $\mathbf{x}+\mathbf{0}'=\mathbf{x}$ 对所有 $\mathbf{x}$ 成立，那么：
+
+$$
+\mathbf{0}'
+= \mathbf{0}' + \mathbf{0}
+= \mathbf{0} + \mathbf{0}'
+= \mathbf{0}.
+$$
+
+三个等号依次使用了 $\mathbf{0}$ 的单位元性质、向量加法交换律，以及 $\mathbf{0}'$ 的单位元性质。因此零向量唯一。$\square$
+:::
+
 # 线性组合
 
 设有 $k$ 个 $n$ 维向量：
@@ -317,9 +386,9 @@ $$
 
 线性组合是后续“张成空间”“基”“线性层”和“注意力加权求和”的共同基础。
 
-# 标准基
+# 标准坐标向量
 
-$\mathbb{R}^{n}$ 的第 $i$ 个标准基向量 $\mathbf{e}_i$ 在第 $i$ 个位置为 $1$，其他位置为 $0$。
+$\mathbb{R}^{n}$ 的第 $i$ 个标准坐标向量 $\mathbf{e}_i$ 在第 $i$ 个位置为 $1$，其他位置为 $0$。
 
 在 $\mathbb{R}^{3}$ 中：
 
@@ -367,7 +436,7 @@ x_1\begin{bmatrix}1\\0\\0\end{bmatrix}
 \begin{bmatrix}x_1\\x_2\\x_3\end{bmatrix}.
 $$
 
-因此坐标 $x_i$ 可以理解为标准基方向 $\mathbf{e}_i$ 的权重。
+因此坐标 $x_i$ 可以理解为标准坐标方向 $\mathbf{e}_i$ 的权重。向量 $\mathbf{e}_1,\ldots,\mathbf{e}_n$ 后续会被证明构成 $\mathbb{R}^n$ 的标准基。
 
 # 内积初步
 
@@ -411,6 +480,40 @@ $$
 
 $1\times1$ 结果通常视为标量。
 
+## 内积的基本性质
+
+标准内积 $\langle\mathbf{x},\mathbf{y}\rangle=\sum_{i=1}^{n}x_i y_i$ 满足以下三条核心性质：
+
+**对称性**：$\langle\mathbf{x},\mathbf{y}\rangle=\langle\mathbf{y},\mathbf{x}\rangle$。
+因为 $x_i y_i = y_i x_i$ 对每个 $i$ 成立。
+
+**双线性性**（对两个输入分别保持线性）：
+
+$$
+\langle\alpha\mathbf{x}+\beta\mathbf{y},\mathbf{z}\rangle
+= \alpha\langle\mathbf{x},\mathbf{z}\rangle + \beta\langle\mathbf{y},\mathbf{z}\rangle,
+$$
+
+$$
+\langle\mathbf{x},\alpha\mathbf{y}+\beta\mathbf{z}\rangle
+= \alpha\langle\mathbf{x},\mathbf{y}\rangle + \beta\langle\mathbf{x},\mathbf{z}\rangle.
+$$
+
+验证：
+
+$$
+\langle\alpha\mathbf{x}+\beta\mathbf{y},\mathbf{z}\rangle
+= \sum_{i=1}^{n} (\alpha x_i+\beta y_i) z_i
+= \alpha\sum_{i=1}^{n} x_i z_i + \beta\sum_{i=1}^{n} y_i z_i
+= \alpha\langle\mathbf{x},\mathbf{z}\rangle + \beta\langle\mathbf{y},\mathbf{z}\rangle.
+$$
+
+**正定性**：$\langle\mathbf{x},\mathbf{x}\rangle\ge 0$，且 $\langle\mathbf{x},\mathbf{x}\rangle=0$ 当且仅当 $\mathbf{x}=\mathbf{0}$。
+
+因为 $\langle\mathbf{x},\mathbf{x}\rangle=\sum_{i=1}^{n}x_i^2$ 是实数的平方和，每一项 $x_i^2\ge 0$，总和为 $0$ 要求每一项都是 $0$，即每个 $x_i=0$。
+
+这些性质可以推广成一般实内积空间的定义。当前只需关注 $\mathbb{R}^n$ 中的标准内积。
+
 # Euclidean 范数初步
 
 向量的 Euclidean 范数定义为：
@@ -437,9 +540,89 @@ $$
 
 范数把向量映射为非负标量，可以理解为从原点到该向量的长度。
 
+## 推导备忘：Cauchy–Schwarz 不等式
+
+对于任意 $\mathbf{x},\mathbf{y}\in\mathbb{R}^{n}$：
+
+$$
+|\langle\mathbf{x},\mathbf{y}\rangle|
+\le
+\lVert\mathbf{x}\rVert_2\,\lVert\mathbf{y}\rVert_2.
+$$ {#eq-cauchy-schwarz}
+
+**证明**：若 $\mathbf{y}=\mathbf{0}$，两边都是 $0$，不等式平凡成立。设 $\mathbf{y}\neq\mathbf{0}$。对任意 $t\in\mathbb{R}$，考虑：
+
+$$
+0
+\le \lVert\mathbf{x}-t\mathbf{y}\rVert_2^{2}
+= \langle\mathbf{x}-t\mathbf{y},\mathbf{x}-t\mathbf{y}\rangle.
+$$
+
+利用内积的双线性展开：
+
+$$
+\begin{aligned}
+\langle\mathbf{x}-t\mathbf{y},\mathbf{x}-t\mathbf{y}\rangle
+&= \langle\mathbf{x},\mathbf{x}\rangle
+- t\langle\mathbf{x},\mathbf{y}\rangle
+- t\langle\mathbf{y},\mathbf{x}\rangle
++ t^2\langle\mathbf{y},\mathbf{y}\rangle \\
+&= \lVert\mathbf{x}\rVert_2^{2}
+- 2t\langle\mathbf{x},\mathbf{y}\rangle
++ t^2\lVert\mathbf{y}\rVert_2^{2}.
+\end{aligned}
+$$
+
+这是关于 $t$ 的二次函数。因为 $\mathbf{y}\neq\mathbf{0}$，其二次项系数 $\lVert\mathbf{y}\rVert_2^2>0$；又因为它对所有 $t$ 都非负，所以判别式必须 $\le 0$：
+
+$$
+(-2\langle\mathbf{x},\mathbf{y}\rangle)^2
+- 4\lVert\mathbf{y}\rVert_2^{2}\lVert\mathbf{x}\rVert_2^{2}
+\le 0.
+$$
+
+即：
+
+$$
+4\langle\mathbf{x},\mathbf{y}\rangle^2
+\le
+4\lVert\mathbf{x}\rVert_2^{2}\lVert\mathbf{y}\rVert_2^{2}.
+$$
+
+两边除以 $4$ 再开平方，得到 $|\langle\mathbf{x},\mathbf{y}\rangle|\le\lVert\mathbf{x}\rVert_2\lVert\mathbf{y}\rVert_2$。$\square$
+
+对两个非零向量，可以把内积除以两者范数，得到取值范围在 $[-1,1]$ 内的余弦相似度。某些检索系统和归一化 attention 使用它；标准 Transformer attention 通常使用除以 $\sqrt{d_k}$ 的未归一化内积，因此两者不能直接等同。
+
+## 推导备忘：三角不等式
+
+对任意 $\mathbf{x},\mathbf{y}\in\mathbb{R}^{n}$：
+
+$$
+\lVert\mathbf{x}+\mathbf{y}\rVert_2
+\le
+\lVert\mathbf{x}\rVert_2 + \lVert\mathbf{y}\rVert_2.
+$$ {#eq-triangle-inequality}
+
+**证明**：
+
+$$
+\begin{aligned}
+\lVert\mathbf{x}+\mathbf{y}\rVert_2^{2}
+&= \langle\mathbf{x}+\mathbf{y},\mathbf{x}+\mathbf{y}\rangle \\
+&= \lVert\mathbf{x}\rVert_2^{2} + 2\langle\mathbf{x},\mathbf{y}\rangle + \lVert\mathbf{y}\rVert_2^{2} \\
+&\le \lVert\mathbf{x}\rVert_2^{2} + 2\lVert\mathbf{x}\rVert_2\lVert\mathbf{y}\rVert_2 + \lVert\mathbf{y}\rVert_2^{2}
+\quad\text{(由 Cauchy–Schwarz)} \\
+&= (\lVert\mathbf{x}\rVert_2 + \lVert\mathbf{y}\rVert_2)^2.
+\end{aligned}
+$$
+
+两边都是非负数，且平方根函数在 $[0,\infty)$ 上单调递增，因此开平方后得到三角不等式。$\square$
+
+几何上，三角不等式说明三角形任意一边的长度不超过另外两边长度之和。它保证 Euclidean 距离满足度量公理之一，也常作为优化误差估计中的基础工具；具体收敛结论还需要凸性、光滑性等额外条件。
+
 # NumPy 验证
 
-NumPy 的一维数组形状是 `(n,)`，它不显式区分行向量和列向量。这一点与数学记号不同。
+NumPy 的一维数组形状是 `(n,)`，它不显式区分行向量和列向量。这一点与数学记号不同。还要注意，NumPy 广播可能让数学上不希望进行的运算仍然成功执行，所以不能只看代码是否报错，也要检查输出形状。
 
 ```{python}
 #| label: lst-vector-verification
@@ -480,7 +663,7 @@ assert x_column.shape == (3, 1)
 assert x_row.shape == (1, 3)
 ```
 
-也可以独立运行：
+也可以在项目根目录独立运行：
 
 ```bash
 python code/vector_basics.py
@@ -500,7 +683,7 @@ $$
 - $d_{\text{model}}$ 表示每个 token 用多少个实数表示；
 - $h_{t,i}$ 表示位置 $t$ 的隐藏向量第 $i$ 个分量。
 
-Attention 最终会对多个 value 向量做加权线性组合：
+设序列长度为 $T$，$t,j\in\{1,\ldots,T\}$。单个 attention head 在输出投影之前，会对 value 向量做加权线性组合：
 
 $$
 \mathbf{o}_t
@@ -508,7 +691,7 @@ $$
 \sum_{j=1}^{T}a_{tj}\mathbf{v}_j.
 $$
 
-其中 $a_{tj}$ 是标量权重，$\mathbf{v}_j$ 是向量。现在已经可以从类型上理解：标量乘向量后仍是向量，同维向量相加后仍是向量，所以输出 $\mathbf{o}_t$ 与 $\mathbf{v}_j$ 具有相同维数。
+其中 $a_{tj}\in\mathbb{R}$，$\mathbf{v}_j\in\mathbb{R}^{d_v}$，因此 $\mathbf{o}_t\in\mathbb{R}^{d_v}$。softmax attention 还满足 $a_{tj}\ge 0$ 且 $\sum_{j=1}^{T}a_{tj}=1$，所以这里不仅是线性组合，也是凸组合。
 
 # 常见误区
 
@@ -519,7 +702,7 @@ $$
 5. 内积的输出是标量，不是逐元素乘积向量。
 6. $\mathbf{x}^{\mathsf T}\mathbf{y}$ 与 $\mathbf{x}\mathbf{y}^{\mathsf T}$ 形状和含义都不同。
 
-# 练习
+# 自检
 
 1. 写出 $\mathbf{x}=[2,-3,1,4]^{\mathsf T}$ 的维数及每个分量。
 2. 计算 $[1,2]^{\mathsf T}+[3,-5]^{\mathsf T}$。
@@ -529,7 +712,10 @@ $$
 6. 计算 $[1,2,3]^{\mathsf T}$ 与 $[-1,0,2]^{\mathsf T}$ 的内积。
 7. 计算 $[3,4]^{\mathsf T}$ 的 Euclidean 范数，并解释为什么结果是 $5$。
 8. 若 $\mathbf{v}_j\in\mathbb{R}^{d}$ 且 $a_j\in\mathbb{R}$，说明 $\sum_{j=1}^{T}a_j\mathbf{v}_j$ 的类型和形状。
+9. 对 $\mathbf{x}=[1,2,2]^{\mathsf T}$、$\mathbf{y}=[2,-1,1]^{\mathsf T}$，验证 Cauchy–Schwarz 不等式。
+10. 用三角不等式说明：若 $\lVert\mathbf{x}\rVert_2\le 1$ 且 $\lVert\mathbf{y}\rVert_2\le 1$，则 $\lVert\mathbf{x}+\mathbf{y}\rVert_2\le 2$。
+11. 逐一验证 $\mathbb{R}^{n}$ 满足向量空间的八条公理中的分配律（公理 7 和 8）。
 
 # 小结
 
-标量是一个数，向量是有序标量列表。向量加法和标量乘法都按分量定义，它们共同产生线性组合。标准基说明坐标是各个基方向的权重，内积把两个向量变成标量，范数把一个向量变成长度。下一章将把多个向量排列成矩阵，并把矩阵解释为线性映射。
+本页整理了 $\mathbb{R}^n$ 中坐标向量的基本语言。向量加法和标量乘法按分量定义，并产生线性组合；标准坐标向量解释了坐标的含义；内积把两个向量映射为标量，Euclidean 范数给出长度，并可进一步推出 Cauchy–Schwarz 不等式和三角不等式。下一页将把多个向量排列成矩阵，并把矩阵解释为线性映射。

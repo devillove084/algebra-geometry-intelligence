@@ -2,17 +2,27 @@
 title: "数、集合与区间"
 ---
 
-# 学习目标
+# 本页要回答的问题
 
-完成本章后，你应当能够：
+读完并动手验算后，我希望能回答：
 
 1. 区分自然数、整数、有理数、实数和复数；
 2. 解释元素、集合、子集与空集；
 3. 计算集合的并、交和差；
-4. 阅读区间、集合描述式与 Cartesian 积；
+4. 阅读区间、集合描述式与笛卡尔积；
 5. 理解索引集合以及求和符号的展开方式。
 
-本章不要求任何线性代数或微积分知识。
+本页不要求线性代数或微积分知识。
+
+# 直观导入
+
+想象面前有一筐苹果。数完整苹果时会用到自然数 $1,2,3,\ldots$；描述半个苹果时会用到分数，也就是有理数。苹果直径这类连续量通常用实数建模，而实际测量仪器只能给出有限精度的近似值。
+
+把所有的苹果放在一起，就是"苹果的集合"。把红苹果挑出来，就是"子集"。把红苹果和青苹果混在一起，就是"并集"。
+
+数学对象没那么遥远。它们只是把日常活动中已经在用的概念——数数、分类、合并——用精确的语言固定下来。一旦固定，我们就能放心地操作、推理，并最终用计算机处理它们。
+
+本页先固定这些基础语言。后续的矩阵乘法、概率事件和注意力公式，都会继续使用集合、索引与求和记号。
 
 # 数与数集
 
@@ -20,13 +30,13 @@ title: "数、集合与区间"
 
 ## 自然数
 
-本书约定：
+本文约定：
 
 $$
 \mathbb{N}\coloneqq\{0,1,2,3,\ldots\}.
 $$
 
-符号 $\coloneqq$ 表示“定义为”。因此上式不是待求解的方程，而是在声明本书对 $\mathbb{N}$ 的约定。
+符号 $\coloneqq$ 表示"定义为"。因此上式不是待求解的方程，而是在声明本文对 $\mathbb{N}$ 的约定。
 
 正整数集合记为：
 
@@ -34,8 +44,8 @@ $$
 \mathbb{N}_{>0}\coloneqq\{1,2,3,\ldots\}.
 $$
 
-::: {.callout-note title="不同教材可能采用不同约定"}
-有些教材不把 $0$ 放入 $\mathbb{N}$。这不是数学矛盾，而是符号约定不同。阅读任何公式前都应确认作者的定义。
+::: {.callout-note title="不同资料可能采用不同约定"}
+有些资料不把 $0$ 放入 $\mathbb{N}$。这不是数学矛盾，而是符号约定不同。阅读任何公式前都应确认作者的定义。
 :::
 
 ## 整数、有理数与实数
@@ -67,7 +77,29 @@ $$ {#eq-rational-definition}
 
 实数集合 $\mathbb{R}$ 包括有理数和无理数。像 $\sqrt{2}$、$\pi$ 和 $e$ 都是实数，但不是有理数。
 
-这些数集具有包含关系：
+## 复数
+
+复数是形如 $a+bi$ 的数，其中 $a,b\in\mathbb{R}$，$i$ 是虚数单位，满足 $i^2=-1$。复数集合记为：
+
+$$
+\mathbb{C}\coloneqq\{a+bi\mid a,b\in\mathbb{R}\}.
+$$
+
+$a$ 称为实部，$b$ 称为虚部。复数加减按分量进行：
+
+$$
+(a+bi)+(c+di)=(a+c)+(b+d)i.
+$$
+
+复数乘法利用 $i^2=-1$：
+
+$$
+(a+bi)(c+di)=ac+adi+bci+bdi^2=(ac-bd)+(ad+bc)i.
+$$
+
+复数的几何解释是复平面上的点：横轴是实轴，纵轴是虚轴。这个视角在后面 Fourier 分析和特征值理论中会反复出现——复数不只是一个抽象的代数对象，它还编码了旋转和振荡。
+
+实数可以视为虚部为零的复数。因此这些数集具有包含关系：
 
 $$
 \mathbb{N}
@@ -81,7 +113,7 @@ $$
 \mathbb{C}.
 $$
 
-$\mathbb{C}$ 是复数集合。复数会在特征值、Fourier 分析和旋转位置编码中出现，现在只需要知道它包含实数。
+复数会在特征值、傅里叶（Fourier）分析和旋转位置编码中再次出现；当前只需理解 $\mathbb{R}\subseteq\mathbb{C}$。
 
 # 集合
 
@@ -158,6 +190,45 @@ $$
 
 这条性质以后经常用于证明两个集合相等。
 
+## 推导备忘：幂集与空集
+
+下面两点用于补充集合论直觉，第一次阅读可以略过，不影响后面的区间、笛卡尔积与求和。
+
+给定集合 $A$，它的幂集 $\mathcal{P}(A)$ 是 $A$ 的所有子集构成的集合：
+
+$$
+\mathcal{P}(A)\coloneqq\{S\mid S\subseteq A\}.
+$$
+
+例如 $A=\{1,2\}$，则：
+
+$$
+\mathcal{P}(A)=\{\varnothing,\{1\},\{2\},\{1,2\}\}.
+$$
+
+注意空集 $\varnothing$ 和 $A$ 本身都是 $A$ 的子集，因此它们都属于 $\mathcal{P}(A)$。
+
+若 $|A|=n$（$A$ 包含 $n$ 个元素），则 $|\mathcal{P}(A)|=2^n$。上例中 $|A|=2$，$|\mathcal{P}(A)|=4=2^2$。
+
+::: {.callout-tip title="为什么空集是任意集合的子集？"}
+
+这里容易产生困惑。回忆子集的定义：
+
+$$
+A\subseteq B\quad\Longleftrightarrow\quad\forall x,\ x\in A\Rightarrow x\in B.
+$$
+
+现在取 $A=\varnothing$。前提"$x\in\varnothing$"永远为假（空集没有元素）。在逻辑中，假前提蕴含任何结论的命题都被视为真（这叫"空真"或 vacuous truth）。因此对于任意 $B$，
+
+$$
+\forall x,\ x\in\varnothing\Rightarrow x\in B
+$$
+
+永远成立。故 $\varnothing\subseteq B$ 对任意集合 $B$ 成立。
+
+也可以用反证法的直觉：如果 $\varnothing\not\subseteq B$，那么 $\varnothing$ 中存在一个元素不属于 $B$。但 $\varnothing$ 没有元素——矛盾。因此 $\varnothing\subseteq B$ 必然成立。
+:::
+
 # 集合运算
 
 设：
@@ -220,6 +291,79 @@ $$
 B\setminus A=\{4\}.
 $$
 
+## 推导备忘：集合运算的代数性质
+
+下面记录集合等式的常用证明方式。第一次阅读只需记住结论，需要练习证明时再回来展开。
+
+集合的并、交、补满足一系列代数律。设 $A,B,C$ 是任意集合。以下性质均可从定义直接验证。
+
+### 交换律与结合律
+
+$$
+A\cup B = B\cup A,\qquad A\cap B = B\cap A.
+$$
+
+$$
+(A\cup B)\cup C = A\cup(B\cup C),\qquad (A\cap B)\cap C = A\cap(B\cap C).
+$$
+
+并集的交换律来自"或"的对称性：$x\in A$ 或 $x\in B$ 与 $x\in B$ 或 $x\in A$ 是同一个条件。结合律说明连续做多次并/交运算时，括号的位置不影响结果。
+
+### 分配律
+
+$$
+A\cap(B\cup C) = (A\cap B)\cup(A\cap C),
+$$
+
+$$
+A\cup(B\cap C) = (A\cup B)\cap(A\cup C).
+$$
+
+**证明（第一条分配律）**：我们证明左右两个集合互相包含。
+
+($\subseteq$)：设 $x\in A\cap(B\cup C)$，
+即 $x\in A$ 且 $x\in B\cup C$。
+由 $x\in B\cup C$ 知 $x\in B$ 或 $x\in C$。
+
+- 若 $x\in B$，则由 $x\in A$ 得 $x\in A\cap B$，从而 $x\in (A\cap B)\cup(A\cap C)$。
+- 若 $x\in C$，则由 $x\in A$ 得 $x\in A\cap C$，从而 $x\in (A\cap B)\cup(A\cap C)$。
+
+两种情况都得到 $x\in (A\cap B)\cup(A\cap C)$，故 $A\cap(B\cup C)\subseteq (A\cap B)\cup(A\cap C)$。
+
+($\supseteq$)：设 $x\in (A\cap B)\cup(A\cap C)$，
+即 $x\in A\cap B$ 或 $x\in A\cap C$。
+两种情形都有 $x\in A$，且 $x\in B$ 或 $x\in C$。
+故 $x\in A$ 且 $x\in B\cup C$，即 $x\in A\cap(B\cup C)$。
+因此 $(A\cap B)\cup(A\cap C)\subseteq A\cap(B\cup C)$。
+
+两边互相包含，故两集合相等。$\square$
+
+第二条分配律可以用同样的双向包含方法证明，此处不重复展开。
+
+### De Morgan 律
+
+设全集为 $U$（讨论范围内的所有元素），并假设 $A,B\subseteq U$。集合 $A$ 相对于 $U$ 的补集记为 $A^c\coloneqq U\setminus A$。
+
+$$
+(A\cup B)^c = A^c\cap B^c,\qquad (A\cap B)^c = A^c\cup B^c.
+$$
+
+**证明（第一式）**：任取 $x\in U$，则
+
+$$
+\begin{aligned}
+x\in(A\cup B)^c
+&\Longleftrightarrow x\notin A\cup B \\
+&\Longleftrightarrow x\notin A\ \text{且}\ x\notin B \\
+&\Longleftrightarrow x\in A^c\ \text{且}\ x\in B^c \\
+&\Longleftrightarrow x\in A^c\cap B^c.
+\end{aligned}
+$$
+
+因为对任意 $x\in U$，它属于左侧当且仅当属于右侧，所以 $(A\cup B)^c=A^c\cap B^c$。$\square$
+
+De Morgan 律的直观含义是："不属于并集"等价于"两个都不属于"；"不属于交集"等价于"至少一个不属于"。这个对偶原理在概率论（事件的补）和逻辑（$\neg(P\lor Q)\equiv\neg P\land\neg Q$）中都会反复出现。
+
 # 区间
 
 实数集合中的连续范围通常使用区间表示。
@@ -239,7 +383,7 @@ $$
 \{x\in\mathbb{R}\mid x\leq 3\}.
 $$
 
-# 有序对与 Cartesian 积
+# 有序对与笛卡尔积
 
 集合忽略顺序，但有序对保留顺序：
 
@@ -251,7 +395,7 @@ $$
 
 通常 $(1,2)\neq(2,1)$。
 
-集合 $A$ 与 $B$ 的 Cartesian 积定义为：
+集合 $A$ 与 $B$ 的笛卡尔积（Cartesian product）定义为：
 
 $$
 A\times B
@@ -275,7 +419,7 @@ A\times B
 \{(1,x),(1,y),(2,x),(2,y)\}.
 $$
 
-$\mathbb{R}^{n}$ 可以理解为 $n$ 个 $\mathbb{R}$ 的 Cartesian 积：
+$\mathbb{R}^{n}$ 可以理解为 $n$ 个 $\mathbb{R}$ 的笛卡尔积：
 
 $$
 \mathbb{R}^{n}
@@ -289,7 +433,7 @@ $$
 
 # 索引与求和
 
-设有 $n$ 个实数：
+设 $n\in\mathbb{N}_{>0}$，并有 $n$ 个实数：
 
 $$
 x_1,x_2,\ldots,x_n.
@@ -334,7 +478,51 @@ $$
 \sum_{j=1}^{n}x_j.
 $$
 
-只要没有与外部符号冲突，把 $i$ 政名为 $j$ 不会改变结果。
+只要没有与外部符号冲突，把 $i$ 改名为 $j$ 不会改变结果。
+
+## 求和的基本性质
+
+求和符号满足以下运算性质，它们使我们可以灵活地拆分和重组求和式。
+
+**线性性**：设 $\alpha,\beta\in\mathbb{R}$ 是常数，则
+
+$$
+\sum_{i=1}^{n}(\alpha x_i+\beta y_i)=\alpha\sum_{i=1}^{n}x_i+\beta\sum_{i=1}^{n}y_i.
+$$
+
+这个等式来自实数乘法对加法的分配律，以及有限加法的交换律和结合律。
+
+**常数项求和**：若每一项都等于同一个常数 $c$，则
+
+$$
+\sum_{i=1}^{n}c = n\cdot c.
+$$
+
+因为 $c+c+\cdots+c$（$n$ 次）$=nc$。
+
+**索引平移**：求和索引可以从任意起点开始：
+
+$$
+\sum_{i=0}^{n-1}x_{i+1} = \sum_{j=1}^{n}x_j.
+$$
+
+这里令 $j=i+1$，当 $i=0$ 时 $j=1$，当 $i=n-1$ 时 $j=n$。索引重命名不改变求和的结果。
+
+**嵌套求和**：设 $m,n\in\mathbb{N}_{>0}$ 且 $a_{ij}\in\mathbb{R}$。两个求和符号嵌套时，按从内到外的顺序展开：
+
+$$
+\sum_{i=1}^{m}\sum_{j=1}^{n}a_{ij}
+=
+\sum_{i=1}^{m}\left(\sum_{j=1}^{n}a_{ij}\right).
+$$
+
+先固定 $i$，对 $j$ 求和，得到 $m$ 个中间结果，再对这 $m$ 个结果求和。在有限求和中，求和次序可以交换：
+
+$$
+\sum_{i=1}^{m}\sum_{j=1}^{n}a_{ij}=\sum_{j=1}^{n}\sum_{i=1}^{m}a_{ij}.
+$$
+
+这在处理矩阵、张量和批量数据时非常常用。
 
 # 与 LLM 和 RL 的第一次连接
 
@@ -344,17 +532,17 @@ $$
 - 一个 token ID 可以属于 $\{0,1,\ldots,|\mathcal{V}|-1\}$；
 - 强化学习中的状态集合记为 $\mathcal{S}$；
 - 动作集合记为 $\mathcal{A}$；
-- 状态—动作对属于 Cartesian 积 $\mathcal{S}\times\mathcal{A}$；
+- 状态—动作对属于笛卡尔积 $\mathcal{S}\times\mathcal{A}$；
 - 训练损失通常是许多样本损失的求和或平均。
 
-若数据集包含 $N$ 个样本，可写成：
+机器学习里虽然常说“数据集”，但它通常允许重复样本，因此更准确地可将其记为一个有序样本族：
 
 $$
 \mathcal{D}
 =
-\left\{
+\left(
 \left(\mathbf{x}^{(i)},y^{(i)}\right)
-\right\}_{i=1}^{N}.
+\right)_{i=1}^{N}.
 $$
 
 现在不需要理解粗体向量，只需观察：上标 $(i)$ 表示第 $i$ 个样本，$N$ 表示样本总数。
@@ -367,7 +555,7 @@ $$
 4. 集合没有重复元素；数据列表、序列和向量可以有重复值。
 5. 数学索引通常从 $1$ 开始，Python 索引通常从 $0$ 开始。
 
-# 练习
+# 自检
 
 1. 判断 $-3$ 分别属于 $\mathbb{N},\mathbb{Z},\mathbb{Q},\mathbb{R}$ 中的哪些集合。
 2. 设 $A=\{1,2,3\}$、$B=\{2,4\}$，求 $A\cup B$、$A\cap B$、$A\setminus B$。
@@ -375,7 +563,11 @@ $$
 4. 若 $A=\{0,1\}$、$B=\{a,b,c\}$，列出 $A\times B$ 的全部元素。
 5. 完全展开并计算 $\sum_{i=1}^{5}(2i-1)$。
 6. 解释为什么 $\varnothing\subseteq A$ 对任意集合 $A$ 都成立。
+7. 写出 $A=\{a,b\}$ 的幂集 $\mathcal{P}(A)$。
+8. 用 De Morgan 律化简 $(A\cup B^c)^c$。
+9. 展开 $\sum_{i=1}^{3}\sum_{j=1}^{2}(i+j)$。
+10. 证明 $A\cap(B\setminus C) = (A\cap B)\setminus C$。
 
 # 小结
 
-本章建立了组织数学对象的基本语言：数属于数集，元素组成集合，集合可以做并、交和差，Cartesian 积产生有序对，求和符号压缩重复加法。下一章用集合来定义函数，从而正式表达“输入如何变成输出”。
+本页整理了组织数学对象的基础语言：数属于数集，元素组成集合，集合可以做并、交和差，并且这些运算满足交换律、结合律、分配律和 De Morgan 律；笛卡尔积产生有序对，求和符号压缩重复加法并满足线性性质。下一页用集合来定义函数，从而正式表达“输入如何变成输出”。

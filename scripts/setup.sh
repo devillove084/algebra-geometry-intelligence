@@ -63,35 +63,49 @@ else
   "${SUDO[@]}" apt-get install -y "${TEMP_DIR}/${QUARTO_PACKAGE}"
 fi
 
-if ! command -v conda >/dev/null 2>&1; then
-  fail "未找到 Conda。请先安装 Miniconda，然后重新运行本脚本。"
+if command -v uv >/dev/null 2>&1; then
+  log "使用 uv 创建或更新 .venv（PyPI 镜像：${PIP_INDEX_URL}）"
+  cd "${PROJECT_ROOT}"
+  if [[ ! -x ".venv/bin/python" ]]; then
+    uv venv --python 3.13 .venv
+  fi
+  uv pip install --python .venv/bin/python \
+    --requirement requirements.txt
+  PYTHON_CMD=("${PROJECT_ROOT}/.venv/bin/python")
+elif command -v conda >/dev/null 2>&1; then
+  log "创建或更新 Conda 环境 ${ENV_NAME}（PyPI 镜像：${PIP_INDEX_URL}）"
+  if conda env list | awk '{print $1}' | grep -Fxq "${ENV_NAME}"; then
+    conda env update --name "${ENV_NAME}" --file "${PROJECT_ROOT}/environment.yml" --prune
+  else
+    conda env create --file "${PROJECT_ROOT}/environment.yml"
+  fi
+  PYTHON_CMD=(conda run --name "${ENV_NAME}" python)
+else
+  fail "未找到 uv 或 Conda。请先安装其中一个 Python 环境管理工具。"
 fi
 
-log "创建或更新 Conda 环境 ${ENV_NAME}（PyPI 镜像：${PIP_INDEX_URL}）"
-if conda env list | awk '{print $1}' | grep -Fxq "${ENV_NAME}"; then
-  conda env update --name "${ENV_NAME}" --file "${PROJECT_ROOT}/environment.yml" --prune
-else
-  conda env create --file "${PROJECT_ROOT}/environment.yml"
-fi
+log "安装 Pandoc 中文翻译"
+bash "${PROJECT_ROOT}/scripts/install-translations.sh"
+
+log "安装 Mermaid PDF 渲染依赖"
+quarto install chrome-headless-shell
 
 log "验证工具链"
 quarto --version
 quarto typst --version
-conda run --name "${ENV_NAME}" python -c \
-  "import jupyter, jupyter_cache, numpy, sympy, matplotlib; print('Python 数学与缓存环境正常')"
+"${PYTHON_CMD[@]}" -c \
+  "import jupyter, jupyter_cache, nbformat, numpy, sympy, matplotlib; print('Python 数学与缓存环境正常')"
 
 cat <<EOF
 
 安装完成。
 
-开始写作：
-  conda activate ${ENV_NAME}
-  cd ${PROJECT_ROOT}
-  quarto preview
+在项目根目录运行：
+  make serve
 
 生成输出：
-  quarto render --to html
-  quarto render --to typst
+  make build
+  make pdf
 
 Typst 已内置在 Quarto 中，不需要安装 TinyTeX。
 EOF

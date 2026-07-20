@@ -1,5 +1,6 @@
 # Quarto 输出与缓存
 /_site/
+/site_libs/
 /.quarto/
 /_freeze/
 **/_site/
@@ -7,6 +8,7 @@
 **/_freeze/
 **/*_files/
 **/*.quarto_ipynb
+**/*.quarto_ipynb_*
 *.typ
 
 # Jupyter
@@ -49,3 +51,7 @@ Thumbs.db
 .idea/
 .vscode/
 .zed/
+
+# Quarto 单文件调试输出
+/index.html
+/roadmap.html

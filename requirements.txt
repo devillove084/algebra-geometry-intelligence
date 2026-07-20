@@ -1,0 +1,6 @@
+jupyter==1.1.*
+ipykernel==7.2.*
+numpy==2.5.*
+sympy==1.14.*
+matplotlib==3.11.*
+jupyter-cache==1.0.1

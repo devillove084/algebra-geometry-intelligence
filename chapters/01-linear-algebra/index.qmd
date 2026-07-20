@@ -16,13 +16,21 @@ $$
 \right)\mathbf{V}.
 $$
 
-现在不需要理解它，但可以观察其中已经包含：
+先不计算它，只观察对象和形状。设
+
+$$
+\mathbf{Q}\in\mathbb{R}^{T_q\times d_k},\qquad
+\mathbf{K}\in\mathbb{R}^{T_k\times d_k},\qquad
+\mathbf{V}\in\mathbb{R}^{T_k\times d_v}.
+$$
+
+则 $\mathbf{Q}\mathbf{K}^{\mathsf T}\in\mathbb{R}^{T_q\times T_k}$。softmax 通常逐行作用于 key 位置维度，最终输出属于 $\mathbb{R}^{T_q\times d_v}$。公式中包含：
 
 - 矩阵 $\mathbf{Q},\mathbf{K},\mathbf{V}$；
 - 转置 $\mathbf{K}^{\mathsf T}$；
 - 矩阵乘法；
 - 标量 $\sqrt{d_k}$；
-- 对矩阵应用的 softmax 函数。
+- 沿指定维度应用的 softmax 函数。
 
 如果不了解对象和形状，这行公式只能被背诵。我们的目标是让它最终成为一个可以逐分量推导、逐维度检查的自然结果。
 
@@ -32,8 +40,8 @@ $$
 2. 向量加法、数乘与线性组合；
 3. 矩阵和线性映射；
 4. 矩阵乘法；
-5. 线性方程组与秩；
-6. 向量空间、基和维数；
+5. 线性方程组与消元；
+6. 向量空间、基、维数与秩；
 7. 内积、范数、距离和投影；
 8. 特征值与特征向量；
 9. 奇异值分解与低秩近似。
@@ -45,8 +53,9 @@ $$
 | 向量 | token embedding、hidden state、reward features |
 | 内积 | attention score、余弦相似度 |
 | 矩阵乘法 | 线性层、投影、批量计算 |
-| 基变换 | 多头表示、特征坐标变换 |
-| 低秩分解 | LoRA、压缩与近似 |
+| 线性映射 | 多头 attention 中的特征映射、输出投影 |
+| 基变换 | 同一对象在不同坐标系中的表示 |
+| 低秩矩阵与低秩近似 | LoRA 更新参数化、压缩与近似 |
 | 范数 | 正则化、梯度裁剪、参数变化度量 |
 
 ## 第一条习惯：先看形状

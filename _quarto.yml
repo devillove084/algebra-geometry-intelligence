@@ -4,6 +4,7 @@ project:
 
 book:
   title: "Algebra, Geometry, and Intelligence"
+  output-file: algebra-geometry-intelligence
   author: "学习者与开源社区"
   date: last-modified
   site-url: "https://devillove084.github.io/algebra-geometry-intelligence/"
@@ -50,13 +51,12 @@ format:
     css: styles/custom.scss
     toc: true
     toc-depth: 4
-    number-sections: true
+    number-sections: false
     number-depth: 4
     code-copy: true
     code-overflow: wrap
     html-math-method: mathjax
   typst:
-    output-file: algebra-geometry-intelligence.pdf
     papersize: a4
     mainfont: "Noto Serif CJK SC"
     sansfont: "Noto Sans CJK SC"
@@ -64,8 +64,7 @@ format:
     fontsize: 11pt
     toc: true
     toc-depth: 3
-    number-sections: true
-    section-numbering: 1.1.1
+    number-sections: false
     keep-typ: true
 
 jupyter: python3

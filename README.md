@@ -2,10 +2,10 @@
 
 ## 代数、几何与智能
 
-[![Read the book](https://img.shields.io/badge/read-GitHub%20Pages-6f4e37?style=for-the-badge)](https://devillove084.github.io/algebra-geometry-intelligence/)
+[![Read the notes](https://img.shields.io/badge/read-GitHub%20Pages-6f4e37?style=for-the-badge)](https://devillove084.github.io/algebra-geometry-intelligence/)
 [![Deploy](https://github.com/devillove084/algebra-geometry-intelligence/actions/workflows/publish.yml/badge.svg)](https://github.com/devillove084/algebra-geometry-intelligence/actions/workflows/publish.yml)
 
-这是一条从最少前置知识出发、面向现代学习系统的选择性数学路线。项目不试图把每个数学学科压缩成一本百科，也不声称高级数学已经给出了智能的统一理论；它关注三件更具体的事：
+这是一份持续整理和校正的个人学习笔记，记录一条从较少前置知识出发、面向现代学习系统的选择性数学路线。它不是完整教材，也不承诺覆盖相关学科的全部内容；现阶段主要记录三件事：
 
 1. 从定义出发推导模型中真正使用的数学对象；
 2. 用代数、几何与概率工具分析表示、训练和对齐；
@@ -15,11 +15,11 @@
 
 ![Algebra, Geometry, and Intelligence 的数学依赖图](images/mathematical-roadmap.svg)
 
-箭头表示**前置依赖**，不是所有读者都必须走完的唯一顺序。浅色节点是共同基础，绿色节点是数学核心，红色节点是按研究目的选择的高级路线。
+箭头表示**前置依赖**，不是必须逐项走完的唯一顺序。浅色节点是共同基础，绿色节点是数学核心，红色节点是按研究目的选择的高级路线。
 
 ## 核心路线
 
-这条路线负责从数学语言走到可以完整推导简化的语言模型和强化学习算法：
+我计划沿这条主线，从数学语言逐步走到能够推导简化的语言模型和强化学习算法：
 
 ```text
 数、集合、函数与证明
@@ -132,7 +132,7 @@ Gram 矩阵与协方差
 
 这一方向主要服务三维视觉、机器人、分子和具身多模态，不会把适用于 $SE(3)$ 的理论泛化成所有图文模型的共同解释。
 
-完整课程依赖、优先级和研究边界见 [`roadmap.qmd`](roadmap.qmd)。
+完整内容依赖、优先级和研究边界见 [`roadmap.qmd`](roadmap.qmd)。
 
 ## 写作准则
 
@@ -146,20 +146,22 @@ Gram 矩阵与协方差
 
 | 状态 | 内容 |
 |---|---|
-| 已发布 | 数学语言导论；数、集合与区间；函数与映射；标量与向量 |
-| 编写中 | 矩阵、线性映射与矩阵乘法 |
-| 下一阶段 | 向量空间、内积、投影、SVD；微积分与概率基础 |
-| 已规划 | 全部核心路线与 A–G 七条高级路线 |
+| 已整理 | 数学语言导论；数、集合与区间；函数与映射；标量与向量 |
+| 整理中 | 矩阵、线性映射与矩阵乘法 |
+| 之后补充 | 向量空间、内积、投影、SVD；微积分与概率基础 |
+| 路线草案 | 核心路线与 A–G 七条高级路线 |
 
-项目仍处在基础章节建设期。路线图表示课程边界与依赖，不表示所有章节已经完成。
+项目仍处在基础章节建设期。路线图表示内容边界与依赖，不表示所有章节已经完成。
 
 ## 阅读与构建
 
-- **在线课本**：<https://devillove084.github.io/algebra-geometry-intelligence/>
+- **在线阅读**：<https://devillove084.github.io/algebra-geometry-intelligence/>
 
-- **本地预览**：`bash scripts/serve.sh`
-- **构建网站**：`bash scripts/build.sh html`
-- **构建 PDF**：`bash scripts/build.sh pdf`
+- **本地预览**：`make serve`
+- **构建网站**：`make build`
+- **构建 PDF**：`make pdf`
+- **清理产物**：`make clean`
 - **首次安装**：`bash scripts/setup.sh`
+- **仅补装中文翻译**：`make translations`
 
 环境、Pages 发布和脚本说明见 [`DEVELOPMENT.md`](DEVELOPMENT.md)。

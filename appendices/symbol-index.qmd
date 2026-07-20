@@ -6,7 +6,7 @@ title: "符号索引"
 
 | 符号 | 含义 |
 |---|---|
-| $\mathbb{N}$ | 自然数集合，本书约定包含 $0$ |
+| $\mathbb{N}$ | 自然数集合，本文约定包含 $0$ |
 | $\mathbb{N}_{>0}$ | 正整数集合 |
 | $\mathbb{Z}$ | 整数集合 |
 | $\mathbb{Q}$ | 有理数集合 |
@@ -18,7 +18,7 @@ title: "符号索引"
 | $A\cup B$ | 并集 |
 | $A\cap B$ | 交集 |
 | $A\setminus B$ | 差集 |
-| $A\times B$ | Cartesian 积 |
+| $A\times B$ | 笛卡尔积 |
 | $\lvert A\rvert$ | 有限集合 $A$ 的元素数量 |
 
 # 代数与线性代数
@@ -32,7 +32,7 @@ title: "符号索引"
 | $A_{ij}$ | 标量 | $\mathbf{A}$ 第 $i$ 行、第 $j$ 列元素 |
 | $\mathbf{A}^{\mathsf T}$ | 矩阵 | $\mathbf{A}$ 的转置 |
 | $\mathbf{0}$ | 向量或矩阵 | 形状由上下文确定的零对象 |
-| $\mathbf{e}_i$ | 向量 | 第 $i$ 个标准基向量 |
+| $\mathbf{e}_i$ | 向量 | 第 $i$ 个标准坐标向量 |
 | $\lVert\mathbf{x}\rVert_2$ | 标量 | $\mathbf{x}$ 的 Euclidean 范数 |
 | $\mathbf{x}^{\mathsf T}\mathbf{y}$ | 标量 | 实向量的标准内积 |
 

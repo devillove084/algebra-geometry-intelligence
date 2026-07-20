@@ -1,53 +1,88 @@
-name: Publish book
+name: Publish notes
 
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
+
+env:
+  QUARTO_VERSION: "1.9.38"
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
+    permissions:
+      contents: read
+      pages: write
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-
-      - name: Set up Conda environment
-        uses: conda-incubator/setup-miniconda@v3
         with:
-          environment-file: environment.yml
-          activate-environment: algebra-geometry-intelligence
-          auto-activate-base: false
+          fetch-depth: 0
+
+      - name: Set up uv and Python
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: requirements.txt
+          python-version: "3.13"
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          uv venv --python 3.13 .venv
+          uv pip install --python .venv/bin/python --requirement requirements.txt
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: ${{ env.QUARTO_VERSION }}
 
-      - name: Render HTML book
-        shell: bash -el {0}
-        run: bash scripts/build.sh html
+      - name: Install Pandoc Chinese translations
+        shell: bash
+        run: bash scripts/install-translations.sh
+
+      - name: Validate shell scripts
+        shell: bash
+        run: bash -n scripts/*.sh
+
+      - name: Render HTML notes
+        shell: bash
+        run: make build
+
+      - name: Verify generated site
+        shell: bash
+        run: test -s _site/index.html
 
       - name: Configure GitHub Pages
+        if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           path: _site
 
   deploy:
+    if: github.event_name != 'pull_request'
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: build
     steps:
       - name: Deploy to GitHub Pages
