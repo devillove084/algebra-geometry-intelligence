@@ -1,4 +1,7 @@
 # Quarto 输出与缓存
+/_site/
+/.quarto/
+/_freeze/
 **/_site/
 **/.quarto/
 **/_freeze/
