@@ -1,21 +1,48 @@
 # Quarto 输出与缓存
-/_site/
-/.quarto/
-/_freeze/
-*_files/
+**/_site/
+**/.quarto/
+**/_freeze/
+**/*_files/
+**/*.quarto_ipynb
 *.typ
 
 # Jupyter
 **/.jupyter_cache/
 **/.ipynb_checkpoints/
 
-# Python
-__pycache__/
+# Python 字节码、测试与构建产物
+**/__pycache__/
 *.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# 本地 Python/Conda 环境
 .venv/
+venv/
+.conda/
+.python-version
+
+# 环境变量与本地秘密
+.env
+.env.*
+!.env.example
+.direnv/
+
+# 临时文件与日志
+*.log
+*.tmp
+*.swp
+*~
 
 # 编辑器与系统
 .DS_Store
+Thumbs.db
+.idea/
+.vscode/
 .zed/
-
-**/*.quarto_ipynb
