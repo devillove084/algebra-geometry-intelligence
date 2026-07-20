@@ -5,7 +5,7 @@ project:
 book:
   title: "Algebra, Geometry, and Intelligence"
   output-file: algebra-geometry-intelligence
-  author: "学习者与开源社区"
+  author: "LuHuanbing"
   date: last-modified
   site-url: "https://devillove084.github.io/algebra-geometry-intelligence/"
   repo-url: "https://github.com/devillove084/algebra-geometry-intelligence"
@@ -31,6 +31,7 @@ book:
 
 lang: zh-CN
 bibliography: references.bib
+csl: styles/china-national-standard-gb-t-7714-2015-numeric.csl
 
 execute:
   freeze: auto

@@ -55,6 +55,14 @@ jobs:
         shell: bash
         run: bash -n scripts/*.sh
 
+      - name: Regenerate figures
+        shell: bash
+        run: make figures
+
+      - name: Verify generated figures are current
+        shell: bash
+        run: git diff --exit-code -- images/linear-algebra
+
       - name: Render HTML notes
         shell: bash
         run: make build

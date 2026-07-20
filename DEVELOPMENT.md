@@ -23,8 +23,9 @@ make translations
 ```bash
 make build  # 输出网站到 _site/
 make pdf    # 使用 Typst 生成 PDF
-make all    # 两种格式
-make clean  # 清理构建产物
+make all      # 两种格式
+make figures  # 重新生成线性代数 SVG 插图
+make clean    # 清理构建产物
 ```
 
 ## 开发预览

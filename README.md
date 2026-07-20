@@ -160,6 +160,7 @@ Gram 矩阵与协方差
 - **本地预览**：`make serve`
 - **构建网站**：`make build`
 - **构建 PDF**：`make pdf`
+- **重新生成线性代数插图**：`make figures`
 - **清理产物**：`make clean`
 - **首次安装**：`bash scripts/setup.sh`
 - **仅补装中文翻译**：`make translations`
