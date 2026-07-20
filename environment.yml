@@ -1,0 +1,13 @@
+name: algebra-geometry-intelligence
+channels:
+  - defaults
+dependencies:
+  - python=3.13
+  - jupyter=1.1
+  - ipykernel=7.2
+  - numpy=2.5
+  - sympy=1.14
+  - matplotlib=3.11
+  - pip
+  - pip:
+      - jupyter-cache==1.0.1

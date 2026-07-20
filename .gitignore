@@ -1,0 +1,21 @@
+# Quarto 输出与缓存
+/_site/
+/.quarto/
+/_freeze/
+*_files/
+*.typ
+
+# Jupyter
+**/.jupyter_cache/
+**/.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# 编辑器与系统
+.DS_Store
+.zed/
+
+**/*.quarto_ipynb

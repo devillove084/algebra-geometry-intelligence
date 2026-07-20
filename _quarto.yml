@@ -1,0 +1,71 @@
+project:
+  type: book
+  output-dir: _site
+
+book:
+  title: "Algebra, Geometry, and Intelligence"
+  author: "学习者与开源社区"
+  date: last-modified
+  site-url: "https://devillove084.github.io/algebra-geometry-intelligence/"
+  repo-url: "https://github.com/devillove084/algebra-geometry-intelligence"
+  repo-actions: [edit, issue]
+  search: true
+
+  chapters:
+    - index.qmd
+    - roadmap.qmd
+    - notation.qmd
+    - part: "第一部分：数学语言"
+      chapters:
+        - chapters/00-foundations/index.qmd
+        - chapters/00-foundations/numbers-and-sets.qmd
+        - chapters/00-foundations/functions.qmd
+    - part: "第二部分：线性代数"
+      chapters:
+        - chapters/01-linear-algebra/index.qmd
+        - chapters/01-linear-algebra/scalars-and-vectors.qmd
+    - part: "附录"
+      chapters:
+        - appendices/symbol-index.qmd
+
+lang: zh-CN
+bibliography: references.bib
+
+execute:
+  freeze: auto
+  cache: true
+
+crossref:
+  chapters: true
+  eq-prefix: "式"
+  fig-prefix: "图"
+  tbl-prefix: "表"
+  sec-prefix: "节"
+
+format:
+  html:
+    theme:
+      light: cosmo
+      dark: darkly
+    css: styles/custom.scss
+    toc: true
+    toc-depth: 4
+    number-sections: true
+    number-depth: 4
+    code-copy: true
+    code-overflow: wrap
+    html-math-method: mathjax
+  typst:
+    output-file: algebra-geometry-intelligence.pdf
+    papersize: a4
+    mainfont: "Noto Serif CJK SC"
+    sansfont: "Noto Sans CJK SC"
+    monofont: "DejaVu Sans Mono"
+    fontsize: 11pt
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    section-numbering: 1.1.1
+    keep-typ: true
+
+jupyter: python3

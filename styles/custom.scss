@@ -1,0 +1,29 @@
+/*-- scss:defaults --*/
+
+$font-family-sans-serif: "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
+$font-family-monospace: "DejaVu Sans Mono", monospace;
+$line-height-base: 1.75;
+
+/*-- scss:rules --*/
+
+.math.display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-block: 0.35rem;
+}
+
+.definition,
+.theorem,
+.example,
+.proof,
+.remark {
+  margin-block: 1rem;
+}
+
+table {
+  font-size: 0.95rem;
+}
+
+.sidebar-title {
+  font-weight: 700;
+}

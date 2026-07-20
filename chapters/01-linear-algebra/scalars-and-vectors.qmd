@@ -1,0 +1,535 @@
+---
+title: "标量与向量"
+---
+
+# 学习目标
+
+完成本章后，你应当能够：
+
+1. 区分标量与向量；
+2. 读取向量的维数、形状和分量；
+3. 逐分量计算向量加法与标量乘法；
+4. 展开线性组合；
+5. 使用标准基向量表示任意向量；
+6. 初步计算内积与 Euclidean 范数；
+7. 对照数学向量与 NumPy 一维数组的差异。
+
+# 标量
+
+标量是单个数。本书现阶段主要使用实数标量：
+
+$$
+x\in\mathbb{R}.
+$$
+
+这句话包含三部分：
+
+- $x$ 是符号名称；
+- $\in$ 表示“属于”；
+- $\mathbb{R}$ 是实数集合。
+
+例如温度 $23.5$、学习率 $10^{-3}$、损失值 $2.4$ 都可以由实数标量表示。
+
+标量的加法与乘法沿用普通算术：
+
+$$
+2+3=5,
+\qquad
+2\cdot3=6.
+$$
+
+# 向量
+
+一个 $n$ 维实向量是 $\mathbb{R}^{n}$ 中的元素。默认把它写成列向量：
+
+$$
+\mathbf{x}
+=
+\begin{bmatrix}
+x_1\\
+x_2\\
+\vdots\\
+x_n
+\end{bmatrix}
+\in\mathbb{R}^{n}.
+$$ {#eq-vector-definition}
+
+逐个解释 @eq-vector-definition：
+
+- $\mathbf{x}$：整个向量，使用粗体小写字母；
+- $n\in\mathbb{N}_{>0}$：向量的维数；
+- $x_i\in\mathbb{R}$：第 $i$ 个标量分量；
+- $i\in\{1,\ldots,n\}$：分量索引；
+- $\mathbb{R}^{n}$：所有 $n$ 维实向量的集合。
+
+例如：
+
+$$
+\mathbf{x}
+=
+\begin{bmatrix}
+2\\
+-1\\
+3
+\end{bmatrix}
+\in\mathbb{R}^{3}
+$$
+
+是三维向量，并且：
+
+$$
+x_1=2,
+\qquad
+x_2=-1,
+\qquad
+x_3=3.
+$$
+
+## 向量不是集合
+
+向量的顺序和重复分量都很重要：
+
+$$
+\begin{bmatrix}1\\2\end{bmatrix}
+\neq
+\begin{bmatrix}2\\1\end{bmatrix}.
+$$
+
+而集合满足 $\{1,2\}=\{2,1\}$。向量是有序对象。
+
+## 向量相等
+
+两个向量相等，当且仅当它们维数相同，且对应分量全部相等：
+
+$$
+\mathbf{x}=\mathbf{y}
+\quad\Longleftrightarrow\quad
+x_i=y_i
+\quad\text{对所有 }i\in\{1,\ldots,n\}.
+$$
+
+# 形状
+
+列向量严格地可以视为 $n\times1$ 矩阵：
+
+$$
+\mathbf{x}\in\mathbb{R}^{n\times1}.
+$$
+
+转置后得到行向量：
+
+$$
+\mathbf{x}^{\mathsf T}
+=
+\begin{bmatrix}
+x_1 & x_2 & \cdots & x_n
+\end{bmatrix}
+\in\mathbb{R}^{1\times n}.
+$$
+
+因此列向量与行向量具有不同形状：
+
+$$
+(n\times1)\neq(1\times n).
+$$
+
+在不引起歧义时，本书把列向量的类型简写为 $\mathbb{R}^{n}$。
+
+# 向量加法
+
+只有相同维数的向量才能直接相加。设：
+
+$$
+\mathbf{x},\mathbf{y}\in\mathbb{R}^{n}.
+$$
+
+向量加法按对应分量定义：
+
+$$
+\mathbf{x}+\mathbf{y}
+\coloneqq
+\begin{bmatrix}
+x_1+y_1\\
+x_2+y_2\\
+\vdots\\
+x_n+y_n
+\end{bmatrix}
+\in\mathbb{R}^{n}.
+$$ {#eq-vector-addition}
+
+分量形式是：
+
+$$
+(\mathbf{x}+\mathbf{y})_i=x_i+y_i,
+\qquad i=1,\ldots,n.
+$$
+
+例如：
+
+$$
+\begin{bmatrix}1\\2\\-1\end{bmatrix}
++
+\begin{bmatrix}3\\0\\4\end{bmatrix}
+=
+\begin{bmatrix}
+1+3\\
+2+0\\
+-1+4
+\end{bmatrix}
+=
+\begin{bmatrix}4\\2\\3\end{bmatrix}.
+$$
+
+不能直接计算一个二维向量与三维向量之和，因为对应分量无法一一匹配。
+
+# 标量乘法
+
+设 $\alpha\in\mathbb{R}$、$\mathbf{x}\in\mathbb{R}^{n}$。标量乘法定义为：
+
+$$
+\alpha\mathbf{x}
+\coloneqq
+\begin{bmatrix}
+\alpha x_1\\
+\alpha x_2\\
+\vdots\\
+\alpha x_n
+\end{bmatrix}
+\in\mathbb{R}^{n}.
+$$ {#eq-scalar-multiplication}
+
+例如：
+
+$$
+-2
+\begin{bmatrix}
+1\\
+3
+\end{bmatrix}
+=
+\begin{bmatrix}
+-2\\
+-6
+\end{bmatrix}.
+$$
+
+几何上，$|\alpha|$ 改变长度；$\alpha<0$ 时还会反转方向。这个直觉将在范数章节中形式化。
+
+# 零向量与负向量
+
+$n$ 维零向量定义为：
+
+$$
+\mathbf{0}
+\coloneqq
+\begin{bmatrix}
+0\\
+\vdots\\
+0
+\end{bmatrix}
+\in\mathbb{R}^{n}.
+$$
+
+它满足：
+
+$$
+\mathbf{x}+\mathbf{0}=\mathbf{x}.
+$$
+
+向量 $\mathbf{x}$ 的负向量是：
+
+$$
+-\mathbf{x}=(-1)\mathbf{x},
+$$
+
+并满足：
+
+$$
+\mathbf{x}+(-\mathbf{x})=\mathbf{0}.
+$$
+
+向量减法因此定义为：
+
+$$
+\mathbf{x}-\mathbf{y}
+\coloneqq
+\mathbf{x}+(-\mathbf{y}).
+$$
+
+# 线性组合
+
+设有 $k$ 个 $n$ 维向量：
+
+$$
+\mathbf{v}_1,\mathbf{v}_2,\ldots,\mathbf{v}_k
+\in\mathbb{R}^{n},
+$$
+
+以及 $k$ 个实数：
+
+$$
+\alpha_1,\alpha_2,\ldots,\alpha_k
+\in\mathbb{R}.
+$$
+
+表达式
+
+$$
+\alpha_1\mathbf{v}_1
++\alpha_2\mathbf{v}_2
++\cdots
++\alpha_k\mathbf{v}_k
+$$
+
+称为这些向量的线性组合。使用求和符号：
+
+$$
+\sum_{j=1}^{k}\alpha_j\mathbf{v}_j.
+$$ {#eq-linear-combination}
+
+注意索引 $j$ 在这里枚举向量，不是枚举向量内部的分量。
+
+例如：
+
+$$
+\mathbf{v}_1=
+\begin{bmatrix}1\\2\end{bmatrix},
+\qquad
+\mathbf{v}_2=
+\begin{bmatrix}3\\-1\end{bmatrix}.
+$$
+
+取 $\alpha_1=2$、$\alpha_2=-1$：
+
+$$
+2\mathbf{v}_1-\mathbf{v}_2
+=
+2\begin{bmatrix}1\\2\end{bmatrix}
+-
+\begin{bmatrix}3\\-1\end{bmatrix}
+=
+\begin{bmatrix}2\\4\end{bmatrix}
++
+\begin{bmatrix}-3\\1\end{bmatrix}
+=
+\begin{bmatrix}-1\\5\end{bmatrix}.
+$$
+
+线性组合是后续“张成空间”“基”“线性层”和“注意力加权求和”的共同基础。
+
+# 标准基
+
+$\mathbb{R}^{n}$ 的第 $i$ 个标准基向量 $\mathbf{e}_i$ 在第 $i$ 个位置为 $1$，其他位置为 $0$。
+
+在 $\mathbb{R}^{3}$ 中：
+
+$$
+\mathbf{e}_1=
+\begin{bmatrix}1\\0\\0\end{bmatrix},
+\qquad
+\mathbf{e}_2=
+\begin{bmatrix}0\\1\\0\end{bmatrix},
+\qquad
+\mathbf{e}_3=
+\begin{bmatrix}0\\0\\1\end{bmatrix}.
+$$
+
+任意向量
+
+$$
+\mathbf{x}
+=
+\begin{bmatrix}
+x_1\\x_2\\x_3
+\end{bmatrix}
+$$
+
+都可以写成：
+
+$$
+\mathbf{x}
+=x_1\mathbf{e}_1+x_2\mathbf{e}_2+x_3\mathbf{e}_3.
+$$
+
+逐步展开右侧：
+
+$$
+x_1\begin{bmatrix}1\\0\\0\end{bmatrix}
++x_2\begin{bmatrix}0\\1\\0\end{bmatrix}
++x_3\begin{bmatrix}0\\0\\1\end{bmatrix}
+=
+\begin{bmatrix}x_1\\0\\0\end{bmatrix}
++
+\begin{bmatrix}0\\x_2\\0\end{bmatrix}
++
+\begin{bmatrix}0\\0\\x_3\end{bmatrix}
+=
+\begin{bmatrix}x_1\\x_2\\x_3\end{bmatrix}.
+$$
+
+因此坐标 $x_i$ 可以理解为标准基方向 $\mathbf{e}_i$ 的权重。
+
+# 内积初步
+
+对 $\mathbf{x},\mathbf{y}\in\mathbb{R}^{n}$，标准内积定义为：
+
+$$
+\langle\mathbf{x},\mathbf{y}\rangle
+\coloneqq
+\mathbf{x}^{\mathsf T}\mathbf{y}
+=
+\sum_{i=1}^{n}x_i y_i.
+$$ {#eq-dot-product}
+
+结果是一个标量。若：
+
+$$
+\mathbf{x}=
+\begin{bmatrix}1\\2\\-1\end{bmatrix},
+\qquad
+\mathbf{y}=
+\begin{bmatrix}3\\0\\4\end{bmatrix},
+$$
+
+则：
+
+$$
+\mathbf{x}^{\mathsf T}\mathbf{y}
+=1\cdot3+2\cdot0+(-1)\cdot4
+=3+0-4
+=-1.
+$$
+
+形状检查为：
+
+$$
+\underbrace{\mathbf{x}^{\mathsf T}}_{1\times n}
+\underbrace{\mathbf{y}}_{n\times1}
+=
+\underbrace{\mathbf{x}^{\mathsf T}\mathbf{y}}_{1\times1}.
+$$
+
+$1\times1$ 结果通常视为标量。
+
+# Euclidean 范数初步
+
+向量的 Euclidean 范数定义为：
+
+$$
+\lVert\mathbf{x}\rVert_2
+\coloneqq
+\sqrt{\sum_{i=1}^{n}x_i^2}
+=
+\sqrt{\mathbf{x}^{\mathsf T}\mathbf{x}}.
+$$ {#eq-euclidean-norm}
+
+对上面的 $\mathbf{x}=[1,2,-1]^{\mathsf T}$：
+
+$$
+\lVert\mathbf{x}\rVert_2
+=
+\sqrt{1^2+2^2+(-1)^2}
+=
+\sqrt{1+4+1}
+=
+\sqrt{6}.
+$$
+
+范数把向量映射为非负标量，可以理解为从原点到该向量的长度。
+
+# NumPy 验证
+
+NumPy 的一维数组形状是 `(n,)`，它不显式区分行向量和列向量。这一点与数学记号不同。
+
+```{python}
+#| label: lst-vector-verification
+#| echo: true
+
+import numpy as np
+
+x = np.array([1.0, 2.0, -1.0])
+y = np.array([3.0, 0.0, 4.0])
+alpha = 2.0
+beta = -0.5
+
+linear_combination = alpha * x + beta * y
+dot_product = x @ y
+norm = np.linalg.norm(x)
+
+print("x.shape =", x.shape)
+print("alpha * x + beta * y =", linear_combination)
+print("x @ y =", dot_product)
+print("||x||_2 =", norm)
+
+assert x.shape == (3,)
+np.testing.assert_allclose(linear_combination, [0.5, 4.0, -4.0])
+np.testing.assert_allclose(dot_product, -1.0)
+np.testing.assert_allclose(norm, np.sqrt(6.0))
+```
+
+若要显式构造列向量，可以使用：
+
+```{python}
+x_column = x.reshape(3, 1)
+x_row = x.reshape(1, 3)
+
+print("列向量形状：", x_column.shape)
+print("行向量形状：", x_row.shape)
+
+assert x_column.shape == (3, 1)
+assert x_row.shape == (1, 3)
+```
+
+也可以独立运行：
+
+```bash
+python code/vector_basics.py
+```
+
+# 与 LLM 的连接
+
+如果模型隐藏维数为 $d_{\text{model}}$，一个 token 的隐藏状态可以写为：
+
+$$
+\mathbf{h}_t\in\mathbb{R}^{d_{\text{model}}},
+$$
+
+其中：
+
+- $t$ 表示 token 在序列中的位置；
+- $d_{\text{model}}$ 表示每个 token 用多少个实数表示；
+- $h_{t,i}$ 表示位置 $t$ 的隐藏向量第 $i$ 个分量。
+
+Attention 最终会对多个 value 向量做加权线性组合：
+
+$$
+\mathbf{o}_t
+=
+\sum_{j=1}^{T}a_{tj}\mathbf{v}_j.
+$$
+
+其中 $a_{tj}$ 是标量权重，$\mathbf{v}_j$ 是向量。现在已经可以从类型上理解：标量乘向量后仍是向量，同维向量相加后仍是向量，所以输出 $\mathbf{o}_t$ 与 $\mathbf{v}_j$ 具有相同维数。
+
+# 常见误区
+
+1. 向量不是“带箭头的一个数”，而是具有多个有序分量的对象。
+2. $\mathbf{x}$ 与 $x_i$ 类型不同：前者是向量，后者是标量。
+3. 相同长度的一维 NumPy 数组在代码中不自动区分行向量和列向量。
+4. 向量加法要求形状兼容；不能因为元素总数相同就随意相加。
+5. 内积的输出是标量，不是逐元素乘积向量。
+6. $\mathbf{x}^{\mathsf T}\mathbf{y}$ 与 $\mathbf{x}\mathbf{y}^{\mathsf T}$ 形状和含义都不同。
+
+# 练习
+
+1. 写出 $\mathbf{x}=[2,-3,1,4]^{\mathsf T}$ 的维数及每个分量。
+2. 计算 $[1,2]^{\mathsf T}+[3,-5]^{\mathsf T}$。
+3. 计算 $3[2,-1,0]^{\mathsf T}$。
+4. 展开 $2\mathbf{v}_1-3\mathbf{v}_2$，其中 $\mathbf{v}_1=[1,0]^{\mathsf T}$、$\mathbf{v}_2=[2,1]^{\mathsf T}$。
+5. 用 $\mathbf{e}_1,\mathbf{e}_2,\mathbf{e}_3$ 表示 $[4,-2,5]^{\mathsf T}$。
+6. 计算 $[1,2,3]^{\mathsf T}$ 与 $[-1,0,2]^{\mathsf T}$ 的内积。
+7. 计算 $[3,4]^{\mathsf T}$ 的 Euclidean 范数，并解释为什么结果是 $5$。
+8. 若 $\mathbf{v}_j\in\mathbb{R}^{d}$ 且 $a_j\in\mathbb{R}$，说明 $\sum_{j=1}^{T}a_j\mathbf{v}_j$ 的类型和形状。
+
+# 小结
+
+标量是一个数，向量是有序标量列表。向量加法和标量乘法都按分量定义，它们共同产生线性组合。标准基说明坐标是各个基方向的权重，内积把两个向量变成标量，范数把一个向量变成长度。下一章将把多个向量排列成矩阵，并把矩阵解释为线性映射。

@@ -1,0 +1,201 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1960" viewBox="0 0 1600 1960" role="img" aria-labelledby="title desc">
+  <title id="title">The mathematical roadmap of Algebra, Geometry, and Intelligence</title>
+  <desc id="desc">A medieval manuscript inspired dependency map from mathematical language through algebra, geometry, probability, learning systems, and research questions.</desc>
+  <defs>
+    <linearGradient id="parchment" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f3e2b8"/>
+      <stop offset="0.48" stop-color="#e7ce96"/>
+      <stop offset="1" stop-color="#d5b777"/>
+    </linearGradient>
+    <radialGradient id="halo">
+      <stop offset="0" stop-color="#fff5cf" stop-opacity="0.92"/>
+      <stop offset="1" stop-color="#c99b45" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="paper-noise" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="3" seed="17" result="noise"/>
+      <feColorMatrix in="noise" type="saturate" values="0" result="gray"/>
+      <feComponentTransfer in="gray" result="faded">
+        <feFuncA type="table" tableValues="0 0.11"/>
+      </feComponentTransfer>
+      <feBlend in="SourceGraphic" in2="faded" mode="multiply"/>
+    </filter>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="7" stdDeviation="6" flood-color="#34200f" flood-opacity="0.34"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#7b5424"/>
+    </marker>
+    <g id="corner-flourish" fill="none" stroke="#7c2d27" stroke-width="5" stroke-linecap="round">
+      <path d="M0 54 C0 18 18 0 54 0 M10 40 C18 20 27 11 46 6"/>
+      <circle cx="17" cy="17" r="5" fill="#b38738" stroke="none"/>
+    </g>
+    <g id="small-rosette">
+      <circle r="18" fill="#7c2d27" stroke="#432313" stroke-width="3"/>
+      <path d="M0-13 L4-4 L13 0 L4 4 L0 13 L-4 4 L-13 0 L-4-4 Z" fill="#d7ad51"/>
+      <circle r="3.5" fill="#f6e7bb"/>
+    </g>
+  </defs>
+
+  <rect width="1600" height="1960" fill="url(#parchment)" filter="url(#paper-noise)"/>
+  <ellipse cx="800" cy="245" rx="600" ry="230" fill="url(#halo)"/>
+
+  <rect x="34" y="34" width="1532" height="1892" rx="22" fill="none" stroke="#432313" stroke-width="8"/>
+  <rect x="52" y="52" width="1496" height="1856" rx="16" fill="none" stroke="#b38738" stroke-width="4"/>
+  <rect x="68" y="68" width="1464" height="1824" rx="12" fill="none" stroke="#7c2d27" stroke-width="2"/>
+  <use href="#corner-flourish" transform="translate(82 82)"/>
+  <use href="#corner-flourish" transform="translate(1518 82) scale(-1 1)"/>
+  <use href="#corner-flourish" transform="translate(82 1878) scale(1 -1)"/>
+  <use href="#corner-flourish" transform="translate(1518 1878) scale(-1 -1)"/>
+
+  <g text-anchor="middle" fill="#362013">
+    <text x="800" y="138" font-family="Georgia, 'Times New Roman', serif" font-size="30" letter-spacing="9">THE MAPPA MATHEMATICA</text>
+    <text x="800" y="205" font-family="Georgia, 'Times New Roman', serif" font-size="62" font-weight="700">Algebra, Geometry, and Intelligence</text>
+    <path d="M350 235 Q800 270 1250 235" fill="none" stroke="#7c2d27" stroke-width="4"/>
+    <use href="#small-rosette" transform="translate(800 250)"/>
+    <text x="800" y="292" font-family="Georgia, 'Times New Roman', serif" font-size="22" font-style="italic">A dependency map — not a claim of a final theory</text>
+  </g>
+
+  <g fill="none" stroke="#7b5424" stroke-width="5" marker-end="url(#arrow)" opacity="0.88">
+    <path d="M800 430 C650 470 370 480 270 535"/>
+    <path d="M800 430 C800 475 800 485 800 535"/>
+    <path d="M800 430 C950 470 1230 480 1330 535"/>
+
+    <path d="M270 655 C220 700 205 720 205 785"/>
+    <path d="M270 655 C400 715 520 730 560 785"/>
+    <path d="M800 655 C735 705 655 735 620 785"/>
+    <path d="M800 655 C850 705 930 735 970 785"/>
+    <path d="M1330 655 C1260 700 1190 735 1120 785"/>
+    <path d="M1330 655 C1390 705 1410 735 1405 785"/>
+
+    <path d="M205 905 C165 955 160 990 175 1040"/>
+    <path d="M205 905 C310 960 390 985 470 1040"/>
+    <path d="M560 905 C650 965 710 990 785 1040"/>
+    <path d="M970 905 C940 960 890 990 835 1040"/>
+    <path d="M970 905 C1070 960 1120 990 1150 1040"/>
+    <path d="M1120 905 C1190 950 1270 985 1425 1040"/>
+    <path d="M1405 905 C1440 960 1450 990 1450 1040"/>
+
+    <path d="M175 1160 C260 1225 350 1245 450 1300"/>
+    <path d="M470 1160 C500 1210 515 1245 520 1300"/>
+    <path d="M785 1160 C700 1210 620 1245 560 1300"/>
+    <path d="M785 1160 C805 1215 810 1245 810 1300"/>
+    <path d="M1150 1160 C1060 1210 1015 1245 1000 1300"/>
+    <path d="M1450 1160 C1350 1220 1250 1250 1160 1300"/>
+
+    <path d="M520 1420 C580 1485 660 1510 755 1570"/>
+    <path d="M810 1420 C810 1480 810 1515 810 1570"/>
+    <path d="M1100 1420 C1020 1485 940 1510 865 1570"/>
+  </g>
+
+  <g font-family="Georgia, 'Times New Roman', serif" text-anchor="middle" filter="url(#shadow)">
+    <g transform="translate(610 330)">
+      <path d="M20 72 Q20 12 190 0 Q360 12 360 72 L360 112 Q360 132 340 132 H40 Q20 132 20 112 Z" fill="#263c52" stroke="#402516" stroke-width="5"/>
+      <text x="190" y="58" fill="#f5e8bf" font-size="27" font-weight="700">MATHEMATICAL LANGUAGE</text>
+      <text x="190" y="94" fill="#dfc77e" font-size="19">numbers · sets · functions · proof</text>
+    </g>
+
+    <g transform="translate(90 535)">
+      <rect width="360" height="120" rx="18" fill="#efe0b9" stroke="#6e3425" stroke-width="5"/>
+      <text x="180" y="48" fill="#512319" font-size="28" font-weight="700">LINEAR ALGEBRA</text>
+      <text x="180" y="82" fill="#5c4630" font-size="19">vectors · maps · bases · inner products</text>
+    </g>
+    <g transform="translate(620 535)">
+      <rect width="360" height="120" rx="18" fill="#efe0b9" stroke="#6e3425" stroke-width="5"/>
+      <text x="180" y="48" fill="#512319" font-size="28" font-weight="700">CALCULUS</text>
+      <text x="180" y="82" fill="#5c4630" font-size="19">limits · derivatives · Taylor · chains</text>
+    </g>
+    <g transform="translate(1150 535)">
+      <rect width="360" height="120" rx="18" fill="#efe0b9" stroke="#6e3425" stroke-width="5"/>
+      <text x="180" y="48" fill="#512319" font-size="28" font-weight="700">PROBABILITY</text>
+      <text x="180" y="82" fill="#5c4630" font-size="19">random variables · expectation · inference</text>
+    </g>
+
+    <g transform="translate(75 785)">
+      <rect width="300" height="120" rx="16" fill="#34564f" stroke="#382419" stroke-width="5"/>
+      <text x="150" y="44" fill="#f4e8c4" font-size="24" font-weight="700">HIGHER ALGEBRA</text>
+      <text x="150" y="76" fill="#dcc982" font-size="18">spectra · SVD · duality</text>
+      <text x="150" y="101" fill="#dcc982" font-size="18">tensors · numerical stability</text>
+    </g>
+    <g transform="translate(430 785)">
+      <rect width="300" height="120" rx="16" fill="#34564f" stroke="#382419" stroke-width="5"/>
+      <text x="150" y="44" fill="#f4e8c4" font-size="24" font-weight="700">OPTIMIZATION</text>
+      <text x="150" y="76" fill="#dcc982" font-size="18">matrix calculus · autodiff</text>
+      <text x="150" y="101" fill="#dcc982" font-size="18">SGD · Adam · constraints</text>
+    </g>
+    <g transform="translate(785 785)">
+      <rect width="330" height="120" rx="16" fill="#34564f" stroke="#382419" stroke-width="5"/>
+      <text x="165" y="44" fill="#f4e8c4" font-size="23" font-weight="700">HIGH-DIMENSIONAL THEORY</text>
+      <text x="165" y="76" fill="#dcc982" font-size="18">concentration · geometry</text>
+      <text x="165" y="101" fill="#dcc982" font-size="18">information · effective dimension</text>
+    </g>
+    <g transform="translate(1255 785)">
+      <rect width="300" height="120" rx="16" fill="#34564f" stroke="#382419" stroke-width="5"/>
+      <text x="150" y="44" fill="#f4e8c4" font-size="22" font-weight="700">DISTRIBUTION GEOMETRY</text>
+      <text x="150" y="76" fill="#dcc982" font-size="18">Fisher · natural gradient</text>
+      <text x="150" y="101" fill="#dcc982" font-size="18">optimal transport · Sinkhorn</text>
+    </g>
+
+    <g transform="translate(45 1040)">
+      <rect width="260" height="120" rx="16" fill="#742f2d" stroke="#351f17" stroke-width="5"/>
+      <text x="130" y="44" fill="#f8e9c4" font-size="22" font-weight="700">SYMMETRY</text>
+      <text x="130" y="75" fill="#e0c67b" font-size="17">groups · representations</text>
+      <text x="130" y="100" fill="#e0c67b" font-size="17">invariance · equivariance</text>
+    </g>
+    <g transform="translate(340 1040)">
+      <rect width="260" height="120" rx="16" fill="#742f2d" stroke="#351f17" stroke-width="5"/>
+      <text x="130" y="44" fill="#f8e9c4" font-size="21" font-weight="700">SPECTRAL THEORY</text>
+      <text x="130" y="75" fill="#e0c67b" font-size="17">Gram · covariance</text>
+      <text x="130" y="100" fill="#e0c67b" font-size="17">random matrices · diagnostics</text>
+    </g>
+    <g transform="translate(650 1040)">
+      <rect width="300" height="120" rx="16" fill="#742f2d" stroke="#351f17" stroke-width="5"/>
+      <text x="150" y="44" fill="#f8e9c4" font-size="22" font-weight="700">LEARNING SYSTEMS</text>
+      <text x="150" y="75" fill="#e0c67b" font-size="17">neural networks · Transformer</text>
+      <text x="150" y="100" fill="#e0c67b" font-size="17">language modeling · inference</text>
+    </g>
+    <g transform="translate(1020 1040)">
+      <rect width="260" height="120" rx="16" fill="#742f2d" stroke="#351f17" stroke-width="5"/>
+      <text x="130" y="44" fill="#f8e9c4" font-size="21" font-weight="700">GEOMETRIC MODELS</text>
+      <text x="130" y="75" fill="#e0c67b" font-size="17">Lie groups · manifolds</text>
+      <text x="130" y="100" fill="#e0c67b" font-size="17">graphs · geometric modalities</text>
+    </g>
+    <g transform="translate(1320 1040)">
+      <rect width="240" height="120" rx="16" fill="#742f2d" stroke="#351f17" stroke-width="5"/>
+      <text x="120" y="44" fill="#f8e9c4" font-size="21" font-weight="700">CONTROL &amp; RL</text>
+      <text x="120" y="75" fill="#e0c67b" font-size="17">MDP · value · policy</text>
+      <text x="120" y="100" fill="#e0c67b" font-size="17">PPO · trust regions</text>
+    </g>
+
+    <g transform="translate(355 1300)">
+      <path d="M0 34 Q150 -24 300 34 V120 H0 Z" fill="#283d5a" stroke="#342116" stroke-width="5"/>
+      <text x="150" y="59" fill="#f7e8bd" font-size="24" font-weight="700">LANGUAGE MODELS</text>
+      <text x="150" y="92" fill="#ddc477" font-size="18">representation · generation · reasoning</text>
+    </g>
+    <g transform="translate(660 1300)">
+      <path d="M0 34 Q150 -24 300 34 V120 H0 Z" fill="#283d5a" stroke="#342116" stroke-width="5"/>
+      <text x="150" y="59" fill="#f7e8bd" font-size="24" font-weight="700">MULTIMODALITY</text>
+      <text x="150" y="92" fill="#ddc477" font-size="18">alignment · fusion · shared structure</text>
+    </g>
+    <g transform="translate(965 1300)">
+      <path d="M0 34 Q150 -24 300 34 V120 H0 Z" fill="#283d5a" stroke="#342116" stroke-width="5"/>
+      <text x="150" y="59" fill="#f7e8bd" font-size="24" font-weight="700">POST-TRAINING</text>
+      <text x="150" y="92" fill="#ddc477" font-size="18">preference · reward · verification</text>
+    </g>
+
+    <g transform="translate(555 1570)">
+      <path d="M0 54 Q0 0 245 0 Q490 0 490 54 V150 Q490 170 470 170 H20 Q0 170 0 150 Z" fill="#222f3b" stroke="#b38738" stroke-width="7"/>
+      <use href="#small-rosette" transform="translate(245 0)"/>
+      <text x="245" y="67" fill="#f8e9c4" font-size="29" font-weight="700">RESEARCH QUESTIONS</text>
+      <text x="245" y="105" fill="#dec77f" font-size="19">testable hypotheses · reproducible experiments</text>
+      <text x="245" y="134" fill="#dec77f" font-size="19">limits, counterexamples, and new structures</text>
+    </g>
+  </g>
+
+  <g transform="translate(190 1790)" font-family="Georgia, 'Times New Roman', serif" fill="#3d2818">
+    <path d="M0 0 H1220" stroke="#7c2d27" stroke-width="3"/>
+    <text x="610" y="42" text-anchor="middle" font-size="21" font-style="italic">Arrows mark mathematical prerequisites; branches are chosen by purpose, not prestige.</text>
+    <g transform="translate(170 82)"><circle r="13" fill="#efe0b9" stroke="#6e3425" stroke-width="3"/><text x="24" y="7" font-size="18">foundations</text></g>
+    <g transform="translate(470 82)"><circle r="13" fill="#34564f" stroke="#382419" stroke-width="3"/><text x="24" y="7" font-size="18">mathematical core</text></g>
+    <g transform="translate(800 82)"><circle r="13" fill="#742f2d" stroke="#351f17" stroke-width="3"/><text x="24" y="7" font-size="18">advanced tracks</text></g>
+  </g>
+</svg>
