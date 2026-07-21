@@ -104,7 +104,7 @@ for y in B:
 
 ax.text(1.9, 5.05, "定义域 A\n允许输入", ha="center", va="center", color=BLUE, fontsize=13, weight="bold")
 ax.text(8.6, 5.05, "陪域 B\n声明的输出集合", ha="center", va="center", color=TEAL, fontsize=13, weight="bold")
-ax.text(5.25, 5.02, "规则：m(x)=x²", ha="center", va="center", color=INK, fontsize=13)
+ax.text(5.25, 5.02, r"规则：$m(x)=x^2$", ha="center", va="center", color=INK, fontsize=13)
 ax.text(9.15, 2.7, "金色点组成值域\nm(A)={0,1,4}", ha="left", va="center", color=INK, fontsize=11)
 ax.set_xlim(0, 11.4)
 ax.set_ylim(0, 5.55)
@@ -329,7 +329,7 @@ draw_mapping(
     selected_inputs={-2, -1, 1, 2},
     selected_outputs={1, 4},
     title="输出子集 D 的原像",
-    subtitle="m⁻¹(D)={−2,−1,1,2}  ←  D={1,4}",
+    subtitle=r"$m^{-1}(D)=\{-2,-1,1,2\}\ \leftarrow\ D=\{1,4\}$",
 )
 fig.tight_layout()
 plt.show()
@@ -502,17 +502,17 @@ fig, axes = plt.subplots(1, 3, figsize=(13, 4.8), facecolor=PAPER)
 draw_finite_function(
     axes[0], ["a", "b", "c"], [1, 2, 3, 4],
     {"a": 1, "b": 2, "c": 3},
-    "输出不重复，陪域存在无原像元素", "单射 ✓　满射 ✗",
+    "输出不重复，陪域存在无原像元素", "单射：是　满射：否",
 )
 draw_finite_function(
     axes[1], ["a", "b", "c", "d"], [1, 2, 3],
     {"a": 1, "b": 2, "c": 2, "d": 3},
-    "不同输入映射到 2，每个陪域元素均有原像", "单射 ✗　满射 ✓",
+    "不同输入映射到 2，每个陪域元素均有原像", "单射：否　满射：是",
 )
 draw_finite_function(
     axes[2], ["a", "b", "c"], [1, 2, 3],
     {"a": 1, "b": 2, "c": 3},
-    "输出不重复，每个陪域元素均有原像", "单射 ✓　满射 ✓（双射）",
+    "输出不重复，每个陪域元素均有原像", "单射：是　满射：是（双射）",
 )
 fig.tight_layout()
 plt.show()
@@ -616,7 +616,7 @@ $$
 ```{python}
 #| label: fig-function-composition-order
 #| fig-format: svg
-#| fig-cap: "复合函数按箭头从左向右执行，但符号 g∘f 从右向左读作先 f 后 g。"
+#| fig-cap: '复合函数按箭头从左向右执行，但符号 $g\circ f$ 从右向左读作先 $f$ 后 $g$。'
 #| fig-alt: "两种复合顺序展示输入二先经过 f 再经过 g 得到二十五，以及先经过 g 再经过 f 得到九"
 #| code-fold: true
 #| code-summary: "查看绘图代码"
@@ -661,21 +661,21 @@ def arrow(ax, start, end, label):
 fig, ax = plt.subplots(figsize=(11, 5), facecolor=PAPER)
 ax.set_facecolor(PAPER)
 
-# 上方：g∘f 的复合顺序
+# 上方：g 后接 f 的复合顺序
 box(ax, (0.3, 3.2), 1.1, 0.75, "x=2", PAPER, BLUE)
 box(ax, (2.5, 3.05), 1.8, 1.05, "f\n2x+1", BLUE, BLUE, PAPER)
 box(ax, (5.4, 3.2), 1.1, 0.75, "5", GOLD, GOLD)
-box(ax, (7.6, 3.05), 1.8, 1.05, "g\ny²", TEAL, TEAL, PAPER)
+box(ax, (7.6, 3.05), 1.8, 1.05, "g\n$y^2$", TEAL, TEAL, PAPER)
 box(ax, (10.5, 3.2), 1.1, 0.75, "25", GOLD, GOLD)
 arrow(ax, (1.4, 3.58), (2.5, 3.58), "应用 f")
 arrow(ax, (4.3, 3.58), (5.4, 3.58), "f(2)=5")
 arrow(ax, (6.5, 3.58), (7.6, 3.58), "应用 g")
 arrow(ax, (9.4, 3.58), (10.5, 3.58), "g(5)=25")
-ax.text(0.3, 4.55, "g∘f：先 f，后 g", color=INK, fontsize=13, weight="bold")
+ax.text(0.3, 4.55, r"$g\circ f$：先 f，后 g", color=INK, fontsize=13, weight="bold")
 
-# 下方：f∘g 的复合顺序
+# 下方：f 后接 g 的复合顺序
 box(ax, (0.3, 1.0), 1.1, 0.75, "x=2", PAPER, BLUE)
-box(ax, (2.5, 0.85), 1.8, 1.05, "g\nx²", TEAL, TEAL, PAPER)
+box(ax, (2.5, 0.85), 1.8, 1.05, "g\n$x^2$", TEAL, TEAL, PAPER)
 box(ax, (5.4, 1.0), 1.1, 0.75, "4", GOLD, GOLD)
 box(ax, (7.6, 0.85), 1.8, 1.05, "f\n2x+1", BLUE, BLUE, PAPER)
 box(ax, (10.5, 1.0), 1.1, 0.75, "9", GOLD, GOLD)
@@ -683,7 +683,7 @@ arrow(ax, (1.4, 1.38), (2.5, 1.38), "应用 g")
 arrow(ax, (4.3, 1.38), (5.4, 1.38), "g(2)=4")
 arrow(ax, (6.5, 1.38), (7.6, 1.38), "应用 f")
 arrow(ax, (9.4, 1.38), (10.5, 1.38), "f(4)=9")
-ax.text(0.3, 2.35, "f∘g：先 g，后 f", color=INK, fontsize=13, weight="bold")
+ax.text(0.3, 2.35, r"$f\circ g$：先 g，后 f", color=INK, fontsize=13, weight="bold")
 
 ax.set_xlim(0, 12)
 ax.set_ylim(0.35, 4.9)

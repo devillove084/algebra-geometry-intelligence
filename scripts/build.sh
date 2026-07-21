@@ -26,6 +26,11 @@ fi
 
 cd "${PROJECT_ROOT}"
 
+if [ "${TARGET}" != "clean" ]; then
+  "${PYTHON_BIN}" scripts/check_unicode_math.py
+  export PYTHONWARNINGS="error:Glyph${PYTHONWARNINGS:+,${PYTHONWARNINGS}}"
+fi
+
 case "${TARGET}" in
   html)
     quarto render --to html

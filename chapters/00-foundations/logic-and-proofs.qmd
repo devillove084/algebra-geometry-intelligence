@@ -453,7 +453,7 @@ axes[0].text(3.0, 0.35, "对应关系：y=x+1", ha="center", color=INK, fontsize
 axes[1].set_title("∃y∀x：y 必须固定", color=INK, fontsize=13, weight="bold")
 rounded_box(axes[1], (1.6, 3.65), 2.8, 0.72, "固定任意 y", GOLD, GOLD)
 rounded_box(axes[1], (1.6, 2.15), 2.8, 0.72, "取 x=y+1", BLUE, BLUE, PAPER)
-rounded_box(axes[1], (1.25, 0.55), 3.5, 0.82, "y>x 变成 y>y+1　✗", PAPER, CORAL, CORAL)
+rounded_box(axes[1], (1.25, 0.55), 3.5, 0.82, "y>x 变成 y>y+1：不成立", PAPER, CORAL, CORAL)
 connect(axes[1], (3.0, 3.65), (3.0, 2.87))
 connect(axes[1], (3.0, 2.15), (3.0, 1.37))
 axes[1].text(4.8, 2.55, "针对已固定的 y\n构造反例", ha="center", va="center", color=CORAL, fontsize=10.5)
@@ -517,7 +517,7 @@ $$
 ```{python}
 #| label: fig-counterexample
 #| fig-format: svg
-#| fig-cap: "一个反例足以否定全称命题：在 x=0 处，x² 并不严格大于 0。"
+#| fig-cap: "一个反例足以否定全称命题：在 $x=0$ 处，$x^2$ 并不严格大于 $0$。"
 #| fig-alt: "抛物线 y 等于 x 平方以及位于原点的反例标记"
 #| code-fold: true
 #| code-summary: "查看绘图代码"
@@ -637,8 +637,8 @@ flow_box(ax, (2.7, 2.45), 3.1, 0.7, "推出 P(x)", TEAL, TEAL, PAPER)
 flow_box(ax, (2.7, 1.25), 3.1, 0.7, "因为 x 任意，所以命题成立", PAPER, TEAL, TEAL)
 
 ax.text(8.3, 5.55, "否定命题", ha="center", color=CORAL, fontsize=13, weight="bold")
-flow_box(ax, (8.3, 4.85), 3.1, 0.7, "寻找一个 x₀∈A", PAPER, CORAL, CORAL)
-flow_box(ax, (8.3, 3.65), 3.1, 0.7, "验证 ¬P(x₀)", CORAL, CORAL, PAPER)
+flow_box(ax, (8.3, 4.85), 3.1, 0.7, r"寻找一个 $x_0\in A$", PAPER, CORAL, CORAL)
+flow_box(ax, (8.3, 3.65), 3.1, 0.7, r"验证 $\neg P(x_0)$", CORAL, CORAL, PAPER)
 flow_box(ax, (8.3, 2.45), 3.1, 0.7, "得到 ∃x∈A，¬P(x)", PAPER, CORAL, CORAL)
 flow_box(ax, (8.3, 1.25), 3.1, 0.7, "原全称命题为假", PAPER, CORAL, CORAL)
 

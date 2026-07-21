@@ -1,4 +1,4 @@
-.PHONY: serve build pdf all clean translations figures
+.PHONY: serve build pdf all clean check translations figures
 
 serve:
 	@bash scripts/serve.sh
@@ -14,6 +14,9 @@ all:
 
 clean:
 	@bash scripts/build.sh clean
+
+check:
+	@python3 scripts/check_unicode_math.py
 
 translations:
 	@bash scripts/install-translations.sh

@@ -111,7 +111,7 @@ fig.patch.set_facecolor(PAPER)
 ax.set_facecolor(PAPER)
 ax.axhspan(limit_value - epsilon, limit_value + epsilon, color=TEAL, alpha=0.16)
 ax.axvspan(a - delta, a + delta, color=GOLD, alpha=0.24)
-ax.plot(x, y, color=BLUE, linewidth=2.6, label="f(x) = x²")
+ax.plot(x, y, color=BLUE, linewidth=2.6, label=r"$f(x)=x^2$")
 ax.plot(x[inside_left], y[inside_left], color=CORAL, linewidth=4.2, label="0 < |x − a| < δ")
 ax.plot(x[inside_right], y[inside_right], color=CORAL, linewidth=4.2)
 ax.axhline(limit_value, color=TEAL, linewidth=1.7, linestyle="--")
@@ -246,7 +246,7 @@ for ax, h in zip(axes, h_values):
     ax.grid(alpha=0.16)
     ax.spines[["top", "right"]].set_visible(False)
 
-axes[0].set_ylabel("f(x) = x²", color=INK)
+axes[0].set_ylabel(r"$f(x)=x^2$", color=INK)
 for ax in axes:
     ax.set_xlabel("x", color=INK)
 axes[-1].legend(frameon=False, loc="upper left")
@@ -328,7 +328,7 @@ $$ {#eq-local-linearization}
 ```{python}
 #| label: fig-local-linearization
 #| fig-format: svg
-#| fig-cap: "缩小 x=0 附近的观察区间时，eˣ 与局部线性近似 1+x 的绝对误差减小。"
+#| fig-cap: "缩小 $x=0$ 附近的观察区间时，$e^x$ 与局部线性近似 $1+x$ 的绝对误差减小。"
 #| fig-alt: "左右两幅图比较指数函数与切线，缩小到原点附近后两者的绝对误差减小"
 #| code-fold: true
 #| code-summary: "查看绘图代码"
@@ -358,7 +358,7 @@ for ax, (left, right) in zip(axes, ranges):
     curve = np.exp(x)
     linear = 1 + x
     ax.set_facecolor(PAPER)
-    ax.plot(x, curve, color=BLUE, linewidth=2.8, label="f(x) = eˣ")
+    ax.plot(x, curve, color=BLUE, linewidth=2.8, label=r"$f(x)=e^x$")
     ax.plot(x, linear, color=TEAL, linewidth=2.2, linestyle="--", label="L(x) = 1 + x")
     ax.fill_between(x, curve, linear, color=CORAL, alpha=0.22, label="近似误差")
     ax.scatter([0], [1], color=GOLD, edgecolor=INK, linewidth=1.0, s=60, zorder=4)
@@ -508,7 +508,7 @@ for ax, n in zip(axes, [6, 24]):
     ax.grid(axis="y", alpha=0.15)
     ax.spines[["top", "right"]].set_visible(False)
 
-axes[0].set_ylabel("f(x) = x²", color=INK)
+axes[0].set_ylabel(r"$f(x)=x^2$", color=INK)
 fig.suptitle("积分不是某一组矩形；它是所有更细近似所趋向的极限", color=INK, fontsize=13)
 fig.tight_layout()
 plt.show()

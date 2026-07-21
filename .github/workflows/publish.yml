@@ -8,6 +8,7 @@ on:
 
 env:
   QUARTO_VERSION: "1.9.38"
+  PYTHONWARNINGS: "error:Glyph"
 
 permissions:
   contents: read
@@ -59,9 +60,11 @@ jobs:
         shell: bash
         run: bash scripts/install-translations.sh
 
-      - name: Validate shell scripts
+      - name: Validate source and shell scripts
         shell: bash
-        run: bash -n scripts/*.sh
+        run: |
+          bash -n scripts/*.sh
+          make check
 
       - name: Regenerate figures
         shell: bash
