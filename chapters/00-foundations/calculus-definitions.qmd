@@ -1,0 +1,524 @@
+---
+title: "极限、导数与积分的定义"
+description: "从有限变化和有限求和出发，理解极限如何把近似变成精确定义，并连接导数、积分与局部线性。"
+---
+
+# 本页要回答的问题
+
+读完并跟随图形思考后，我希望能回答：
+
+1. 为什么微积分必须先有极限，而不能直接把“无穷小”当成普通数字；
+2. 如何准确读懂 $\lim_{x\to a}f(x)=L$；
+3. 导数为什么来自割线斜率的极限，它在几何和近似中分别表示什么；
+4. 积分为什么来自有限矩形和的极限，而不只是“曲线下面积”；
+5. 导数与积分为什么会由微积分基本定理联系起来；
+6. 偏导数和梯度如何从一元导数推广而来；
+7. 数值近似、图像直觉和数学定义各自能说明什么、不能说明什么。
+
+::: {.callout-important title="本页的边界"}
+本页重在建立定义和直觉，不系统训练求导公式、积分技巧、极限计算、级数判别或严格实分析。后续微积分部分会展开这些内容；这里先保证看到公式时知道对象是什么、极限在哪里、结论依赖什么条件。
+:::
+
+# 从有限变化开始
+
+设函数 $f:\mathbb{R}\to\mathbb{R}$。把输入 $x$ 改变一个真实、有限的量 $h\neq0$，输出变化为：
+
+$$
+\Delta f
+\coloneqq
+f(x+h)-f(x).
+$$
+
+输入变化是 $h$，因此这段区间上的**平均变化率**是：
+
+$$
+\frac{\Delta f}{h}
+=
+\frac{f(x+h)-f(x)}{h}.
+$$ {#eq-average-rate}
+
+这里没有“无穷小”。$h$ 可以是 $1$、$0.1$ 或 $10^{-6}$，但它始终是一个普通的非零实数。
+
+例如，若位置由 $s(t)$ 给出，则：
+
+$$
+\frac{s(t+h)-s(t)}{h}
+$$
+
+表示从时刻 $t$ 到 $t+h$ 的平均速度。它需要两个时刻，因而还不是“某一时刻的速度”。
+
+::: {.callout-note title="先有限，再取极限"}
+微积分的严谨语言不是先假设存在一个神秘的“无限小量”，而是先讨论每个有限的 $h\neq0$，再研究当 $h$ 越来越接近 $0$ 时，某个量是否逼近稳定值。
+:::
+
+# 极限：把“越来越接近”变成命题
+
+## 先看记号
+
+表达式
+
+$$
+\lim_{x\to a}f(x)=L
+$$
+
+读作：当 $x$ 越来越接近 $a$ 时，$f(x)$ 越来越接近 $L$。
+
+这句话关注的是 $a$ **附近**的函数值，不要求先知道 $f(a)$。因此：
+
+- 极限存在时，$f(a)$ 可能等于 $L$；
+- 也可能 $f(a)$ 没有定义；
+- 还可能 $f(a)$ 已定义但不等于 $L$。
+
+$x\to a$ 不是把 $x$ 直接代成 $a$，而是在询问：只要把 $x$ 限制得足够靠近 $a$，能否迫使 $f(x)$ 任意靠近某个固定值 $L$？
+
+## $\varepsilon$–$\delta$ 定义
+
+设 $f$ 在 $a$ 附近有定义。我们说：
+
+$$
+\lim_{x\to a}f(x)=L,
+$$
+
+如果下面的命题成立：
+
+$$
+\forall\varepsilon>0,
+\ \exists\delta>0,
+\ \forall x,
+\quad
+0<\lvert x-a\rvert<\delta
+\Rightarrow
+\lvert f(x)-L\rvert<\varepsilon.
+$$ {#eq-epsilon-delta-limit}
+
+逐层阅读 @eq-epsilon-delta-limit：
+
+1. 对方可以任意指定输出误差 $\varepsilon>0$；
+2. 我们必须找到一个输入误差范围 $\delta>0$；
+3. 只要 $x$ 与 $a$ 的距离小于 $\delta$，但 $x\neq a$；
+4. 就能保证 $f(x)$ 与 $L$ 的距离小于 $\varepsilon$。
+
+量词顺序非常重要：$\delta$ 可以依赖 $\varepsilon$，但不能依赖之后临时挑选的 $x$。
+
+::: {.callout-tip title="把定义想成一场挑战"}
+对方不断缩小允许的输出误差 $\varepsilon$，我们每次都能相应缩小输入窗口 $\delta$ 并守住要求。无论对方要求多精确，只要都能做到，极限就是 $L$。
+:::
+
+## 连续性的定义
+
+如果 $f(a)$ 有定义，并且：
+
+$$
+\lim_{x\to a}f(x)=f(a),
+$$
+
+就称 $f$ 在 $a$ 处连续。
+
+这句话把三件事放在一起：
+
+1. $f(a)$ 存在；
+2. $\lim_{x\to a}f(x)$ 存在；
+3. 两者相等。
+
+“图像没有断开”是有用直觉，真正的定义仍是极限等于函数值。
+
+# 导数：割线斜率逼近什么
+
+## 导数的定义
+
+对 $h\neq0$，@eq-average-rate 是图像上两点之间的割线斜率。若当 $h\to0$ 时这个斜率趋于唯一有限值，就定义：
+
+$$
+f'(x)
+\coloneqq
+\lim_{h\to0}
+\frac{f(x+h)-f(x)}{h}.
+$$ {#eq-derivative-definition}
+
+若这个极限存在，就称 $f$ 在 $x$ 处**可导**。
+
+导数不是把 $h=0$ 代入分式。直接代入会得到 $0/0$，没有定义。导数是分式在 $h\neq0$ 时的值所趋近的极限。
+
+```{python}
+#| label: fig-secant-to-tangent
+#| fig-format: svg
+#| fig-cap: "随着 h 缩小，经过两个不同点的割线逐渐逼近 x=1 处的切线。"
+#| fig-alt: "三幅图展示二次函数上的割线随着间隔缩小逐渐逼近切线"
+#| code-fold: true
+#| code-summary: "查看绘图代码"
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
+BLUE = "#274C77"
+TEAL = "#2A9D8F"
+GOLD = "#E9C46A"
+CORAL = "#E76F51"
+INK = "#243447"
+PAPER = "#FBFAF7"
+
+x = np.linspace(-0.35, 2.35, 500)
+f = x**2
+x0 = 1.0
+h_values = [1.0, 0.45, 0.12]
+
+fig, axes = plt.subplots(1, 3, figsize=(11, 3.6), sharex=True, sharey=True)
+fig.patch.set_facecolor(PAPER)
+
+for ax, h in zip(axes, h_values):
+    ax.set_facecolor(PAPER)
+    ax.plot(x, f, color=BLUE, linewidth=2.6)
+
+    secant_slope = ((x0 + h) ** 2 - x0**2) / h
+    secant = x0**2 + secant_slope * (x - x0)
+    tangent = x0**2 + 2 * x0 * (x - x0)
+
+    ax.plot(x, secant, color=CORAL, linewidth=2.1, label="割线")
+    ax.plot(x, tangent, color=TEAL, linewidth=2.0, linestyle="--", label="切线")
+    ax.scatter([x0, x0 + h], [x0**2, (x0 + h) ** 2], color=[GOLD, CORAL], s=58, zorder=3)
+    ax.annotate("h", xy=(x0 + h / 2, -0.08), ha="center", color=INK, fontsize=10)
+    ax.set_title(f"h = {h:g}，割线斜率 = {secant_slope:.2f}", color=INK, fontsize=11)
+    ax.set_xlim(-0.25, 2.25)
+    ax.set_ylim(-0.35, 5.1)
+    ax.grid(alpha=0.16)
+    ax.spines[["top", "right"]].set_visible(False)
+
+axes[0].set_ylabel("f(x) = x²", color=INK)
+for ax in axes:
+    ax.set_xlabel("x", color=INK)
+axes[-1].legend(frameon=False, loc="upper left")
+fig.suptitle("割线并不会在 h = 0 时突然变成切线；它的斜率在 h → 0 时趋于切线斜率", color=INK, fontsize=13)
+fig.tight_layout()
+plt.show()
+```
+
+在图中，$f(x)=x^2$，固定 $x=1$。割线斜率是：
+
+$$
+\frac{(1+h)^2-1}{h}
+=2+h,
+\qquad h\neq0.
+$$
+
+因此：
+
+$$
+f'(1)
+=
+\lim_{h\to0}(2+h)
+=2.
+$$
+
+## 导数的三个互补解释
+
+同一个导数可以从三个角度阅读：
+
+1. **变化率**：输入变化一单位时，输出在局部大约变化多少；
+2. **几何斜率**：函数图像在该点的切线斜率；
+3. **局部线性系数**：在足够小的范围内，用线性函数近似 $f$ 时最合适的系数。
+
+第三种解释可以写成：
+
+$$
+f(x+h)
+=
+f(x)+f'(x)h+r(h),
+$$
+
+其中余项满足：
+
+$$
+\lim_{h\to0}\frac{r(h)}{h}=0.
+$$
+
+因此常见的一阶近似是：
+
+$$
+f(x+h)
+\approx
+f(x)+f'(x)h.
+$$ {#eq-local-linearization}
+
+导数不是只描述“函数正在上升还是下降”，它给出了函数在该点附近最好的线性近似。
+
+## 可导比连续更强
+
+如果函数在某点可导，那么它在该点连续；反方向不一定成立。
+
+例如 $f(x)=\lvert x\rvert$ 在 $x=0$ 连续，但左右割线斜率分别趋于 $-1$ 和 $1$，没有共同极限，所以它在 $0$ 处不可导。
+
+# 多变量函数：偏导数与梯度
+
+设：
+
+$$
+f:\mathbb{R}^{n}\to\mathbb{R},
+\qquad
+\mathbf{x}=(x_1,\ldots,x_n).
+$$
+
+只改变第 $i$ 个坐标、固定其他坐标，得到偏导数：
+
+$$
+\frac{\partial f}{\partial x_i}(\mathbf{x})
+\coloneqq
+\lim_{h\to0}
+\frac{
+ f(x_1,\ldots,x_i+h,\ldots,x_n)-f(\mathbf{x})
+}{h}.
+$$ {#eq-partial-derivative-definition}
+
+把所有偏导数组成列向量，得到本文采用的梯度约定：
+
+$$
+\nabla_{\mathbf{x}}f(\mathbf{x})
+\coloneqq
+\begin{bmatrix}
+\dfrac{\partial f}{\partial x_1}(\mathbf{x})\\
+\vdots\\
+\dfrac{\partial f}{\partial x_n}(\mathbf{x})
+\end{bmatrix}
+\in\mathbb{R}^{n}.
+$$
+
+梯度给出标量输出对各输入方向的一阶敏感度。对小扰动 $\Delta\mathbf{x}$：
+
+$$
+f(\mathbf{x}+\Delta\mathbf{x})
+\approx
+f(\mathbf{x})
++
+\nabla_{\mathbf{x}}f(\mathbf{x})^{\mathsf T}
+\Delta\mathbf{x}.
+$$
+
+::: {.callout-warning title="偏导数存在不自动保证整体可微"}
+各坐标方向的偏导数都存在，只说明沿坐标轴分别观察时有变化率。要得到统一的局部线性近似，还需要更强的可微条件。后续多变量微积分会严格区分这些概念。
+:::
+
+若输出也是向量，$\mathbf{f}:\mathbb{R}^{n}\to\mathbb{R}^{m}$，所有一阶偏导数会组成 Jacobian 矩阵。这里先认识名称与形状，布局约定将在矩阵微积分章节正式固定。
+
+# 积分：有限求和逼近累积量
+
+## 从矩形和开始
+
+设 $f:[a,b]\to\mathbb{R}$。把区间均分成 $n$ 段：
+
+$$
+\Delta x
+=
+\frac{b-a}{n}.
+$$
+
+在第 $i$ 段选择样本点 $x_i^*$，用矩形面积：
+
+$$
+f(x_i^*)\Delta x
+$$
+
+近似这一小段的带符号面积。所有矩形相加得到 Riemann 和：
+
+$$
+S_n
+=
+\sum_{i=1}^{n}f(x_i^*)\Delta x.
+$$ {#eq-riemann-sum}
+
+```{python}
+#| label: fig-riemann-sums
+#| fig-format: svg
+#| fig-cap: "矩形越来越窄时，有限矩形和逐渐逼近曲线下的累积量。"
+#| fig-alt: "使用六个和二十四个矩形近似二次函数曲线下面积的对比图"
+#| code-fold: true
+#| code-summary: "查看绘图代码"
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
+BLUE = "#274C77"
+TEAL = "#2A9D8F"
+GOLD = "#E9C46A"
+INK = "#243447"
+PAPER = "#FBFAF7"
+
+curve_x = np.linspace(0, 2, 500)
+curve_y = curve_x**2
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 3.8), sharex=True, sharey=True)
+fig.patch.set_facecolor(PAPER)
+
+for ax, n in zip(axes, [6, 24]):
+    dx = 2 / n
+    left = np.arange(n) * dx
+    mid = left + dx / 2
+    heights = mid**2
+    approximation = np.sum(heights * dx)
+
+    ax.set_facecolor(PAPER)
+    ax.bar(left, heights, width=dx, align="edge", color=GOLD, edgecolor=TEAL, alpha=0.72, linewidth=0.8)
+    ax.plot(curve_x, curve_y, color=BLUE, linewidth=2.6)
+    ax.fill_between(curve_x, 0, curve_y, color=TEAL, alpha=0.08)
+    ax.set_title(f"n = {n}，矩形和 ≈ {approximation:.4f}", color=INK, fontsize=11)
+    ax.set_xlabel("x", color=INK)
+    ax.grid(axis="y", alpha=0.15)
+    ax.spines[["top", "right"]].set_visible(False)
+
+axes[0].set_ylabel("f(x) = x²", color=INK)
+fig.suptitle("积分不是某一组矩形；它是所有更细近似所趋向的极限", color=INK, fontsize=13)
+fig.tight_layout()
+plt.show()
+```
+
+## Riemann 积分的定义
+
+上图使用等宽矩形建立直觉。正式定义允许不等宽分割。取：
+
+$$
+a=x_0<x_1<\cdots<x_n=b,
+$$
+
+记第 $i$ 段宽度为 $\Delta x_i=x_i-x_{i-1}$，并在每段中选择标记点 $\xi_i\in[x_{i-1},x_i]$。对应的 Riemann 和是：
+
+$$
+S(f;P,\boldsymbol{\xi})
+\coloneqq
+\sum_{i=1}^{n}f(\xi_i)\Delta x_i.
+$$
+
+分割 $P$ 的网格宽度定义为最长小区间：
+
+$$
+\lVert P\rVert
+\coloneqq
+\max_{1\leq i\leq n}\Delta x_i.
+$$
+
+若存在唯一实数 $I$，使得：
+
+$$
+\forall\varepsilon>0,
+\ \exists\eta>0,
+\quad
+\lVert P\rVert<\eta
+\Rightarrow
+\left\lvert
+S(f;P,\boldsymbol{\xi})-I
+\right\rvert<\varepsilon,
+$$
+
+并且这个保证对所有足够细的分割 $P$ 和所有标记点选择 $\boldsymbol{\xi}$ 都成立，就称 $f$ 在 $[a,b]$ 上 Riemann 可积，并定义：
+
+$$
+\int_a^b f(x)\,dx
+\coloneqq
+I.
+$$ {#eq-riemann-integral-definition}
+
+关键不只是“矩形变多”，而是最长小区间趋于零时，不同分割和不同取点方式都必须逼近同一个数。
+
+对非负函数，它可以解释为曲线下方面积；函数取负值时，积分计算的是**带符号面积**。更一般地，积分表示把连续分布的小贡献累积起来，例如：
+
+- 由速度累积位移；
+- 由密度累积质量；
+- 由概率密度累积概率；
+- 由瞬时损耗累积总成本。
+
+$dx$ 同时提醒我们积分变量是 $x$，并保留“把许多宽度为 $\Delta x$ 的小贡献相加”的来源。它不应在没有上下文时被随意当作普通数字消去。
+
+# 微积分基本定理：变化率与累积互相连接
+
+定义面积累积函数：
+
+$$
+A(x)
+\coloneqq
+\int_a^x f(t)\,dt.
+$$
+
+当右端点从 $x$ 增加到 $x+h$ 时，新增加的窄条面积约为 $f(x)h$。严格取极限后，在适当连续条件下：
+
+$$
+A'(x)=f(x).
+$$ {#eq-fundamental-theorem-part-one}
+
+反过来，若 $F'(x)=f(x)$，则：
+
+$$
+\int_a^b f(x)\,dx
+=
+F(b)-F(a).
+$$ {#eq-fundamental-theorem-part-two}
+
+这两式构成微积分基本定理的核心：
+
+- 导数从函数中提取局部变化率；
+- 积分把局部贡献累积成整体变化；
+- 在适当条件下，它们以精确方式互相抵消。
+
+这不是“求面积的巧合”，而是局部变化与整体累积之间的结构关系。
+
+# 链式法则先读懂，不急着熟练计算
+
+若：
+
+$$
+y=f(u),
+\qquad
+u=g(x),
+$$
+
+则复合函数为 $y=f(g(x))$。在可导条件下：
+
+$$
+\frac{dy}{dx}
+=
+\frac{dy}{du}
+\frac{du}{dx}.
+$$
+
+它表达敏感度的传递：$x$ 的小变化先造成 $u$ 的小变化，再造成 $y$ 的小变化。反向传播会把这种局部敏感度沿计算图反向组合，但完整推导留给正式微积分与神经网络章节。
+
+# 常见误区
+
+1. **把极限当代入。** $x\to a$ 研究附近行为，不等于直接令 $x=a$。
+2. **把 $h$ 设为零。** 导数定义始终先要求 $h\neq0$，再令 $h\to0$。
+3. **把数值很接近当成极限证明。** 采样能建立直觉，不能覆盖任意 $\varepsilon$。
+4. **把导数只记成公式表。** 导数首先是差商极限和局部线性系数。
+5. **把积分只理解成非负面积。** 积分是 Riemann 和的极限，可以表示带符号累积量。
+6. **认为连续就一定可导。** $\lvert x\rvert$ 在 $0$ 连续但不可导。
+7. **认为梯度为零就一定是最小值。** 它也可能是最大值、鞍点或退化点。
+8. **把图像当成定义。** 图像提供直觉，精确定义仍依赖极限和量词。
+
+# 自检
+
+1. 在导数定义中，为什么不能直接代入 $h=0$？
+2. 用自己的话解释 $\varepsilon$ 和 $\delta$ 分别约束什么。
+3. 写出 $f(x)=x^2$ 在一般点 $x$ 的差商，并说明取极限前为什么要求 $h\neq0$。
+4. 解释导数的“变化率”“切线斜率”和“局部线性”三种含义为什么是同一对象。
+5. 写出 Riemann 和中 $f(x_i^*)$ 与 $\Delta x$ 各自扮演的角色。
+6. 为什么增加更多矩形不是积分定义的全部，还必须讨论极限是否存在且唯一？
+7. 对 $f:\mathbb{R}^n\to\mathbb{R}$，说明 $\nabla_{\mathbf{x}}f$ 的形状。
+8. 用一句话描述微积分基本定理连接了哪两种操作。
+
+# 小结
+
+- 极限把“任意接近”写成带量词的精确命题。
+- 导数是差商在步长趋于零时的极限，也是最好的局部线性系数。
+- 偏导数只改变一个坐标；梯度收集标量函数对所有坐标的一阶敏感度。
+- 积分是有限加权和在分割变细时的极限，本质是连续累积。
+- 微积分基本定理说明局部变化率与整体累积在适当条件下互为逆过程。
+- 图形和数值实验帮助发现结构，定义负责说明结论究竟在什么条件下成立。
+
+下一页把“面积与权重”的语言用于不确定性：我们会定义概率空间、随机变量、条件概率和统计样本。

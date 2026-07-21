@@ -3,9 +3,9 @@ title: "命题、量词与证明"
 description: "学习数学陈述的真假、逻辑连接词、量词、反例和常用证明方法。"
 ---
 
-## 这章要解决什么问题
+# 本页要回答的问题
 
-数学不只是计算。看到一句话时，我们还需要判断：
+数学不只是计算。读完并动手判断例子后，我希望能回答：
 
 - 它是不是一个可以讨论真假的完整陈述？
 - 它对哪些对象成立？
@@ -101,6 +101,8 @@ $$
 #| fig-format: svg
 #| fig-cap: "Python 枚举两个命题的全部真假组合。深色表示真，浅色表示假。"
 #| fig-alt: "包含非、且、或、蕴含和等价运算结果的真值表"
+#| code-fold: true
+#| code-summary: "查看绘图代码"
 
 import itertools
 import matplotlib.pyplot as plt
@@ -214,6 +216,8 @@ $$
 #| fig-format: svg
 #| fig-cap: "蕴含的集合视角：所有满足 P 的对象也必须满足 Q。"
 #| fig-alt: "表示 P 的小椭圆完全包含在表示 Q 的大椭圆中"
+#| code-fold: true
+#| code-summary: "查看绘图代码"
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import Ellipse, Rectangle
@@ -400,6 +404,8 @@ $$
 #| fig-format: svg
 #| fig-cap: "一个反例足以否定全称命题：在 x=0 处，x² 并不严格大于 0。"
 #| fig-alt: "抛物线 y 等于 x 平方以及位于原点的反例标记"
+#| code-fold: true
+#| code-summary: "查看绘图代码"
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -772,4 +778,4 @@ $$
 - 直接证明、逆否证明、反证法、分类讨论和归纳法适用于不同结构的命题。
 - Python 能穷举有限论域、寻找反例和验证实现，但有限采样不能替代无限论域上的证明。
 
-下一步进入矩阵时，我们会使用本章的语言准确表述：“对任意兼容形状的向量”“存在唯一解”“当且仅当矩阵可逆”等命题。
+下一页会直接使用量词和极限定义导数与积分；之后进入线性代数时，我们还会用本页的语言准确表述：“对任意兼容形状的向量”“存在唯一解”“当且仅当矩阵可逆”等命题。

@@ -22,6 +22,8 @@ book:
         - chapters/00-foundations/numbers-and-sets.qmd
         - chapters/00-foundations/functions.qmd
         - chapters/00-foundations/logic-and-proofs.qmd
+        - chapters/00-foundations/calculus-definitions.qmd
+        - chapters/00-foundations/probability-statistics-definitions.qmd
     - part: "第二部分：线性代数"
       chapters:
         - chapters/01-linear-algebra/index.qmd
@@ -55,7 +57,7 @@ format:
     number-sections: false
     number-depth: 4
     code-copy: true
-    code-overflow: wrap
+    code-overflow: scroll
     html-math-method: mathjax
   typst:
     papersize: a4

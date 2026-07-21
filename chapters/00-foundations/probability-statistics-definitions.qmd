@@ -1,0 +1,678 @@
+---
+title: "概率模型、随机变量与统计样本"
+description: "从样本空间和事件出发，定义概率、条件概率、随机变量、分布与期望，并区分总体、样本、统计量和估计量。"
+---
+
+# 本页要回答的问题
+
+读完并跟随图形思考后，我希望能回答：
+
+1. 一个概率模型由哪些对象组成，为什么概率不是“凭感觉给出的百分数”；
+2. 事件与样本点有什么区别，概率函数接受什么输入；
+3. 条件概率为什么是在已知信息下重新缩小讨论范围；
+4. 随机变量为什么本质上仍是函数，随机性来自哪里；
+5. 分布、概率质量、概率密度和期望分别描述什么；
+6. 总体、样本、统计量、估计量与估计值有什么区别；
+7. 理论概率、经验频率和模型假设之间是什么关系。
+
+::: {.callout-important title="本页的边界"}
+本页建立概率与统计的核心对象和定义，不展开组合计数技巧、常见分布大全、大数定律与中心极限定理的证明、置信区间、假设检验或贝叶斯统计体系。后续概率论与统计部分会逐步补全这些内容。
+:::
+
+# 为什么需要概率模型
+
+确定性函数在输入固定后给出唯一输出。随机现象不同：即使实验条件看起来相同，单次结果也可能不同。
+
+概率论并不是放弃精确性，而是把“哪些结果可能出现”和“各类结果有多大权重”写成精确对象。统计学则反过来：我们只看到有限数据，希望推断生成数据的规律，同时说明不确定性。
+
+可以先记住这条方向：
+
+$$
+\text{概率论：模型}\longrightarrow\text{可能的数据},
+$$
+
+$$
+\text{统计学：观察到的数据}\longrightarrow\text{关于模型的结论}.
+$$
+
+二者使用相同的概率语言，但提问方向不同。
+
+# 样本空间与事件
+
+## 样本空间
+
+一次随机实验的所有可能基本结果组成**样本空间**，记为 $\Omega$。
+
+掷一次六面骰子时，可以取：
+
+$$
+\Omega
+=
+\{1,2,3,4,5,6\}.
+$$
+
+其中每个 $\omega\in\Omega$ 是一个样本点。例如 $\omega=4$ 表示这次实验的具体结果是 $4$。
+
+样本空间的选择取决于问题。抛两次硬币时，若关心顺序，可以写：
+
+$$
+\Omega
+=
+\{HH,HT,TH,TT\}.
+$$
+
+若只记录正面数量，样本空间也可以写成 $\{0,1,2\}$，但这已经改变了基本结果的描述方式，不能再默认三个数等可能。
+
+## 事件
+
+**事件**是样本空间的子集。
+
+掷骰子时：
+
+$$
+A
+=
+\{2,4,6\}
+$$
+
+表示“结果是偶数”，而：
+
+$$
+B
+=
+\{4,5,6\}
+$$
+
+表示“结果至少为 $4$”。
+
+实验发生后，若实际结果 $\omega\in A$，就说事件 $A$ 发生。
+
+事件可以使用集合运算：
+
+- $A\cap B$：$A$ 与 $B$ 同时发生；
+- $A\cup B$：至少一个发生；
+- $A^c$：$A$ 不发生；
+- $A\setminus B$：$A$ 发生但 $B$ 不发生。
+
+这正是数与集合章节在概率中的第一次直接应用。
+
+# 概率空间：给事件分配权重
+
+## 概率空间的定义
+
+一个概率模型写成三元组：
+
+$$
+(\Omega,\mathcal{F},\mathbb{P}).
+$$
+
+其中：
+
+1. $\Omega$ 是样本空间；
+2. $\mathcal{F}$ 是允许讨论概率的事件集合；
+3. $\mathbb{P}:\mathcal{F}\to[0,1]$ 是概率测度。
+
+事件集合 $\mathcal{F}$ 不是任意挑选的集合族。它至少满足：
+
+1. $\Omega\in\mathcal{F}$；
+2. 若 $A\in\mathcal{F}$，则补集 $A^c\in\mathcal{F}$；
+3. 若 $A_1,A_2,\ldots\in\mathcal{F}$，则可列并集 $\bigcup_{i=1}^{\infty}A_i\in\mathcal{F}$。
+
+满足这些条件的事件族称为 $\sigma$-代数。在有限样本空间中，通常可以令 $\mathcal{F}$ 为 $\Omega$ 的所有子集；在无限空间中保留 $\mathcal{F}$，可以确保集合运算后的事件仍然可赋概率。
+
+概率测度满足三条基本要求：
+
+1. **非负性**：对任意事件 $A\in\mathcal{F}$，$\mathbb{P}(A)\geq0$；
+2. **归一化**：$\mathbb{P}(\Omega)=1$；
+3. **可列可加性**：若 $A_1,A_2,\ldots$ 两两不相交，则
+   $$
+   \mathbb{P}\!\left(\bigcup_{i=1}^{\infty}A_i\right)
+   =
+   \sum_{i=1}^{\infty}\mathbb{P}(A_i).
+   $$
+
+其他常用规则都可以由这三条推出。例如：
+
+$$
+\mathbb{P}(A^c)=1-\mathbb{P}(A).
+$$
+
+## 等可能只是特殊模型
+
+如果有限样本空间中的每个样本点等可能，那么：
+
+$$
+\mathbb{P}(A)
+=
+\frac{\lvert A\rvert}{\lvert\Omega\rvert}.
+$$
+
+但这个公式不是概率的一般定义。若骰子有偏，六个结果不再等可能，仍然可以建立合法概率模型，只是要分别指定各样本点的权重。
+
+::: {.callout-warning title="先说明模型，再谈概率"}
+“掷出偶数的概率是 $1/2$”隐含了骰子公平、六个点数等可能等假设。概率值永远属于某个模型；模型假设改变，概率也可能改变。
+:::
+
+# 条件概率：已知信息后重新看样本空间
+
+设 $\mathbb{P}(B)>0$。在已知事件 $B$ 已发生时，事件 $A$ 的条件概率定义为：
+
+$$
+\mathbb{P}(A\mid B)
+\coloneqq
+\frac{\mathbb{P}(A\cap B)}{\mathbb{P}(B)}.
+$$ {#eq-conditional-probability-definition}
+
+它包含两步：
+
+1. 先把注意力限制到 $B$ 内；
+2. 再看 $B$ 中有多少概率质量同时属于 $A$。
+
+```{python}
+#| label: fig-conditional-probability-die
+#| fig-format: svg
+#| fig-cap: "条件在 B 上，相当于先把样本空间缩小到 {4,5,6}，再计算其中属于 A 的比例。"
+#| fig-alt: "六个骰子结果方块中四五六被保留，四六同时属于偶数事件"
+#| code-fold: true
+#| code-summary: "查看绘图代码"
+
+import matplotlib.pyplot as plt
+from matplotlib.patches import FancyBboxPatch
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
+BLUE = "#274C77"
+TEAL = "#2A9D8F"
+GOLD = "#E9C46A"
+CORAL = "#E76F51"
+INK = "#243447"
+MUTED = "#DCE3E8"
+PAPER = "#FBFAF7"
+
+fig, axes = plt.subplots(2, 1, figsize=(9.6, 4.8))
+fig.patch.set_facecolor(PAPER)
+
+for ax in axes:
+    ax.set_facecolor(PAPER)
+    ax.set_xlim(0.4, 6.6)
+    ax.set_ylim(0, 1.35)
+    ax.axis("off")
+
+for value in range(1, 7):
+    color = TEAL if value % 2 == 0 else GOLD
+    box = FancyBboxPatch((value - 0.38, 0.3), 0.76, 0.72, boxstyle="round,pad=0.03,rounding_size=0.09", facecolor=color, edgecolor=BLUE, linewidth=1.4)
+    axes[0].add_patch(box)
+    axes[0].text(value, 0.66, str(value), ha="center", va="center", fontsize=16, color=INK, weight="bold")
+axes[0].text(0.48, 1.18, "原样本空间 Ω：A = 偶数（绿色）", color=INK, fontsize=11, weight="bold")
+
+for value in range(1, 7):
+    in_b = value >= 4
+    in_a_and_b = in_b and value % 2 == 0
+    color = TEAL if in_a_and_b else (CORAL if in_b else MUTED)
+    alpha = 1.0 if in_b else 0.38
+    box = FancyBboxPatch((value - 0.38, 0.3), 0.76, 0.72, boxstyle="round,pad=0.03,rounding_size=0.09", facecolor=color, edgecolor=BLUE if in_b else MUTED, linewidth=1.4, alpha=alpha)
+    axes[1].add_patch(box)
+    axes[1].text(value, 0.66, str(value), ha="center", va="center", fontsize=16, color=INK, weight="bold", alpha=alpha)
+axes[1].text(0.48, 1.18, "已知 B = {4,5,6}：只在保留的三个结果中重新归一化", color=INK, fontsize=11, weight="bold")
+axes[1].text(5.0, 0.08, "其中 4、6 属于 A，所以 P(A|B) = 2/3", ha="center", color=INK, fontsize=11)
+
+fig.tight_layout()
+plt.show()
+```
+
+在公平骰子模型中：
+
+$$
+A\cap B=\{4,6\},
+\qquad
+\mathbb{P}(A\cap B)=\frac{2}{6},
+\qquad
+\mathbb{P}(B)=\frac{3}{6}.
+$$
+
+所以：
+
+$$
+\mathbb{P}(A\mid B)
+=
+\frac{2/6}{3/6}
+=
+\frac{2}{3}.
+$$
+
+条件概率不是给原事件“附加一个标签”，而是改变当前用于归一化的参考范围。
+
+## 乘法公式与 Bayes 公式
+
+由定义直接整理得到：
+
+$$
+\mathbb{P}(A\cap B)
+=
+\mathbb{P}(A\mid B)\mathbb{P}(B).
+$$
+
+交换 $A,B$ 的角色：
+
+$$
+\mathbb{P}(A\cap B)
+=
+\mathbb{P}(B\mid A)\mathbb{P}(A).
+$$
+
+因此在分母非零时：
+
+$$
+\mathbb{P}(A\mid B)
+=
+\frac{
+\mathbb{P}(B\mid A)\mathbb{P}(A)
+}{
+\mathbb{P}(B)
+}.
+$$ {#eq-bayes-rule}
+
+Bayes 公式不是额外的神秘规则，它只是用两种顺序表达同一个交集概率。
+
+# 独立：知道一个事件不改变另一个事件
+
+若：
+
+$$
+\mathbb{P}(A\cap B)
+=
+\mathbb{P}(A)\mathbb{P}(B),
+$$
+
+就称事件 $A$ 与 $B$ 独立。
+
+当 $\mathbb{P}(B)>0$ 时，这等价于：
+
+$$
+\mathbb{P}(A\mid B)=\mathbb{P}(A).
+$$
+
+也就是说，知道 $B$ 已发生不会改变 $A$ 的概率。
+
+独立是一条关于联合概率如何分解的数学条件，不等于“两个事件看起来没有关系”，也不等于因果上互不影响。
+
+# 随机变量：把随机结果映射成数
+
+## 随机变量仍然是函数
+
+随机变量 $X$ 是从样本空间到数值空间的函数：
+
+$$
+X:\Omega\to\mathbb{R}.
+$$
+
+例如掷两次硬币，令 $X$ 表示正面数量：
+
+$$
+X(HH)=2,
+\qquad
+X(HT)=X(TH)=1,
+\qquad
+X(TT)=0.
+$$
+
+函数 $X$ 本身是固定规则；随机性来自实验结果 $\omega$ 尚未确定。实验发生后得到样本点 $\omega$，随机变量产生一个普通数值：
+
+$$
+x=X(\omega).
+$$
+
+本文用大写字母 $X$ 表示随机变量，用小写字母 $x$ 表示它的一个可能取值或观测值。
+
+::: {.callout-note title="严格性说明"}
+在一般概率空间中，随机变量还必须满足可测性，使 $\{\omega:X(\omega)\in B\}$ 成为可赋概率的事件。本页先用有限例子建立对象关系，测度论概率会正式定义可测性。
+:::
+
+## 分布
+
+随机变量把样本空间中的概率质量搬到数值空间。$X$ 的分布由：
+
+$$
+\mathbb{P}_X(C)
+\coloneqq
+\mathbb{P}(X\in C)
+$$
+
+定义，其中 $C$ 是数值空间中的事件。
+
+记号：
+
+$$
+X\sim\mathcal{D}
+$$
+
+表示随机变量 $X$ 服从分布 $\mathcal{D}$。左侧是随机变量，右侧是描述其取值规律的分布，二者不是同一种对象。
+
+# 离散概率、连续密度与分布函数
+
+## 离散随机变量
+
+若 $X$ 只取有限或可数多个值，概率质量函数定义为：
+
+$$
+p_X(x)
+\coloneqq
+\mathbb{P}(X=x).
+$$
+
+它满足：
+
+$$
+p_X(x)\geq0,
+\qquad
+\sum_x p_X(x)=1.
+$$
+
+## 连续随机变量
+
+连续随机变量常用概率密度函数 $p_X(x)$ 描述，使区间概率为：
+
+$$
+\mathbb{P}(a\leq X\leq b)
+=
+\int_a^b p_X(x)\,dx.
+$$
+
+密度不是点概率。对通常的连续分布：
+
+$$
+\mathbb{P}(X=x)=0,
+$$
+
+但 $p_X(x)$ 可以大于零，甚至可以大于 $1$；真正必须归一化的是密度下的总面积：
+
+$$
+\int_{-\infty}^{\infty}p_X(x)\,dx=1.
+$$
+
+## 累积分布函数
+
+累积分布函数定义为：
+
+$$
+F_X(x)
+\coloneqq
+\mathbb{P}(X\leq x).
+$$
+
+它同时适用于离散和连续随机变量，并且单调不减，取值位于 $[0,1]$。
+
+# 联合、边缘与条件分布
+
+两个随机变量 $X,Y$ 的联合分布描述它们一起如何取值。离散情形写作：
+
+$$
+p_{X,Y}(x,y)
+=
+\mathbb{P}(X=x,Y=y).
+$$
+
+把另一个变量的可能值加总掉，得到边缘分布：
+
+$$
+p_X(x)
+=
+\sum_y p_{X,Y}(x,y).
+$$
+
+在 $p_Y(y)>0$ 时，条件分布为：
+
+$$
+p_{X\mid Y}(x\mid y)
+=
+\frac{p_{X,Y}(x,y)}{p_Y(y)}.
+$$
+
+若对所有相关取值都有：
+
+$$
+p_{X,Y}(x,y)
+=
+p_X(x)p_Y(y),
+$$
+
+就称 $X$ 与 $Y$ 独立。
+
+这些记号会直接出现在语言模型中：
+
+$$
+p_\theta(x_t\mid x_{<t})
+$$
+
+表示参数为 $\theta$ 的模型在已有前文 $x_{<t}$ 时，对下一个 token $x_t$ 给出的条件分布。
+
+# 期望、方差与协方差
+
+## 期望
+
+离散随机变量的期望定义为：
+
+$$
+\mathbb{E}[X]
+\coloneqq
+\sum_x x\,p_X(x),
+$$
+
+只要这个加权和存在。
+
+连续情形相应为：
+
+$$
+\mathbb{E}[X]
+\coloneqq
+\int_{-\infty}^{\infty}x\,p_X(x)\,dx.
+$$
+
+更一般地：
+
+$$
+\mathbb{E}[g(X)]
+=
+\sum_x g(x)p_X(x)
+$$
+
+或对应的积分。
+
+期望是按概率权重计算的中心，不一定是随机变量可能取得的值。例如公平骰子的期望是 $3.5$，但实际不会掷出 $3.5$。
+
+## 方差
+
+方差定义为：
+
+$$
+\operatorname{Var}(X)
+\coloneqq
+\mathbb{E}\!\left[(X-\mathbb{E}[X])^2\right].
+$$
+
+它度量随机变量围绕均值的平方偏离。标准差是：
+
+$$
+\operatorname{Std}(X)
+\coloneqq
+\sqrt{\operatorname{Var}(X)},
+$$
+
+与 $X$ 具有相同单位。
+
+## 协方差
+
+两个随机变量的协方差定义为：
+
+$$
+\operatorname{Cov}(X,Y)
+\coloneqq
+\mathbb{E}\!\left[
+(X-\mathbb{E}[X])
+(Y-\mathbb{E}[Y])
+\right].
+$$
+
+协方差描述线性共同变化趋势。独立通常推出协方差为零，但协方差为零一般不推出独立；相关也不等于因果。
+
+# 从概率到统计：总体、样本与估计
+
+## 总体与样本
+
+统计建模通常假设存在某个未知分布 $P_\theta$，其中 $\theta$ 是未知参数。我们观察到 $N$ 个样本：
+
+$$
+X^{(1)},X^{(2)},\ldots,X^{(N)}.
+$$
+
+若写作：
+
+$$
+X^{(1)},\ldots,X^{(N)}
+\overset{\mathrm{iid}}{\sim}
+P_\theta,
+$$
+
+表示这些随机变量相互独立，并且服从同一分布。
+
+实验后得到具体观测：
+
+$$
+x^{(1)},x^{(2)},\ldots,x^{(N)}.
+$$
+
+要始终区分随机样本 $X^{(i)}$ 与已经看到的数据 $x^{(i)}$。
+
+## 统计量、估计量与估计值
+
+**统计量**是样本的函数，并且不含未知参数。例如样本均值：
+
+$$
+\overline{X}
+\coloneqq
+\frac{1}{N}
+\sum_{i=1}^{N}X^{(i)}.
+$$
+
+如果一个统计量被用来估计参数 $\theta$，就称为**估计量**，常记为：
+
+$$
+\widehat{\theta}
+=
+T(X^{(1)},\ldots,X^{(N)}).
+$$
+
+代入实际数据后得到的具体数值：
+
+$$
+\widehat{\theta}_{\mathrm{obs}}
+=
+T(x^{(1)},\ldots,x^{(N)})
+$$
+
+称为估计值。
+
+估计量在重复抽样前是随机变量；估计值在数据给定后是固定数字。
+
+## 经验平均不等于理论期望
+
+样本平均：
+
+$$
+\frac{1}{N}\sum_{i=1}^{N}x^{(i)}
+$$
+
+是从有限数据计算出的经验量；理论期望：
+
+$$
+\mathbb{E}_{X\sim P_\theta}[X]
+$$
+
+由分布决定。大数定律会在适当条件下连接二者，但有限样本中它们通常不完全相等。
+
+# 似然：固定数据，比较参数
+
+给定观测数据 $x$，若模型密度或质量函数为 $p_\theta(x)$，似然函数定义为：
+
+$$
+L(\theta;x)
+\coloneqq
+p_\theta(x).
+$$
+
+同一个表达式可以有两个阅读方向：
+
+- 固定 $\theta$、让 $x$ 变化时，$p_\theta(x)$ 是数据分布；
+- 固定已经观察到的 $x$、让 $\theta$ 变化时，$L(\theta;x)$ 是似然函数。
+
+似然不是“参数的概率分布”。要给参数本身赋概率，还需要贝叶斯模型中的先验与后验定义。
+
+独立样本的联合似然常写成乘积：
+
+$$
+L(\theta;x^{(1:N)})
+=
+\prod_{i=1}^{N}p_\theta(x^{(i)}).
+$$
+
+取对数后乘积变成求和：
+
+$$
+\log L(\theta;x^{(1:N)})
+=
+\sum_{i=1}^{N}\log p_\theta(x^{(i)}).
+$$
+
+这会连接到最大似然、交叉熵和语言模型训练目标，但推导留到正式概率与信息论章节。
+
+# 理论、模拟与数据各自做什么
+
+| 层次 | 给定什么 | 得到什么 | 主要风险 |
+|---|---|---|---|
+| 概率模型 | $\Omega,\mathcal{F},\mathbb{P}$ 或 $P_\theta$ | 事件概率、分布、期望 | 假设可能不符合真实数据 |
+| 数值模拟 | 模型与伪随机数 | 近似频率、样本路径 | 有限次数与数值误差 |
+| 统计数据 | 真实观测样本 | 参数估计、模型比较 | 抽样偏差、混杂与分布变化 |
+
+模拟可以检查推导、形成直觉和近似难算的量，但模拟结果仍依赖输入模型。数据可以反驳不合适的模型，却不会自动告诉我们唯一正确的因果机制。
+
+# 常见误区
+
+1. **把样本点和事件混为一谈。** $\omega$ 是一次基本结果，$A$ 是结果集合。
+2. **把等可能公式当一般定义。** $\lvert A\rvert/\lvert\Omega\rvert$ 只适用于有限等可能模型。
+3. **忽略条件。** $\mathbb{P}(A\mid B)$ 与 $\mathbb{P}(A)$ 通常不同。
+4. **把独立理解成互斥。** 两个正概率互斥事件不可能独立。
+5. **混淆随机变量与观测值。** $X$ 是函数，$x$ 是一次取值。
+6. **把密度当点概率。** 连续分布中概率来自区间积分。
+7. **把期望当最常见结果。** 期望甚至可能不是可取值。
+8. **把经验平均写成理论期望。** 二者需要大数定律及其条件连接。
+9. **把似然当参数概率。** 似然固定数据后比较参数，不自动归一化成参数分布。
+10. **把相关当因果。** 概率依赖与因果机制是不同层次的问题。
+
+# 自检
+
+1. 掷两次硬币时，分别给出一个样本点和一个事件。
+2. 为什么概率函数 $\mathbb{P}$ 的输入是事件，而不是普通实数？
+3. 用“缩小样本空间并重新归一化”解释条件概率定义。
+4. 随机变量既然是函数，它的随机性来自哪里？
+5. 对连续随机变量，为什么 $p_X(x)$ 不是 $\mathbb{P}(X=x)$？
+6. 解释 $X\sim\mathcal{D}$ 中 $X$ 与 $\mathcal{D}$ 的对象类型。
+7. 区分理论期望、样本均值、估计量和估计值。
+8. 为什么零协方差不自动意味着独立？
+9. 固定数据后，$p_\theta(x)$ 作为 $\theta$ 的函数应叫什么？
+10. 语言模型表达式 $p_\theta(x_t\mid x_{<t})$ 中，参数、条件和随机输出分别是什么？
+
+# 小结
+
+- 概率空间 $(\Omega,\mathcal{F},\mathbb{P})$ 规定可能结果、可讨论事件及其概率。
+- 条件概率通过限制到已知事件并重新归一化来更新讨论范围。
+- 随机变量是从样本空间到数值空间的函数，分布是它在数值空间诱导出的概率规律。
+- 离散情形使用概率质量，连续情形使用密度积分；密度值不是点概率。
+- 期望是概率加权的平均，方差描述围绕均值的平方波动。
+- 统计学从有限样本出发；统计量、估计量和估计值必须区分。
+- 模型概率、模拟频率和真实数据是三个不同层次，任何结论都要说明自己处在哪一层。
+
+到这里，第一部分已经给出阅读后续内容所需的基本语言：对象与集合、函数、命题与证明、极限与变化、概率模型与统计样本。下一部分进入线性代数，把这些语言用于向量、矩阵和线性映射。
