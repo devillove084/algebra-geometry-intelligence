@@ -168,6 +168,8 @@ $$ {#eq-conditional-probability-definition}
 1. 先把注意力限制到 $B$ 内；
 2. 再看 $B$ 中有多少概率质量同时属于 $A$。
 
+图中先列出六个等可能结果，再淡化不属于 $B$ 的结果。保留的三个结果构成条件样本空间，其中两个同时属于 $A$。
+
 ```{python}
 #| label: fig-conditional-probability-die
 #| fig-format: svg
@@ -190,7 +192,6 @@ TEAL = "#2A9D8F"
 GOLD = "#E9C46A"
 CORAL = "#E76F51"
 INK = "#243447"
-MUTED = "#DCE3E8"
 PAPER = "#FBFAF7"
 
 fig, axes = plt.subplots(2, 1, figsize=(9.6, 4.8))
@@ -212,9 +213,9 @@ axes[0].text(0.48, 1.18, "原样本空间 Ω：A = 偶数（绿色）", color=IN
 for value in range(1, 7):
     in_b = value >= 4
     in_a_and_b = in_b and value % 2 == 0
-    color = TEAL if in_a_and_b else (CORAL if in_b else MUTED)
-    alpha = 1.0 if in_b else 0.38
-    box = FancyBboxPatch((value - 0.38, 0.3), 0.76, 0.72, boxstyle="round,pad=0.03,rounding_size=0.09", facecolor=color, edgecolor=BLUE if in_b else MUTED, linewidth=1.4, alpha=alpha)
+    color = TEAL if in_a_and_b else (CORAL if in_b else PAPER)
+    alpha = 1.0 if in_b else 0.28
+    box = FancyBboxPatch((value - 0.38, 0.3), 0.76, 0.72, boxstyle="round,pad=0.03,rounding_size=0.09", facecolor=color, edgecolor=BLUE if in_b else INK, linewidth=1.4, alpha=alpha)
     axes[1].add_patch(box)
     axes[1].text(value, 0.66, str(value), ha="center", va="center", fontsize=16, color=INK, weight="bold", alpha=alpha)
 axes[1].text(0.48, 1.18, "已知 B = {4,5,6}：只在保留的三个结果中重新归一化", color=INK, fontsize=11, weight="bold")
@@ -244,7 +245,7 @@ $$
 \frac{2}{3}.
 $$
 
-条件概率不是给原事件“附加一个标签”，而是改变当前用于归一化的参考范围。
+条件概率改变归一化的参考范围。图中使用有限等可能模型，因此可以计算格子比例；对非等可能结果必须计算概率质量。一般定义由 @eq-conditional-probability-definition 给出。
 
 ## 乘法公式与 Bayes 公式
 
@@ -302,6 +303,83 @@ $$
 
 # 随机变量：把随机结果映射成数
 
+## 随机变量映射图示
+
+抛两次硬币的样本点为 $HH,HT,TH,TT$。令 $X$ 记录正面数量，则四个样本点分别映射到 $2,1,1,0$；映射到同一数值的概率质量在分布中相加。
+
+```{python}
+#| label: fig-sample-space-random-variable-distribution
+#| fig-format: svg
+#| fig-cap: "样本空间经过随机变量映射到数值空间；落在同一数值上的样本点，其概率质量在分布中相加。"
+#| fig-alt: "箭头从 HH、HT、TH、TT 四个样本点出发，经随机变量映射到 0、1、2 三个值，右侧显示对应概率质量"
+#| code-fold: true
+#| code-summary: "查看绘图代码"
+
+import matplotlib.pyplot as plt
+from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
+BLUE = "#274C77"
+TEAL = "#2A9D8F"
+GOLD = "#E9C46A"
+CORAL = "#E76F51"
+INK = "#243447"
+PAPER = "#FBFAF7"
+
+fig, axes = plt.subplots(1, 2, figsize=(11.2, 4.5), gridspec_kw={"width_ratios": [1.65, 1.0]})
+fig.patch.set_facecolor(PAPER)
+for ax in axes:
+    ax.set_facecolor(PAPER)
+
+outcomes = ["HH", "HT", "TH", "TT"]
+values = [2, 1, 1, 0]
+source_y = [3.35, 2.45, 1.55, 0.65]
+target_y = {2: 3.05, 1: 2.00, 0: 0.95}
+
+axes[0].set_xlim(0, 3.15)
+axes[0].set_ylim(0, 4)
+axes[0].axis("off")
+for outcome, value, y_pos in zip(outcomes, values, source_y):
+    box = FancyBboxPatch((0.12, y_pos - 0.27), 0.78, 0.54, boxstyle="round,pad=0.03,rounding_size=0.08", facecolor=GOLD, edgecolor=BLUE, linewidth=1.3)
+    axes[0].add_patch(box)
+    axes[0].text(0.51, y_pos, outcome, ha="center", va="center", color=INK, fontsize=12, weight="bold")
+    axes[0].text(0.98, y_pos, "1/4", va="center", color=INK, fontsize=9)
+    arrow = FancyArrowPatch((0.92, y_pos), (2.35, target_y[value]), arrowstyle="-|>", mutation_scale=13, color=CORAL, linewidth=1.6, connectionstyle="arc3,rad=0.06")
+    axes[0].add_patch(arrow)
+
+for value, y_pos in target_y.items():
+    circle = plt.Circle((2.62, y_pos), 0.26, facecolor=TEAL, edgecolor=BLUE, linewidth=1.4)
+    axes[0].add_patch(circle)
+    axes[0].text(2.62, y_pos, str(value), ha="center", va="center", color=PAPER, fontsize=13, weight="bold")
+
+axes[0].text(0.51, 3.83, "样本点 ω", ha="center", color=INK, fontsize=11, weight="bold")
+axes[0].text(1.65, 3.83, "X(ω) = 正面数量", ha="center", color=INK, fontsize=11, weight="bold")
+axes[0].text(2.62, 3.83, "数值 0、1、2", ha="center", color=INK, fontsize=11, weight="bold")
+axes[0].set_title("每条箭头从一个样本点出发", color=INK, fontsize=12)
+
+axes[1].bar([0, 1, 2], [0.25, 0.50, 0.25], width=0.56, color=[GOLD, TEAL, GOLD], edgecolor=BLUE, linewidth=1.3)
+axes[1].set_xticks([0, 1, 2])
+axes[1].set_ylim(0, 0.62)
+axes[1].set_xlabel("X 的取值", color=INK)
+axes[1].set_ylabel("概率质量", color=INK)
+axes[1].set_title("X 诱导的分布", color=INK, fontsize=12)
+axes[1].grid(axis="y", alpha=0.14)
+axes[1].spines[["top", "right"]].set_visible(False)
+for x_value, probability in zip([0, 1, 2], [0.25, 0.50, 0.25]):
+    axes[1].text(x_value, probability + 0.025, f"{probability:.2f}", ha="center", color=INK, fontsize=10)
+
+fig.suptitle("随机变量把样本点映射为数值，并由此诱导分布", color=INK, fontsize=13)
+fig.tight_layout()
+plt.show()
+```
+
+箭头直接从 $HH,HT,TH,TT$ 出发，并终止于 $2,1,1,0$。由于 $HT$ 与 $TH$ 都映射到 $1$，所以 $\mathbb{P}(X=1)=1/4+1/4=1/2$。图中只展示有限等可能模型；随机变量和诱导分布由下面的函数与事件概率公式定义。
+
 ## 随机变量仍然是函数
 
 随机变量 $X$ 是从样本空间到数值空间的函数：
@@ -334,7 +412,7 @@ $$
 
 ## 分布
 
-随机变量把样本空间中的概率质量搬到数值空间。$X$ 的分布由：
+随机变量在数值空间上诱导概率分布。$X$ 的分布由：
 
 $$
 \mathbb{P}_X(C)
@@ -354,6 +432,77 @@ $$
 
 # 离散概率、连续密度与分布函数
 
+## 离散质量与密度积分
+
+离散分布可以在单个取值上分配正概率。若分布存在密度，则任意单点的概率为零，区间概率由密度积分计算。
+
+```{python}
+#| label: fig-discrete-mass-vs-continuous-density
+#| fig-format: svg
+#| fig-cap: "离散分布在点上分配概率质量；有密度的分布满足单点概率为零，区间概率等于密度积分。"
+#| fig-alt: "左图是六个骰子点的离散概率柱，右图是连续钟形密度及一个区间下方的阴影面积"
+#| code-fold: true
+#| code-summary: "查看绘图代码"
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
+BLUE = "#274C77"
+TEAL = "#2A9D8F"
+GOLD = "#E9C46A"
+CORAL = "#E76F51"
+INK = "#243447"
+PAPER = "#FBFAF7"
+
+fig, axes = plt.subplots(1, 2, figsize=(10.4, 4.2))
+fig.patch.set_facecolor(PAPER)
+for ax in axes:
+    ax.set_facecolor(PAPER)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.grid(axis="y", alpha=0.14)
+
+faces = np.arange(1, 7)
+probabilities = np.full(6, 1 / 6)
+axes[0].bar(faces, probabilities, width=0.58, color=GOLD, edgecolor=BLUE, linewidth=1.2)
+axes[0].bar([3], [1 / 6], width=0.58, color=CORAL, edgecolor=BLUE, linewidth=1.4)
+axes[0].annotate("P(X=3) = 1/6", xy=(3, 1 / 6), xytext=(3.85, 0.245), color=CORAL, fontsize=10, arrowprops=dict(arrowstyle="->", color=CORAL))
+axes[0].set_xticks(faces)
+axes[0].set_ylim(0, 0.29)
+axes[0].set_xlabel("离散取值 x", color=INK)
+axes[0].set_ylabel("pₓ(x) = P(X=x)", color=INK)
+axes[0].set_title("离散分布：柱高等于点概率", color=INK, fontsize=12)
+
+x = np.linspace(-3.5, 3.5, 700)
+density = np.exp(-(x**2) / 2) / np.sqrt(2 * np.pi)
+a, b, point = -0.65, 0.95, 0.20
+interval = (x >= a) & (x <= b)
+axes[1].plot(x, density, color=BLUE, linewidth=2.6)
+axes[1].fill_between(x[interval], 0, density[interval], color=TEAL, alpha=0.48)
+axes[1].axvline(a, color=GOLD, linewidth=1.2, linestyle="--")
+axes[1].axvline(b, color=GOLD, linewidth=1.2, linestyle="--")
+point_density = np.exp(-(point**2) / 2) / np.sqrt(2 * np.pi)
+axes[1].scatter([point], [point_density], color=CORAL, s=55, zorder=4)
+axes[1].annotate("pₓ(x) 是密度值；P(X=x)=0", xy=(point, point_density), xytext=(0.72, 0.46), color=CORAL, fontsize=10, arrowprops=dict(arrowstyle="->", color=CORAL))
+axes[1].text((a + b) / 2, 0.08, "P(a≤X≤b) = ∫ₐᵇ pₓ(x) dx", ha="center", color=INK, fontsize=10)
+axes[1].set_xlim(-3.5, 3.5)
+axes[1].set_ylim(0, 0.53)
+axes[1].set_xlabel("有密度分布的取值 x", color=INK)
+axes[1].set_ylabel("密度 pₓ(x)", color=INK)
+axes[1].set_title("有密度分布：区间概率由积分给出", color=INK, fontsize=12)
+
+fig.suptitle("离散质量用求和计算；密度对应的区间概率用积分计算", color=INK, fontsize=13)
+fig.tight_layout()
+plt.show()
+```
+
+左图表示 $\mathbb{P}(X=3)=1/6$。右图红点的纵坐标是密度值，不是点概率；对该有密度分布，$\mathbb{P}(X=0.2)=0$，绿色区域表示区间概率。图中只采用一个离散均匀分布和一个正态密度；一般定义由下面的求和与积分公式给出。
+
 ## 离散随机变量
 
 若 $X$ 只取有限或可数多个值，概率质量函数定义为：
@@ -372,9 +521,9 @@ p_X(x)\geq0,
 \sum_x p_X(x)=1.
 $$
 
-## 连续随机变量
+## 有密度的分布
 
-连续随机变量常用概率密度函数 $p_X(x)$ 描述，使区间概率为：
+若 $X$ 的分布存在概率密度函数 $p_X(x)$，则区间概率为：
 
 $$
 \mathbb{P}(a\leq X\leq b)
@@ -382,7 +531,7 @@ $$
 \int_a^b p_X(x)\,dx.
 $$
 
-密度不是点概率。对通常的连续分布：
+密度值不是点概率。对有密度的分布：
 
 $$
 \mathbb{P}(X=x)=0,
@@ -452,6 +601,72 @@ $$
 
 # 期望、方差与协方差
 
+理论期望是由分布确定的固定数值；样本均值由有限观测计算。不同样本产生不同轨迹，且有限样本均值通常不等于理论期望。
+
+```{python}
+#| label: fig-expectation-vs-sample-mean
+#| fig-format: svg
+#| fig-cap: "理论期望由分布确定；作为估计量的样本均值随有限样本而波动，样本量增长时通常更稳定。"
+#| fig-alt: "上图展示公平骰子分布和期望三点五，下图展示三次抽样的运行样本均值围绕三点五波动"
+#| code-fold: true
+#| code-summary: "查看绘图代码"
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
+BLUE = "#274C77"
+TEAL = "#2A9D8F"
+GOLD = "#E9C46A"
+CORAL = "#E76F51"
+INK = "#243447"
+PAPER = "#FBFAF7"
+
+expectation = 3.5
+rng = np.random.default_rng(2026)
+sample_sizes = np.arange(1, 121)
+colors = [BLUE, TEAL, CORAL]
+
+fig, axes = plt.subplots(2, 1, figsize=(9.8, 6.6), gridspec_kw={"height_ratios": [1.0, 1.45]})
+fig.patch.set_facecolor(PAPER)
+for ax in axes:
+    ax.set_facecolor(PAPER)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.grid(alpha=0.14)
+
+faces = np.arange(1, 7)
+axes[0].bar(faces, np.full(6, 1 / 6), width=0.62, color=GOLD, edgecolor=BLUE, linewidth=1.2)
+axes[0].axvline(expectation, color=CORAL, linewidth=2.4, linestyle="--")
+axes[0].annotate("理论期望 E[X] = 3.5\n由分布确定", xy=(expectation, 0.13), xytext=(4.35, 0.22), color=CORAL, fontsize=10, arrowprops=dict(arrowstyle="->", color=CORAL))
+axes[0].set_ylim(0, 0.28)
+axes[0].set_xticks(faces)
+axes[0].set_ylabel("理论概率", color=INK)
+axes[0].set_title("公平骰子的质量函数决定 E[X] = 3.5", color=INK, fontsize=12)
+
+for run, color in enumerate(colors, start=1):
+    samples = rng.integers(1, 7, size=len(sample_sizes))
+    running_mean = np.cumsum(samples) / sample_sizes
+    axes[1].plot(sample_sizes, running_mean, color=color, linewidth=1.8, alpha=0.92, label=f"第 {run} 批样本")
+axes[1].axhline(expectation, color=GOLD, linewidth=2.2, linestyle="--", label="理论期望 3.5")
+axes[1].set_xlim(1, len(sample_sizes))
+axes[1].set_ylim(1, 6)
+axes[1].set_xlabel("样本量 N", color=INK)
+axes[1].set_ylabel("样本均值估计值", color=INK)
+axes[1].set_title("统计估计：同一估计量在不同样本上产生不同轨迹", color=INK, fontsize=12)
+axes[1].legend(frameon=False, ncol=2, loc="upper right")
+
+fig.suptitle("理论期望与有限样本均值属于不同对象", color=INK, fontsize=13)
+fig.tight_layout()
+plt.show()
+```
+
+上图的 $3.5$ 是分布的理论期望；下图每条曲线是一批样本的运行均值，纵轴完整覆盖骰子的取值范围 $[1,6]$。图中只有三条有限模拟轨迹，不能据此推出收敛，也不要求轨迹单调接近 $3.5$；大数定律还要求 iid、期望存在等条件及明确的收敛概念。理论期望与样本均值分别由下文的加权和与样本平均公式定义。
+
 ## 期望
 
 离散随机变量的期望定义为：
@@ -464,7 +679,7 @@ $$
 
 只要这个加权和存在。
 
-连续情形相应为：
+若 $X$ 存在密度 $p_X$，则：
 
 $$
 \mathbb{E}[X]
@@ -646,7 +861,7 @@ $$
 3. **忽略条件。** $\mathbb{P}(A\mid B)$ 与 $\mathbb{P}(A)$ 通常不同。
 4. **把独立理解成互斥。** 两个正概率互斥事件不可能独立。
 5. **混淆随机变量与观测值。** $X$ 是函数，$x$ 是一次取值。
-6. **把密度当点概率。** 连续分布中概率来自区间积分。
+6. **把密度当点概率。** 有密度分布的单点概率为零，区间概率由密度积分给出。
 7. **把期望当最常见结果。** 期望甚至可能不是可取值。
 8. **把经验平均写成理论期望。** 二者需要大数定律及其条件连接。
 9. **把似然当参数概率。** 似然固定数据后比较参数，不自动归一化成参数分布。
@@ -658,7 +873,7 @@ $$
 2. 为什么概率函数 $\mathbb{P}$ 的输入是事件，而不是普通实数？
 3. 用“缩小样本空间并重新归一化”解释条件概率定义。
 4. 随机变量既然是函数，它的随机性来自哪里？
-5. 对连续随机变量，为什么 $p_X(x)$ 不是 $\mathbb{P}(X=x)$？
+5. 对有密度的分布，为什么 $p_X(x)$ 不是 $\mathbb{P}(X=x)$？
 6. 解释 $X\sim\mathcal{D}$ 中 $X$ 与 $\mathcal{D}$ 的对象类型。
 7. 区分理论期望、样本均值、估计量和估计值。
 8. 为什么零协方差不自动意味着独立？
@@ -670,7 +885,7 @@ $$
 - 概率空间 $(\Omega,\mathcal{F},\mathbb{P})$ 规定可能结果、可讨论事件及其概率。
 - 条件概率通过限制到已知事件并重新归一化来更新讨论范围。
 - 随机变量是从样本空间到数值空间的函数，分布是它在数值空间诱导出的概率规律。
-- 离散情形使用概率质量，连续情形使用密度积分；密度值不是点概率。
+- 离散情形使用概率质量；有密度的分布用密度积分计算区间概率，且密度值不是点概率。
 - 期望是概率加权的平均，方差描述围绕均值的平方波动。
 - 统计学从有限样本出发；统计量、估计量和估计值必须区分。
 - 模型概率、模拟频率和真实数据是三个不同层次，任何结论都要说明自己处在哪一层。

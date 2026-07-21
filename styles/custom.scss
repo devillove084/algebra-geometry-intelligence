@@ -162,3 +162,10 @@ details.code-fold .code-copy-outer-scaffold {
   border-radius: 0;
   box-shadow: none;
 }
+
+body.quarto-dark {
+  --bs-body-color: #dce2e8;
+  --bs-body-color-rgb: 220, 226, 232;
+  --bs-heading-color: #f4f6f8;
+  --bs-secondary-color: #b8c1ca;
+}

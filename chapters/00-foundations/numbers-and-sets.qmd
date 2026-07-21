@@ -16,17 +16,137 @@ title: "数、集合与区间"
 
 # 直观导入
 
-想象面前有一筐苹果。数完整苹果时会用到自然数 $1,2,3,\ldots$；描述半个苹果时会用到分数，也就是有理数。苹果直径这类连续量通常用实数建模，而实际测量仪器只能给出有限精度的近似值。
+离散对象的数量通常用自然数表示，带符号的增减量需要整数，比例与分数需要有理数，长度等连续量通常用实数建模。实际测量只给出有限精度的实数近似值。
 
-把所有的苹果放在一起，就是"苹果的集合"。把红苹果挑出来，就是"子集"。把红苹果和青苹果混在一起，就是"并集"。
+集合把满足共同条件的对象组织为一个整体；子集表示条件更严格的对象范围，并集、交集和差集表示不同的条件组合。
 
-数学对象没那么遥远。它们只是把日常活动中已经在用的概念——数数、分类、合并——用精确的语言固定下来。一旦固定，我们就能放心地操作、推理，并最终用计算机处理它们。
-
-本页先固定这些基础语言。后续的矩阵乘法、概率事件和注意力公式，都会继续使用集合、索引与求和记号。
+本页建立数、集合、索引与求和的基本语言。后续的矩阵乘法、概率事件和注意力公式都会使用这些记号。
 
 # 数与数集
 
-一个**标量**是单个数。机器学习中最常见的标量来自实数集合 $\mathbb{R}$，但先从更小的数集开始。
+## 示例：数轴位置与数集归属
+
+比较 $-2$、$\frac12$、$\sqrt2$、$2$ 和 $1+i$：需要分别确定它们能否表示在实数轴上，以及它们所属的最小常用数集。
+
+```{python}
+#| label: fig-number-systems
+#| fig-format: svg
+#| fig-cap: "实数轴编码实数的位置，嵌套区域编码常用数集的包含关系；每个示例标在其所属的最小数集区域中。"
+#| fig-alt: "上半部分是在负二、二分之一、根号二和二处标点的实数轴，并注明一加 i 不在实数轴上；下半部分是自然数、整数、有理数、实数和复数的五层嵌套方框"
+#| code-fold: true
+#| code-summary: "查看绘图代码"
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.patches import Rectangle
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
+BLUE = "#274C77"
+TEAL = "#2A9D8F"
+GOLD = "#E9C46A"
+CORAL = "#E76F51"
+INK = "#243447"
+PAPER = "#FBFAF7"
+
+fig, (ax_line, ax_sets) = plt.subplots(
+    2,
+    1,
+    figsize=(9.6, 7.2),
+    gridspec_kw={"height_ratios": [1, 1.45]},
+)
+fig.patch.set_facecolor(PAPER)
+
+# 上半图：实数轴编码实数的位置。
+ax_line.set_facecolor(PAPER)
+ax_line.annotate(
+    "",
+    xy=(3.3, 0),
+    xytext=(-3.3, 0),
+    arrowprops={"arrowstyle": "<->", "color": INK, "linewidth": 1.8},
+)
+for tick in range(-3, 4):
+    ax_line.plot([tick, tick], [-0.07, 0.07], color=INK, linewidth=1.1)
+    ax_line.text(tick, -0.18, str(tick), ha="center", va="top", color=INK, fontsize=9)
+
+number_points = [
+    (-2, r"$-2$：整数", TEAL, 0.36),
+    (0.5, r"$\frac{1}{2}$：有理数", GOLD, 0.46),
+    (np.sqrt(2), r"$\sqrt{2}$：无理实数", CORAL, -0.48),
+    (2, r"$2$：自然数", BLUE, 0.36),
+]
+for value, label, color, label_y in number_points:
+    ax_line.scatter([value], [0], s=72, color=color, edgecolor=INK, linewidth=0.9, zorder=3)
+    ax_line.text(value, label_y, label, ha="center", va="center", color=color, fontsize=10.5)
+
+ax_line.text(
+    3.18,
+    0.88,
+    r"$1+i$：复数，不在实数轴上",
+    ha="right",
+    va="center",
+    color=INK,
+    fontsize=10.5,
+    bbox={"boxstyle": "round,pad=0.35", "facecolor": PAPER, "edgecolor": BLUE},
+)
+ax_line.set_xlim(-3.5, 3.5)
+ax_line.set_ylim(-0.78, 1.15)
+ax_line.set_title("实数轴上的位置", color=INK, fontsize=12.5, weight="bold")
+ax_line.axis("off")
+
+# 下半图：嵌套边界编码子集关系。
+ax_sets.set_facecolor(PAPER)
+set_boxes = [
+    (0.00, 0.00, 10.0, 4.4, INK, r"$\mathbb{C}$  复数"),
+    (0.75, 0.40, 8.5, 3.6, CORAL, r"$\mathbb{R}$  实数"),
+    (1.50, 0.80, 7.0, 2.8, GOLD, r"$\mathbb{Q}$  有理数"),
+    (2.25, 1.20, 5.5, 2.0, TEAL, r"$\mathbb{Z}$  整数"),
+    (3.00, 1.60, 4.0, 1.2, BLUE, r"$\mathbb{N}$  自然数"),
+]
+for x, y, width, height, color, label in set_boxes:
+    ax_sets.add_patch(
+        Rectangle(
+            (x, y),
+            width,
+            height,
+            facecolor=color,
+            edgecolor=color,
+            linewidth=2.0,
+            alpha=0.12,
+        )
+    )
+    ax_sets.add_patch(
+        Rectangle((x, y), width, height, fill=False, edgecolor=color, linewidth=2.0)
+    )
+    ax_sets.text(x + 0.12, y + 0.10, label, ha="left", va="bottom", color=color, fontsize=10.5, weight="bold")
+
+examples = [
+    (5.00, 2.18, r"$2$", BLUE),
+    (2.62, 2.18, r"$-2$", TEAL),
+    (1.87, 2.18, r"$\frac{1}{2}$", GOLD),
+    (1.12, 2.18, r"$\sqrt{2}$", CORAL),
+    (9.62, 2.18, r"$1+i$", INK),
+]
+for x, y, label, color in examples:
+    ax_sets.text(x, y, label, ha="center", va="center", color=color, fontsize=13, weight="bold")
+
+ax_sets.set_xlim(-0.15, 10.15)
+ax_sets.set_ylim(-0.15, 4.55)
+ax_sets.set_aspect("equal")
+ax_sets.set_title("常用数集的包含关系", color=INK, fontsize=12.5, weight="bold")
+ax_sets.axis("off")
+
+fig.tight_layout()
+plt.show()
+```
+
+上半图以横坐标编码实数大小，因此 $-2$、$\frac12$、$\sqrt2$ 和 $2$ 各对应实数轴上的一个点；$1+i\notin\mathbb{R}$，不对应实数轴上的位置。下半图以嵌套边界编码包含关系：$2\in\mathbb{N}$，$-2\in\mathbb{Z}$ 但 $-2\notin\mathbb{N}$，$\frac12\in\mathbb{Q}$ 但 $\frac12\notin\mathbb{Z}$，$\sqrt2\in\mathbb{R}$ 但 $\sqrt2\notin\mathbb{Q}$，$1+i\in\mathbb{C}$ 但 $1+i\notin\mathbb{R}$。
+
+一个**标量**是单个数。机器学习中最常见的标量来自实数集合 $\mathbb{R}$，以下依次定义图中的各个数集。
 
 ## 自然数
 
@@ -112,6 +232,8 @@ $$
 \subseteq
 \mathbb{C}.
 $$
+
+@fig-number-systems 下半图的嵌套边界对应上述包含式。每个 $\subseteq$ 都表示左侧集合的每个元素也属于右侧集合：例如 $\mathbb{Z}\subseteq\mathbb{Q}$，因为任意整数 $p$ 都能写成 $p/1$。逆向包含通常不成立；例如 $\frac12\in\mathbb{Q}$，但 $\frac12\notin\mathbb{Z}$。
 
 复数会在特征值、傅里叶（Fourier）分析和旋转位置编码中再次出现；当前只需理解 $\mathbb{R}\subseteq\mathbb{C}$。
 
@@ -231,13 +353,98 @@ $$
 
 # 集合运算
 
-设：
+## 示例：并、交与差的区域编码
+
+对以下两个集合，分别计算至少属于一个集合、同时属于两个集合、属于 $A$ 但不属于 $B$ 的元素：
 
 $$
 A=\{1,2,3\},
 \qquad
 B=\{3,4\}.
 $$
+
+```{python}
+#| label: fig-set-operations
+#| fig-format: svg
+#| fig-cap: "同一对集合上的三种筛选：并集保留两个圆覆盖的全部区域，交集只保留重叠区域，差集只保留 A 独有的区域。"
+#| fig-alt: "三幅并排的集合区域图；左图高亮 A 或 B，中图高亮 A 与 B 的重叠，右图高亮 A 中去掉 B 的部分；数字一二位于 A 独有区域，三位于交叠区域，四位于 B 独有区域"
+#| code-fold: true
+#| code-summary: "查看绘图代码"
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.patches import Circle
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
+BLUE = "#274C77"
+TEAL = "#2A9D8F"
+GOLD = "#E9C46A"
+CORAL = "#E76F51"
+INK = "#243447"
+PAPER = "#FBFAF7"
+
+x_grid = np.linspace(1.0, 7.0, 500)
+y_grid = np.linspace(0.3, 4.5, 360)
+xx, yy = np.meshgrid(x_grid, y_grid)
+center_a = (3.1, 2.35)
+center_b = (4.9, 2.35)
+radius = 1.75
+in_a = (xx - center_a[0]) ** 2 + (yy - center_a[1]) ** 2 <= radius**2
+in_b = (xx - center_b[0]) ** 2 + (yy - center_b[1]) ** 2 <= radius**2
+
+operations = [
+    (in_a | in_b, GOLD, r"$A\cup B=\{1,2,3,4\}$", {1, 2, 3, 4}),
+    (in_a & in_b, TEAL, r"$A\cap B=\{3\}$", {3}),
+    (in_a & ~in_b, CORAL, r"$A\setminus B=\{1,2\}$", {1, 2}),
+]
+element_positions = {
+    1: (2.05, 2.72),
+    2: (2.62, 1.62),
+    3: (4.00, 2.35),
+    4: (5.95, 2.35),
+}
+
+fig, axes = plt.subplots(1, 3, figsize=(11.2, 3.9))
+fig.patch.set_facecolor(PAPER)
+
+for ax, (mask, color, title, selected) in zip(axes, operations):
+    ax.set_facecolor(PAPER)
+    ax.contourf(xx, yy, mask.astype(float), levels=[0.5, 1.5], colors=[color], alpha=0.82)
+    ax.add_patch(Circle(center_a, radius, fill=False, edgecolor=BLUE, linewidth=2.0))
+    ax.add_patch(Circle(center_b, radius, fill=False, edgecolor=TEAL, linewidth=2.0))
+    ax.text(2.28, 4.02, r"$A$", ha="center", color=BLUE, fontsize=13, weight="bold")
+    ax.text(5.72, 4.02, r"$B$", ha="center", color=TEAL, fontsize=13, weight="bold")
+
+    for value, (x, y) in element_positions.items():
+        text_color = PAPER if value in selected and color != GOLD else INK
+        ax.text(
+            x,
+            y,
+            str(value),
+            ha="center",
+            va="center",
+            color=text_color,
+            fontsize=12,
+            weight="bold" if value in selected else "normal",
+            alpha=1.0 if value in selected else 0.42,
+        )
+
+    ax.set_title(title, color=INK, fontsize=12, pad=8)
+    ax.set_xlim(1.0, 7.0)
+    ax.set_ylim(0.3, 4.45)
+    ax.set_aspect("equal")
+    ax.axis("off")
+
+fig.tight_layout()
+plt.show()
+```
+
+圆的边界编码集合隶属关系：$1,2$ 位于 $A$ 的非重叠区域，$3$ 位于 $A$ 与 $B$ 的重叠区域，$4$ 位于 $B$ 的非重叠区域。左、中、右三幅图的着色区域分别对应条件“$x\in A$ 或 $x\in B$”“$x\in A$ 且 $x\in B$”“$x\in A$ 且 $x\notin B$”，即 $A\cup B$、$A\cap B$ 和 $A\setminus B$。
 
 ## 并集
 
@@ -385,6 +592,67 @@ $$
 
 # 有序对与笛卡尔积
 
+## 示例：有限集合的有序配对
+
+从 $A=\{1,2\}$ 中取一个元素，再从 $B=\{x,y\}$ 中取一个元素，列出所有保持选择次序的配对。
+
+```{python}
+#| label: fig-cartesian-product-grid
+#| fig-format: svg
+#| fig-cap: "A 与 B 的笛卡尔积是一张配对网格：A 的两个选择乘以 B 的两个选择，得到四个有序对。"
+#| fig-alt: "二乘二配对网格，行标签是一和二，列标签是 x 和 y，四个交点依次标有有序对一 x、一 y、二 x、二 y"
+#| code-fold: true
+#| code-summary: "查看绘图代码"
+
+import matplotlib.pyplot as plt
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
+BLUE = "#274C77"
+TEAL = "#2A9D8F"
+GOLD = "#E9C46A"
+CORAL = "#E76F51"
+INK = "#243447"
+PAPER = "#FBFAF7"
+
+fig, ax = plt.subplots(figsize=(7.8, 5.0))
+fig.patch.set_facecolor(PAPER)
+ax.set_facecolor(PAPER)
+
+for x_pos in (0, 1):
+    ax.plot([x_pos, x_pos], [0, 1], color=GOLD, linewidth=1.6, linestyle="--", alpha=0.85)
+for y_pos in (0, 1):
+    ax.plot([0, 1], [y_pos, y_pos], color=GOLD, linewidth=1.6, linestyle="--", alpha=0.85)
+
+pairs = [
+    (0, 0, r"$(1,x)$", BLUE),
+    (1, 0, r"$(1,y)$", TEAL),
+    (0, 1, r"$(2,x)$", CORAL),
+    (1, 1, r"$(2,y)$", BLUE),
+]
+for x_pos, y_pos, label, color in pairs:
+    ax.scatter([x_pos], [y_pos], s=760, color=color, edgecolor=INK, linewidth=1.4, zorder=3)
+    ax.text(x_pos, y_pos, label, ha="center", va="center", color=PAPER, fontsize=12, weight="bold", zorder=4)
+
+ax.set_xticks([0, 1], [r"$x$", r"$y$"])
+ax.set_yticks([0, 1], [r"$1$", r"$2$"])
+ax.tick_params(axis="both", colors=INK, labelsize=12, length=0)
+ax.set_xlabel(r"第二个分量 $b$：从 $B=\{x,y\}$ 中选择", color=INK, fontsize=11, labelpad=10)
+ax.set_ylabel(r"第一个分量 $a$：从 $A=\{1,2\}$ 中选择", color=INK, fontsize=11, labelpad=10)
+ax.set_title(r"$2\times2=4$ 个有序对 $(a,b)$", color=INK, fontsize=13, weight="bold", pad=12)
+ax.set_xlim(-0.55, 1.55)
+ax.set_ylim(-0.48, 1.48)
+ax.spines[["top", "right", "bottom", "left"]].set_visible(False)
+fig.tight_layout()
+plt.show()
+```
+
+纵轴编码第一个分量 $a\in A$，横轴编码第二个分量 $b\in B$，每个交点对应一个有序对 $(a,b)$；例如 $a=2$ 与 $b=y$ 的交点对应 $(2,y)$。两行与两列产生 $2\times2=4$ 个有序对。有序对保留坐标次序：交换分量得到 $(b,a)\in B\times A$，通常不等于 $(a,b)\in A\times B$。
+
 集合忽略顺序，但有序对保留顺序：
 
 $$
@@ -432,6 +700,87 @@ $$
 因此 $\mathbb{R}^{n}$ 的一个元素是由 $n$ 个实数组成的有序列表。这正是下一部分要学习的实向量。
 
 # 索引与求和
+
+## 示例：有限索引集上的求和
+
+四个样本的损失依次为 $x_1=2$、$x_2=1$、$x_3=3$、$x_4=2$。计算这四项的总和。
+
+```{python}
+#| label: fig-indexed-sum
+#| fig-format: svg
+#| fig-cap: "四项有限求和的图形编码：横轴表示索引 i，柱高表示 x_i，上方公式给出展开式与总和。"
+#| fig-alt: "四根柱分别位于索引一到四，高度依次为二一三二；下方箭头标出索引范围一至四，上方公式把四项相加得到八"
+#| code-fold: true
+#| code-summary: "查看绘图代码"
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
+BLUE = "#274C77"
+TEAL = "#2A9D8F"
+GOLD = "#E9C46A"
+CORAL = "#E76F51"
+INK = "#243447"
+PAPER = "#FBFAF7"
+
+indices = np.arange(1, 5)
+values = np.array([2, 1, 3, 2])
+bar_colors = [BLUE, TEAL, GOLD, CORAL]
+
+fig, ax = plt.subplots(figsize=(8.8, 5.0))
+fig.patch.set_facecolor(PAPER)
+ax.set_facecolor(PAPER)
+bars = ax.bar(indices, values, width=0.62, color=bar_colors, edgecolor=INK, linewidth=1.2)
+
+for index, value, bar in zip(indices, values, bars):
+    ax.text(
+        bar.get_x() + bar.get_width() / 2,
+        value + 0.14,
+        rf"$x_{index}={value}$",
+        ha="center",
+        va="bottom",
+        color=INK,
+        fontsize=11,
+        weight="bold",
+    )
+
+ax.annotate(
+    "",
+    xy=(4.35, -0.42),
+    xytext=(0.65, -0.42),
+    arrowprops={"arrowstyle": "<->", "color": TEAL, "linewidth": 2.0},
+)
+ax.text(2.5, -0.72, r"$i$ 从 $1$ 依次取值至 $n=4$", ha="center", va="center", color=TEAL, fontsize=11)
+ax.text(
+    2.5,
+    3.78,
+    r"$\sum_{i=1}^{4}x_i=2+1+3+2=8$",
+    ha="center",
+    va="center",
+    color=INK,
+    fontsize=14,
+    weight="bold",
+)
+
+ax.set_xticks(indices, [rf"$i={index}$" for index in indices])
+ax.set_ylabel(r"第 $i$ 项的值 $x_i$", color=INK, fontsize=11)
+ax.set_xlim(0.45, 4.55)
+ax.set_ylim(-0.95, 4.15)
+ax.grid(axis="y", color=INK, alpha=0.14)
+ax.spines[["top", "right"]].set_visible(False)
+ax.spines[["left", "bottom"]].set_color(INK)
+ax.tick_params(colors=INK)
+fig.tight_layout()
+plt.show()
+```
+
+横轴编码索引 $i=1,2,3,4$，第 $i$ 根柱的高度编码数值 $x_i$，下方箭头标出有限索引范围 $1\leq i\leq4$。因此 $\sum_{i=1}^{4}x_i$ 对四个索引各取一项，展开为 $2+1+3+2=8$。该图只表示有限项求和；一般定义将终止索引 $4$ 替换为任意 $n\in\mathbb{N}_{>0}$。
 
 设 $n\in\mathbb{N}_{>0}$，并有 $n$ 个实数：
 

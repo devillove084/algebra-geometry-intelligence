@@ -50,10 +50,11 @@ crossref:
 format:
   html:
     theme:
-      light: [cosmo, styles/custom.scss]
-      dark: [darkly, styles/custom.scss]
+      light: [litera, styles/custom.scss]
+      dark: [slate, styles/custom.scss]
     toc: true
     toc-depth: 4
+    lightbox: true
     number-sections: false
     number-depth: 4
     code-copy: true

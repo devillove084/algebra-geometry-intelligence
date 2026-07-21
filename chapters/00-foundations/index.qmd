@@ -4,63 +4,110 @@ title: "数学语言导论"
 
 # 本部分要回答的问题
 
-在计算机程序中，一个变量通常带有类型，例如整数、浮点数或数组。数学公式也存在类似的“类型系统”，只是它经常没有被显式写出来。
-
-考虑：
+考虑大语言模型的下一 token 预测。给定前文“今天下雨，出门记得带”，模型需要为词表中的每个候选 token 分配概率，其中“伞”应获得较高概率。设 $\mathcal{V}$ 是有限词表，$T\in\mathbb{N}_{>0}$ 是上下文长度，输入 token 序列为：
 
 $$
-f(\mathbf{x})=\mathbf{A}\mathbf{x}+\mathbf{b}.
+\mathbf{x}=(x_1,\ldots,x_T)\in\mathcal{V}^{T}.
 $$
 
-仅凭这一行，我们至少要追问：
+带参数 $\theta$ 的模型把离散序列映射为 logits，再由 softmax 得到下一个 token 的条件分布：
 
-- $f$ 的定义域和陪域是什么？
-- $\mathbf{x}$ 是标量、向量还是矩阵？
-- $\mathbf{A}$ 和 $\mathbf{b}$ 的形状是什么？
-- 加法与乘法为什么合法？
-- 等号表达恒等关系、方程，还是定义？
+$$
+\mathbf{x}\in\mathcal{V}^{T}
+\xrightarrow{\ f_\theta\ }
+\mathbf{z}=f_\theta(\mathbf{x})\in\mathbb{R}^{|\mathcal{V}|}
+\xrightarrow{\ \operatorname{softmax}\ }
+p_\theta(\cdot\mid\mathbf{x}).
+$$ {#eq-next-token-chain}
 
-本部分建立回答这些问题所需的最小语言。
+向量 $\mathbf{z}$ 为词表中的每个 token 给出一个实数分数。条件分布满足：
+
+$$
+p_\theta(v\mid\mathbf{x})\geq 0,
+\qquad
+\sum_{v\in\mathcal{V}}p_\theta(v\mid\mathbf{x})=1.
+$$
+
+本导论只使用 softmax 的输入、输出和作用，不推导其具体公式。
+
+令目标 token $Y$ 取值于 $\mathcal{V}$。单个样本的负对数似然损失为：
+
+$$
+\ell(\theta;\mathbf{x},Y)
+\coloneqq
+-\log p_\theta(Y\mid\mathbf{x}).
+$$ {#eq-next-token-loss}
+
+理论目标是数据分布下的期望损失；实际训练使用 $N$ 个样本的有限平均：
+
+$$
+L(\theta)
+\coloneqq
+\mathbb{E}_{(X,Y)\sim P_{\mathrm{data}}}
+\left[\ell(\theta;X,Y)\right],
+\qquad
+\widehat{L}_{N}(\theta)
+\coloneqq
+\frac{1}{N}\sum_{i=1}^{N}
+\ell\!\left(\theta;\mathbf{x}^{(i)},y^{(i)}\right).
+$$ {#eq-population-empirical-loss}
+
+从输入类型到有限样本目标，这条对象链集中使用了本部分的五类数学语言。
 
 ## 对象、名称与命题
 
-数学对象是我们讨论的事物，例如数字 $2$、集合 $\mathbb{R}$、向量 $\mathbf{x}$。符号是对象的名称。命题则是可以判断真假的陈述。
-
-例如：
-
-- $2$ 是一个数学对象；
-- $x$ 可以是某个对象的名称；
-- “$2<3$”是一个真命题；
-- “$x<3$”在没有说明 $x$ 时还不是完整命题。
+数学对象是讨论的事物，符号是对象的名称，命题是可以判断真假的陈述。在上述例子中，$\mathcal{V}$ 是集合，$\mathbf{x}$ 是序列，$f_\theta$ 是函数，$p_\theta(\cdot\mid\mathbf{x})$ 是条件分布；“其所有分量之和等于 $1$”是关于该分布的命题。
 
 ::: {.callout-note title="不要把符号当成对象本身"}
-字母 $x$ 不是一个固定的数。它可以指代某个数，也可以作为函数输入或方程中的未知量。含义来自定义和上下文。
+符号 $X$、$\mathbf{x}$ 和 $x_i$ 分别可以表示随机输入、一个具体输入序列和序列的第 $i$ 项。它们的含义由定义与上下文确定。
 :::
 
 ## 依赖顺序
 
-本部分按以下顺序展开：
+箭头从基础概念指向使用该概念的后续主题。
 
-1. **数与集合**：认识常用数集、笛卡尔积、索引与求和；
-2. **函数与映射**：描述输入到输出的确定关系，并区分定义域、陪域和值域；
-3. **命题、量词与证明**：区分真假、假设与结论，学习反例和常用证明方法；
-4. **极限、导数与积分的定义**：从有限变化和有限求和出发，理解极限如何把近似变成精确定义；
-5. **概率模型、随机变量与统计样本**：认识不确定性模型的基本对象，并区分理论分布与有限数据。
+```{mermaid}
+flowchart TD
+    A[数与集合] -->|说明对象与取值范围| B[函数与映射]
+    A -->|提供元素、子集与集合运算| C[命题、量词与证明]
+    B -->|陈述函数具有哪些性质| C
+    B -->|描述量如何变化| D[极限、导数与积分的定义]
+    C -->|给出精确定义与论证规则| D
+    A -->|提供样本空间与事件| E[概率模型、随机变量与统计样本]
+    B -->|随机变量是一类函数| E
+    C -->|表达概率陈述| E
+    D -->|连续概率与期望| E
+```
 
-前三页建立贯穿全书的通用语言，后两页给出微积分与概率统计的核心定义和直觉。它们不是完整课程；求导积分技巧、概率分布、统计推断与相关定理会在后续专题中系统展开。
+@eq-next-token-chain、@eq-next-token-loss 和 @eq-population-empirical-loss 中的五类问题分别由以下章节处理：
+
+1. **数与集合**确定对象及其取值范围。$\mathcal{V}$ 是有限集合，$\mathcal{V}^{T}$ 是笛卡尔积，$\mathbb{R}^{|\mathcal{V}|}$ 是实向量空间；下标、集合大小 $|\mathcal{V}|$ 和有限求和也属于这一层语言。
+2. **函数与映射**说明对象之间的确定关系。$f_\theta:\mathcal{V}^{T}\to\mathbb{R}^{|\mathcal{V}|}$ 有明确的定义域和陪域，softmax 接收 logits 并输出条件分布，损失 $\ell$ 又把一个样本映射为实数。
+3. **命题、量词与证明**规定如何准确陈述性质。例如“对每个 $\mathbf{x}\in\mathcal{V}^{T}$ 和每个 $v\in\mathcal{V}$，$p_\theta(v\mid\mathbf{x})\geq0$，并且各分量之和为 $1$”包含全称量词；证明需要说明假设，有限测试不能替代一般性论证。
+4. **极限、导数与积分的定义**说明变化率和连续累积。梯度训练使用更新
+   $$
+   \theta_{t+1}
+   =
+   \theta_t-
+   \eta\nabla_{\theta}\widehat{L}_{N}(\theta_t),
+   $$
+   其中导数刻画损失对参数的局部变化；积分表示连续累积，并为连续概率模型中的期望提供基础。
+5. **概率模型、随机变量与统计样本**区分模型分布、理论目标和有限数据。$p_\theta(\cdot\mid\mathbf{x})$ 是条件分布，$L(\theta)$ 是数据分布下的期望，$\widehat{L}_{N}(\theta)$ 是由 $N$ 个观测样本计算的经验平均。
+
+前三章建立通用数学语言，后两章给出微积分与概率统计的核心定义和直觉；求导技巧、具体概率分布与统计推断将在后续专题展开。
 
 ## 自检
 
-读完这部分后，我需要能解释下面每个符号：
+读完本部分后，应能按对象类型和运算顺序解释：
 
 $$
-f:\mathbb{R}^{n}\to\mathbb{R}^{m},
+\mathbf{x}\in\mathcal{V}^{T}
+\xrightarrow{\ f_\theta\ }
+\mathbf{z}\in\mathbb{R}^{|\mathcal{V}|}
+\xrightarrow{\ \operatorname{softmax}\ }
+p_\theta(\cdot\mid\mathbf{x}),
 \qquad
-\mathbf{y}=f(\mathbf{x}),
-\qquad
-\mathbf{x}\in\mathbb{R}^{n},
-\qquad
-\mathbf{y}\in\mathbb{R}^{m}.
+\ell(\theta;\mathbf{x},Y)=-\log p_\theta(Y\mid\mathbf{x}).
 $$
 
-还需要能够说明一个陈述使用的是全称量词还是存在量词，它依赖哪些假设，以及有限数值检查为什么不能自动替代证明。除此之外，还应能从定义解释：导数为什么是差商的极限、积分为什么是有限和的极限，以及概率模型中的样本空间、事件、随机变量和分布分别是什么对象。
+还应能说明 $L(\theta)$ 与 $\widehat{L}_{N}(\theta)$ 分别依赖理论分布还是有限样本；识别概率归一化陈述中的量词与假设；并从定义说明导数、积分和期望在这条对象链中处理的不同问题。

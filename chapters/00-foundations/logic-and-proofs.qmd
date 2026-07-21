@@ -94,7 +94,7 @@ $$
 | 假 | 真 | 真 | 假 | 真 | 真 | 假 |
 | 假 | 假 | 真 | 假 | 假 | 真 | 真 |
 
-下面的 Python 代码不是在证明真值表，而是在按照定义枚举四种可能，并把结果画出来。
+两个命题共有 $2\times2=4$ 种真假组合。图中每行表示一种组合，每列表示一个逻辑表达式；四行构成按定义的完整枚举。
 
 ```{python}
 #| label: fig-truth-table
@@ -107,9 +107,17 @@ $$
 import itertools
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import ListedColormap
 from matplotlib_inline.backend_inline import set_matplotlib_formats
 
 set_matplotlib_formats("svg")
+BLUE = "#274C77"
+TEAL = "#2A9D8F"
+GOLD = "#E9C46A"
+CORAL = "#E76F51"
+INK = "#243447"
+PAPER = "#FBFAF7"
+
 plt.rcParams["font.family"] = "sans-serif"
 plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
@@ -132,27 +140,38 @@ for p, q in itertools.product([True, False], repeat=2):
     ])
 
 values = np.array(rows, dtype=int)
-column_names = ["P", "Q", "not P", "P and Q", "P or Q", "P implies Q", "P iff Q"]
+column_names = ["P", "Q", "¬P", "P ∧ Q", "P ∨ Q", "P ⇒ Q", "P ⇔ Q"]
 
-fig, ax = plt.subplots(figsize=(10, 3.3))
-ax.imshow(values, cmap="YlGn", vmin=0, vmax=1, aspect="auto")
+fig, ax = plt.subplots(figsize=(10, 3.3), facecolor=PAPER)
+ax.set_facecolor(PAPER)
+ax.imshow(values, cmap=ListedColormap([PAPER, TEAL]), vmin=0, vmax=1, aspect="auto")
 ax.set_xticks(range(len(column_names)), labels=column_names)
-ax.set_yticks(range(len(rows)), labels=["T, T", "T, F", "F, T", "F, F"])
-ax.set_xlabel("logical expression")
-ax.set_ylabel("values of P and Q")
+ax.set_yticks(range(len(rows)), labels=["真, 真", "真, 假", "假, 真", "假, 假"])
+ax.set_xlabel("逻辑表达式", color=INK)
+ax.set_ylabel("P 与 Q 的取值", color=INK)
+ax.tick_params(colors=INK)
 
 for i in range(values.shape[0]):
     for j in range(values.shape[1]):
-        ax.text(j, i, "T" if values[i, j] else "F", ha="center", va="center")
+        ax.text(
+            j, i, "真" if values[i, j] else "假",
+            ha="center", va="center",
+            color=PAPER if values[i, j] else INK,
+            weight="bold",
+        )
 
 for edge in np.arange(-0.5, values.shape[1], 1):
-    ax.axvline(edge, color="white", linewidth=1)
+    ax.axvline(edge, color=INK, linewidth=0.8, alpha=0.45)
 for edge in np.arange(-0.5, values.shape[0], 1):
-    ax.axhline(edge, color="white", linewidth=1)
+    ax.axhline(edge, color=INK, linewidth=0.8, alpha=0.45)
+for spine in ax.spines.values():
+    spine.set_color(INK)
 
 fig.tight_layout()
 plt.show()
 ```
+
+青色格表示真，纸白色格表示假。第二行满足 $P$ 真、$Q$ 假，因此 $P\Rightarrow Q$ 为假而 $P\lor Q$ 为真。该图完整验证有限真值表，但逻辑连接词的定义本身是所采用逻辑系统的约定。
 
 在 Python 中：
 
@@ -172,7 +191,7 @@ $$ {#eq-implication-as-or}
 
 ## 蕴含：充分条件与必要条件
 
-### 为什么“假推出真”仍算真
+### 蕴含的真值条件
 
 命题
 
@@ -197,25 +216,31 @@ $$
 
 真正能否定原命题的只能是：找到一个能被 $4$ 整除、却不能被 $2$ 整除的整数。
 
-### 集合包含视角
+### 固定论域上的集合包含
 
-把使 $P$ 为真的对象放入集合 $S_P$，把使 $Q$ 为真的对象放入集合 $S_Q$。那么：
-
-$$
-P\Rightarrow Q
-$$
-
-意味着：
+固定论域 $U$，设 $P(x)$ 和 $Q(x)$ 是定义在 $U$ 上的谓词，并定义
 
 $$
+S_P\coloneqq\{x\in U\mid P(x)\},
+\qquad
+S_Q\coloneqq\{x\in U\mid Q(x)\}.
+$$
+
+则逐点蕴含与集合包含等价：
+
+$$
+\forall x\in U,\ \bigl(P(x)\Rightarrow Q(x)\bigr)
+\quad\Longleftrightarrow\quad
 S_P\subseteq S_Q.
-$$
+$$ {#eq-pointwise-implication-inclusion}
+
+下图表示这一等价关系。
 
 ```{python}
 #| label: fig-implication-as-inclusion
 #| fig-format: svg
-#| fig-cap: "蕴含的集合视角：所有满足 P 的对象也必须满足 Q。"
-#| fig-alt: "表示 P 的小椭圆完全包含在表示 Q 的大椭圆中"
+#| fig-cap: "在固定论域 U 上，逐点蕴含 ∀x∈U, P(x)⇒Q(x) 等价于 S_P⊆S_Q。"
+#| fig-alt: "固定论域 U 中表示 S_P 的蓝色椭圆完全包含在表示 S_Q 的青色椭圆中"
 #| code-fold: true
 #| code-summary: "查看绘图代码"
 
@@ -224,18 +249,26 @@ from matplotlib.patches import Ellipse, Rectangle
 from matplotlib_inline.backend_inline import set_matplotlib_formats
 
 set_matplotlib_formats("svg")
+BLUE = "#274C77"
+TEAL = "#2A9D8F"
+GOLD = "#E9C46A"
+CORAL = "#E76F51"
+INK = "#243447"
+PAPER = "#FBFAF7"
+
 plt.rcParams["font.family"] = "sans-serif"
 plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
 
-fig, ax = plt.subplots(figsize=(8, 4.8))
-ax.add_patch(Rectangle((0, 0), 10, 6, facecolor="#f2e5c4", edgecolor="#5a3d2b", linewidth=2))
-ax.add_patch(Ellipse((5, 3), 7.5, 4.6, facecolor="#8fb9a8", edgecolor="#254f45", alpha=0.72, linewidth=2.5))
-ax.add_patch(Ellipse((4.3, 3), 3.2, 2.1, facecolor="#c46b5e", edgecolor="#6b2924", alpha=0.82, linewidth=2.5))
-ax.text(8.9, 5.45, "universe", ha="right", va="top", fontsize=12)
-ax.text(7.2, 4.25, "Q: necessary", ha="center", fontsize=13)
-ax.text(4.3, 3, "P: sufficient", ha="center", va="center", color="white", fontsize=13, weight="bold")
-ax.text(5, 0.42, r"$P \Rightarrow Q$  means  $S_P \subseteq S_Q$", ha="center", fontsize=14)
+fig, ax = plt.subplots(figsize=(8, 4.8), facecolor=PAPER)
+ax.set_facecolor(PAPER)
+ax.add_patch(Rectangle((0, 0), 10, 6, facecolor=PAPER, edgecolor=INK, linewidth=2))
+ax.add_patch(Ellipse((5, 3), 7.5, 4.6, facecolor=TEAL, edgecolor=TEAL, alpha=0.40, linewidth=2.5))
+ax.add_patch(Ellipse((4.3, 3), 3.2, 2.1, facecolor=BLUE, edgecolor=BLUE, alpha=0.88, linewidth=2.5))
+ax.text(8.9, 5.45, "固定论域 U", ha="right", va="top", fontsize=12, color=INK)
+ax.text(7.2, 4.25, r"$S_Q=\{x\in U\mid Q(x)\}$", ha="center", fontsize=12.5, color=INK)
+ax.text(4.3, 3, r"$S_P=\{x\in U\mid P(x)\}$", ha="center", va="center", color=PAPER, fontsize=12.5, weight="bold")
+ax.text(5, 0.42, r"$\forall x\in U,\ (P(x)\Rightarrow Q(x))\quad\Longleftrightarrow\quad S_P\subseteq S_Q$", ha="center", fontsize=12.5, color=INK)
 ax.set_xlim(-0.2, 10.2)
 ax.set_ylim(-0.2, 6.2)
 ax.set_aspect("equal")
@@ -244,12 +277,12 @@ fig.tight_layout()
 plt.show()
 ```
 
+外框表示固定论域 $U$，蓝色区域表示 $S_P$，青色区域表示 $S_Q$。蓝色区域包含于青色区域，正对应 @eq-pointwise-implication-inclusion。该图表示一般等价关系，不证明具体谓词之间的蕴含；例如整除命题仍须由 $n=4k=2(2k)$ 证明。
+
 因此，在 $P\Rightarrow Q$ 中：
 
 - $P$ 是 $Q$ 的**充分条件**：只要 $P$ 成立，就足以保证 $Q$；
 - $Q$ 是 $P$ 的**必要条件**：如果连 $Q$ 都不成立，$P$ 一定不成立。
-
-记忆时不要只背术语，应该回到集合图：$P$ 的区域完全位于 $Q$ 内部。
 
 ### 逆命题、否命题与逆否命题
 
@@ -349,7 +382,89 @@ $$
 
 ### 量词顺序不能交换
 
-比较：
+下图比较交换全称量词与存在量词后产生的两种变量依赖关系。
+
+```{python}
+#| label: fig-quantifier-order
+#| fig-format: svg
+#| fig-cap: "量词顺序决定变量依赖：∀x∃y 时可令 y=x+1；∃y∀x 时固定的 y 不满足对所有 x 都有 y>x。"
+#| fig-alt: "左右流程图对比全称量词在前时 y 可依赖 x，以及存在量词在前时 y 必须固定"
+#| code-fold: true
+#| code-summary: "查看绘图代码"
+
+import matplotlib.pyplot as plt
+from matplotlib.patches import Circle, FancyArrowPatch, FancyBboxPatch
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+BLUE = "#274C77"
+TEAL = "#2A9D8F"
+GOLD = "#E9C46A"
+CORAL = "#E76F51"
+INK = "#243447"
+PAPER = "#FBFAF7"
+
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
+
+def rounded_box(ax, xy, width, height, text, facecolor, edgecolor, textcolor=INK, fontsize=11.5):
+    ax.add_patch(FancyBboxPatch(
+        xy, width, height,
+        boxstyle="round,pad=0.08,rounding_size=0.12",
+        facecolor=facecolor, edgecolor=edgecolor,
+        linewidth=2, alpha=0.92,
+    ))
+    ax.text(
+        xy[0] + width / 2, xy[1] + height / 2, text,
+        ha="center", va="center", color=textcolor,
+        fontsize=fontsize, weight="bold",
+    )
+
+
+def connect(ax, start, end, color=CORAL):
+    ax.add_patch(FancyArrowPatch(
+        start, end, arrowstyle="-|>", mutation_scale=14,
+        color=color, linewidth=2,
+    ))
+
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 5), facecolor=PAPER)
+for ax in axes:
+    ax.set_facecolor(PAPER)
+    ax.set_xlim(0, 6)
+    ax.set_ylim(0, 5)
+    ax.axis("off")
+
+# 左：y 可以依赖 x
+axes[0].set_title("∀x∃y：y 可以依赖 x", color=INK, fontsize=13, weight="bold")
+for row, (x_value, y_value) in enumerate([(-2, -1), (0, 1), (2, 3)]):
+    y_pos = 3.8 - row * 1.25
+    axes[0].add_patch(Circle((1.1, y_pos), 0.34, facecolor=BLUE, edgecolor=BLUE, linewidth=1.8))
+    axes[0].text(1.1, y_pos, f"x={x_value}", ha="center", va="center", color=PAPER, weight="bold")
+    axes[0].add_patch(Circle((4.9, y_pos), 0.34, facecolor=TEAL, edgecolor=TEAL, linewidth=1.8))
+    axes[0].text(4.9, y_pos, f"y={y_value}", ha="center", va="center", color=PAPER, weight="bold")
+    connect(axes[0], (1.45, y_pos), (4.55, y_pos))
+    axes[0].text(3.0, y_pos + 0.23, "令 y=x+1", ha="center", color=INK, fontsize=10.5)
+axes[0].text(3.0, 0.35, "对应关系：y=x+1", ha="center", color=INK, fontsize=11)
+
+# 右：y 必须固定
+axes[1].set_title("∃y∀x：y 必须固定", color=INK, fontsize=13, weight="bold")
+rounded_box(axes[1], (1.6, 3.65), 2.8, 0.72, "固定任意 y", GOLD, GOLD)
+rounded_box(axes[1], (1.6, 2.15), 2.8, 0.72, "取 x=y+1", BLUE, BLUE, PAPER)
+rounded_box(axes[1], (1.25, 0.55), 3.5, 0.82, "y>x 变成 y>y+1　✗", PAPER, CORAL, CORAL)
+connect(axes[1], (3.0, 3.65), (3.0, 2.87))
+connect(axes[1], (3.0, 2.15), (3.0, 1.37))
+axes[1].text(4.8, 2.55, "针对已固定的 y\n构造反例", ha="center", va="center", color=CORAL, fontsize=10.5)
+
+fig.tight_layout()
+plt.show()
+```
+
+蓝色表示 $x$，青色表示依赖于 $x$ 的 $y$，金色表示先固定的 $y$。左图对应 $\forall x\exists y$，右图对应 $\exists y\forall x$。图中的有限示例不证明实数论域上的结论；一般构造随公式说明如下。
+
+相应命题为：
 
 $$
 \forall x\in\mathbb{R},\ \exists y\in\mathbb{R},\ y>x,
@@ -397,7 +512,7 @@ $$
 \exists x\in\mathbb{R},\ x^2\leq0.
 $$
 
-取 $x=0$ 就得到反例。
+取 $x=0$ 作为候选反例。下图仅标示该点；有限绘图区不能支持关于全体实数的结论。
 
 ```{python}
 #| label: fig-counterexample
@@ -412,6 +527,13 @@ import numpy as np
 from matplotlib_inline.backend_inline import set_matplotlib_formats
 
 set_matplotlib_formats("svg")
+BLUE = "#274C77"
+TEAL = "#2A9D8F"
+GOLD = "#E9C46A"
+CORAL = "#E76F51"
+INK = "#243447"
+PAPER = "#FBFAF7"
+
 plt.rcParams["font.family"] = "sans-serif"
 plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
@@ -419,30 +541,124 @@ plt.rcParams["axes.unicode_minus"] = False
 x = np.linspace(-2.5, 2.5, 500)
 y = x**2
 
-fig, ax = plt.subplots(figsize=(8, 4.8))
-ax.plot(x, y, color="#274c77", linewidth=2.5, label=r"$y=x^2$")
-ax.axhline(0, color="#6c757d", linewidth=1)
-ax.axvline(0, color="#6c757d", linewidth=1)
-ax.scatter([0], [0], color="#9b2226", s=90, zorder=3)
+fig, ax = plt.subplots(figsize=(8, 4.8), facecolor=PAPER)
+ax.set_facecolor(PAPER)
+ax.plot(x, y, color=BLUE, linewidth=2.5, label=r"$y=x^2$")
+ax.axhline(0, color=INK, linewidth=1)
+ax.axvline(0, color=INK, linewidth=1)
+ax.scatter([0], [0], color=CORAL, edgecolor=CORAL, s=90, zorder=3)
 ax.annotate(
-    r"counterexample: $x=0$",
+    r"反例：$x=0$",
     xy=(0, 0),
     xytext=(0.65, 1.7),
-    arrowprops={"arrowstyle": "->", "color": "#9b2226"},
-    color="#9b2226",
+    arrowprops={"arrowstyle": "->", "color": CORAL, "linewidth": 1.8},
+    color=CORAL,
     fontsize=12,
+    weight="bold",
 )
-ax.set_title(r"The claim $\forall x\in\mathbb{R},\ x^2>0$ is false")
-ax.set_xlabel("x")
-ax.set_ylabel(r"$x^2$")
+ax.set_title(r"反例 $x=0$ 满足 $x^2=0$", color=INK)
+ax.set_xlabel("x", color=INK)
+ax.set_ylabel(r"$x^2$", color=INK)
 ax.set_ylim(-0.3, 6.5)
-ax.legend()
-ax.grid(alpha=0.2)
+ax.tick_params(colors=INK)
+for spine in ax.spines.values():
+    spine.set_color(INK)
+legend = ax.legend(facecolor=PAPER, edgecolor=TEAL)
+for text in legend.get_texts():
+    text.set_color(INK)
+ax.grid(color=TEAL, alpha=0.20)
 fig.tight_layout()
 plt.show()
 ```
 
+蓝色曲线是有限区间内的函数图像，珊瑚色点标出 $x=0$。代入计算给出
+
+$$
+0^2=0\leq0,
+$$
+
+因此 $\exists x\in\mathbb{R},x^2\leq0$，原全称命题为假。图像只用于定位反例。一般结论 $\forall x\in\mathbb{R},x^2\geq0$ 来自实数的代数与序性质：若 $x\geq0$，则 $x\cdot x\geq0$；若 $x<0$，则 $-x>0$ 且 $x^2=(-x)(-x)>0$。
+
 ## 常用证明方法
+
+对全称命题 $\forall x\in A,P(x)$，证明需要处理任意 $x\in A$；否定只需给出一个满足 $\lnot P(x_0)$ 的 $x_0\in A$。
+
+```{python}
+#| label: fig-proof-counterexample-paths
+#| fig-format: svg
+#| fig-cap: "全称命题的两条严谨路径：证明必须处理任意对象，否定只需验证一个反例。"
+#| fig-alt: "流程图从全称命题分为证明路径与反例路径，并提示许多正例不能替代证明"
+#| code-fold: true
+#| code-summary: "查看绘图代码"
+
+import matplotlib.pyplot as plt
+from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+BLUE = "#274C77"
+TEAL = "#2A9D8F"
+GOLD = "#E9C46A"
+CORAL = "#E76F51"
+INK = "#243447"
+PAPER = "#FBFAF7"
+
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
+
+def flow_box(ax, center, width, height, text, facecolor, edgecolor, textcolor=INK, fontsize=11.2):
+    x, y = center
+    ax.add_patch(FancyBboxPatch(
+        (x - width / 2, y - height / 2), width, height,
+        boxstyle="round,pad=0.08,rounding_size=0.12",
+        facecolor=facecolor, edgecolor=edgecolor,
+        linewidth=2, alpha=0.92,
+    ))
+    ax.text(x, y, text, ha="center", va="center", color=textcolor, fontsize=fontsize, weight="bold")
+
+
+def flow_arrow(ax, start, end, color):
+    ax.add_patch(FancyArrowPatch(
+        start, end, arrowstyle="-|>", mutation_scale=14,
+        color=color, linewidth=2,
+    ))
+
+
+fig, ax = plt.subplots(figsize=(11, 7), facecolor=PAPER)
+ax.set_facecolor(PAPER)
+flow_box(ax, (5.5, 6.35), 3.2, 0.7, "待判断：∀x∈A，P(x)", GOLD, GOLD)
+
+ax.text(2.7, 5.55, "证明命题", ha="center", color=BLUE, fontsize=13, weight="bold")
+flow_box(ax, (2.7, 4.85), 3.1, 0.7, "任取一个 x∈A", PAPER, BLUE, BLUE)
+flow_box(ax, (2.7, 3.65), 3.1, 0.7, "使用定义与已知定理", BLUE, BLUE, PAPER)
+flow_box(ax, (2.7, 2.45), 3.1, 0.7, "推出 P(x)", TEAL, TEAL, PAPER)
+flow_box(ax, (2.7, 1.25), 3.1, 0.7, "因为 x 任意，所以命题成立", PAPER, TEAL, TEAL)
+
+ax.text(8.3, 5.55, "否定命题", ha="center", color=CORAL, fontsize=13, weight="bold")
+flow_box(ax, (8.3, 4.85), 3.1, 0.7, "寻找一个 x₀∈A", PAPER, CORAL, CORAL)
+flow_box(ax, (8.3, 3.65), 3.1, 0.7, "验证 ¬P(x₀)", CORAL, CORAL, PAPER)
+flow_box(ax, (8.3, 2.45), 3.1, 0.7, "得到 ∃x∈A，¬P(x)", PAPER, CORAL, CORAL)
+flow_box(ax, (8.3, 1.25), 3.1, 0.7, "原全称命题为假", PAPER, CORAL, CORAL)
+
+flow_arrow(ax, (4.7, 6.05), (3.1, 5.22), BLUE)
+flow_arrow(ax, (6.3, 6.05), (7.9, 5.22), CORAL)
+for y_top, y_bottom in [(4.50, 4.02), (3.30, 2.82), (2.10, 1.62)]:
+    flow_arrow(ax, (2.7, y_top), (2.7, y_bottom), BLUE)
+    flow_arrow(ax, (8.3, y_top), (8.3, y_bottom), CORAL)
+
+flow_box(ax, (5.5, 0.35), 4.0, 0.55, "只检查很多正例：仍不能证明无限全称命题", PAPER, GOLD, INK, 10.5)
+ax.plot([4.3, 6.7], [0.72, 0.72], color=GOLD, linewidth=2, linestyle="--")
+
+ax.set_xlim(0.4, 10.6)
+ax.set_ylim(0, 6.9)
+ax.axis("off")
+fig.tight_layout()
+plt.show()
+```
+
+蓝色路径表示对任意 $x\in A$ 推出 $P(x)$；珊瑚色路径表示构造 $x_0\in A$ 并验证 $\lnot P(x_0)$，从而得到 $\exists x\in A,\lnot P(x)$。底部金色框指出，有限个正例不能证明无限论域上的全称命题。该图仅给出推理结构，不构成具体定理的证明。
 
 ### 直接证明
 

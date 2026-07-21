@@ -71,6 +71,74 @@ $$
 
 $x\to a$ 不是把 $x$ 直接代成 $a$，而是在询问：只要把 $x$ 限制得足够靠近 $a$，能否迫使 $f(x)$ 任意靠近某个固定值 $L$？
 
+## $\varepsilon$–$\delta$ 窗口图示
+
+横向窗口由 $\delta$ 控制，纵向误差带由 $\varepsilon$ 控制。极限考察穿孔邻域 $0<|x-a|<\delta$，不包含 $x=a$。对 $f(x)=x^2$、$a=1$、$L=1$，图中取 $\varepsilon=0.6$ 和 $\delta=0.2$。
+
+```{python}
+#| label: fig-epsilon-delta-window
+#| fig-format: svg
+#| fig-cap: "ε–δ 窗口：当 0<|x−a|<δ 时，函数值落在 |f(x)−L|<ε 的误差带内；空心点表示排除 x=a。"
+#| fig-alt: "二次函数在 a 两侧的穿孔邻域内落入输出误差带，a 处用空心点表示排除"
+#| code-fold: true
+#| code-summary: "查看绘图代码"
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
+BLUE = "#274C77"
+TEAL = "#2A9D8F"
+GOLD = "#E9C46A"
+CORAL = "#E76F51"
+INK = "#243447"
+PAPER = "#FBFAF7"
+
+x = np.linspace(0.15, 1.75, 600)
+y = x**2
+a, limit_value = 1.0, 1.0
+epsilon, delta = 0.6, 0.2
+inside_left = (x > a - delta) & (x < a)
+inside_right = (x > a) & (x < a + delta)
+
+fig, ax = plt.subplots(figsize=(8.8, 4.8))
+fig.patch.set_facecolor(PAPER)
+ax.set_facecolor(PAPER)
+ax.axhspan(limit_value - epsilon, limit_value + epsilon, color=TEAL, alpha=0.16)
+ax.axvspan(a - delta, a + delta, color=GOLD, alpha=0.24)
+ax.plot(x, y, color=BLUE, linewidth=2.6, label="f(x) = x²")
+ax.plot(x[inside_left], y[inside_left], color=CORAL, linewidth=4.2, label="0 < |x − a| < δ")
+ax.plot(x[inside_right], y[inside_right], color=CORAL, linewidth=4.2)
+ax.axhline(limit_value, color=TEAL, linewidth=1.7, linestyle="--")
+ax.axvline(a, color=GOLD, linewidth=1.7, linestyle="--")
+ax.axhline(limit_value - epsilon, color=TEAL, linewidth=1.0, alpha=0.75)
+ax.axhline(limit_value + epsilon, color=TEAL, linewidth=1.0, alpha=0.75)
+ax.axvline(a - delta, color=GOLD, linewidth=1.0, alpha=0.9)
+ax.axvline(a + delta, color=GOLD, linewidth=1.0, alpha=0.9)
+ax.scatter([a], [limit_value], s=78, facecolor=PAPER, edgecolor=INK, linewidth=1.8, zorder=5, label="排除 x = a")
+
+ax.annotate("输出带：|f(x) − L| < ε", xy=(0.22, limit_value + epsilon), xytext=(0.22, limit_value + epsilon + 0.18), color=TEAL, fontsize=11, arrowprops=dict(arrowstyle="->", color=TEAL))
+ax.annotate("穿孔输入窗：0 < |x − a| < δ", xy=(a + delta, 0.18), xytext=(1.27, 0.08), color=INK, fontsize=11, arrowprops=dict(arrowstyle="->", color=GOLD))
+ax.text(a + 0.025, limit_value - 0.20, "(a, L)", color=INK, fontsize=10)
+ax.set_xlim(0.15, 1.75)
+ax.set_ylim(0.0, 3.15)
+ax.set_xlabel("输入 x", color=INK)
+ax.set_ylabel("输出 f(x)", color=INK)
+ax.set_title("给定 ε 后，选择满足输出要求的 δ", color=INK, fontsize=13)
+ax.grid(alpha=0.14)
+ax.spines[["top", "right"]].set_visible(False)
+ax.legend(frameon=False, loc="upper left")
+fig.tight_layout()
+plt.show()
+```
+
+橙色曲线分成 $a$ 左右两段，表示 $0<|x-a|<\delta$；$(a,L)$ 处的空心点表示不检查 $x=a$，因此 $f(a)$ 是否存在、是否等于 $L$ 都不影响该极限。图中只固定了一组 $\varepsilon$ 和 $\delta$；一般定义由下面的全称量词与蕴含式给出。对本图参数，$0<|x-1|<0.2$ 推出 $x^2\in(0.64,1.44)\subset(0.4,1.6)$。
+
 ## $\varepsilon$–$\delta$ 定义
 
 设 $f$ 在 $a$ 附近有定义。我们说：
@@ -93,15 +161,15 @@ $$ {#eq-epsilon-delta-limit}
 
 逐层阅读 @eq-epsilon-delta-limit：
 
-1. 对方可以任意指定输出误差 $\varepsilon>0$；
-2. 我们必须找到一个输入误差范围 $\delta>0$；
+1. 先任意给定输出误差 $\varepsilon>0$；
+2. 再选取一个输入误差范围 $\delta>0$；
 3. 只要 $x$ 与 $a$ 的距离小于 $\delta$，但 $x\neq a$；
 4. 就能保证 $f(x)$ 与 $L$ 的距离小于 $\varepsilon$。
 
 量词顺序非常重要：$\delta$ 可以依赖 $\varepsilon$，但不能依赖之后临时挑选的 $x$。
 
-::: {.callout-tip title="把定义想成一场挑战"}
-对方不断缩小允许的输出误差 $\varepsilon$，我们每次都能相应缩小输入窗口 $\delta$ 并守住要求。无论对方要求多精确，只要都能做到，极限就是 $L$。
+::: {.callout-tip title="量词顺序"}
+$\varepsilon$ 是任意给定的精度要求；$\delta$ 可以依赖 $\varepsilon$，但同一个 $\delta$ 必须适用于穿孔邻域中的所有 $x$。
 :::
 
 ## 连续性的定义
@@ -124,20 +192,9 @@ $$
 
 # 导数：割线斜率逼近什么
 
-## 导数的定义
+## 割线趋于切线
 
-对 $h\neq0$，@eq-average-rate 是图像上两点之间的割线斜率。若当 $h\to0$ 时这个斜率趋于唯一有限值，就定义：
-
-$$
-f'(x)
-\coloneqq
-\lim_{h\to0}
-\frac{f(x+h)-f(x)}{h}.
-$$ {#eq-derivative-definition}
-
-若这个极限存在，就称 $f$ 在 $x$ 处**可导**。
-
-导数不是把 $h=0$ 代入分式。直接代入会得到 $0/0$，没有定义。导数是分式在 $h\neq0$ 时的值所趋近的极限。
+先观察有限的 $h$：第二个点沿曲线靠近第一个点时，连接两点的割线不断转动，斜率逐渐稳定。下面三幅图把同一逼近过程截取在三个时刻。
 
 ```{python}
 #| label: fig-secant-to-tangent
@@ -198,6 +255,23 @@ fig.tight_layout()
 plt.show()
 ```
 
+图中仅列出三个正步长，割线斜率依次为 $3,2.45,2.12$。这些有限取值说明逼近趋势；导数是否存在以及极限是否唯一，由下面的差商极限给出。
+
+## 导数的定义
+
+对 $h\neq0$，@eq-average-rate 是图像上两点之间的割线斜率。若当 $h\to0$ 时这个斜率趋于唯一有限值，就定义：
+
+$$
+f'(x)
+\coloneqq
+\lim_{h\to0}
+\frac{f(x+h)-f(x)}{h}.
+$$ {#eq-derivative-definition}
+
+若这个极限存在，就称 $f$ 在 $x$ 处**可导**。
+
+导数不是把 $h=0$ 代入分式。直接代入会得到 $0/0$，没有定义。导数是分式在 $h\neq0$ 时的值所趋近的极限。
+
 在图中，$f(x)=x^2$，固定 $x=1$。割线斜率是：
 
 $$
@@ -214,6 +288,8 @@ f'(1)
 \lim_{h\to0}(2+h)
 =2.
 $$
+
+这里的代数式 $2+h\to2$ 才完成了这个例子的论证：它不是从三条割线猜测答案，而是对任意非零 $h$ 化简差商后取极限。
 
 ## 导数的三个互补解释
 
@@ -246,6 +322,61 @@ f(x)+f'(x)h.
 $$ {#eq-local-linearization}
 
 导数不是只描述“函数正在上升还是下降”，它给出了函数在该点附近最好的线性近似。
+
+以下比较 $f(x)=e^x$ 与 $x=0$ 处的线性近似 $1+x$。缩小原点附近的观察区间后，两者的绝对误差减小。
+
+```{python}
+#| label: fig-local-linearization
+#| fig-format: svg
+#| fig-cap: "缩小 x=0 附近的观察区间时，eˣ 与局部线性近似 1+x 的绝对误差减小。"
+#| fig-alt: "左右两幅图比较指数函数与切线，缩小到原点附近后两者的绝对误差减小"
+#| code-fold: true
+#| code-summary: "查看绘图代码"
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
+BLUE = "#274C77"
+TEAL = "#2A9D8F"
+GOLD = "#E9C46A"
+CORAL = "#E76F51"
+INK = "#243447"
+PAPER = "#FBFAF7"
+
+fig, axes = plt.subplots(1, 2, figsize=(10.2, 4.1))
+fig.patch.set_facecolor(PAPER)
+ranges = [(-1.25, 1.25), (-0.22, 0.22)]
+
+for ax, (left, right) in zip(axes, ranges):
+    x = np.linspace(left, right, 500)
+    curve = np.exp(x)
+    linear = 1 + x
+    ax.set_facecolor(PAPER)
+    ax.plot(x, curve, color=BLUE, linewidth=2.8, label="f(x) = eˣ")
+    ax.plot(x, linear, color=TEAL, linewidth=2.2, linestyle="--", label="L(x) = 1 + x")
+    ax.fill_between(x, curve, linear, color=CORAL, alpha=0.22, label="近似误差")
+    ax.scatter([0], [1], color=GOLD, edgecolor=INK, linewidth=1.0, s=60, zorder=4)
+    ax.set_xlim(left, right)
+    ax.set_xlabel("x", color=INK)
+    ax.grid(alpha=0.14)
+    ax.spines[["top", "right"]].set_visible(False)
+
+axes[0].set_title("较大区间：绝对误差较大", color=INK, fontsize=12)
+axes[1].set_title("较小区间：绝对误差较小", color=INK, fontsize=12)
+axes[0].set_ylabel("函数值", color=INK)
+axes[0].legend(frameon=False, loc="upper left")
+fig.suptitle("缩小邻域时，函数与线性模型的绝对误差减小", color=INK, fontsize=13)
+fig.tight_layout()
+plt.show()
+```
+
+绿色直线的斜率为 $f'(0)=1$，橙色区域表示绝对误差 $|e^h-1-h|=|r(h)|$。图中只比较两个区间上的绝对误差，没有直接展示 $r(h)/h$；局部线性的严格条件仍是前述余项极限。
 
 ## 可导比连续更强
 
@@ -330,6 +461,8 @@ S_n
 \sum_{i=1}^{n}f(x_i^*)\Delta x.
 $$ {#eq-riemann-sum}
 
+先以有限个矩形近似曲线下方的累积量。每个矩形贡献“高度 × 宽度”，矩形和是这些贡献之和；增加分割数可以观察近似值的变化。
+
 ```{python}
 #| label: fig-riemann-sums
 #| fig-format: svg
@@ -381,6 +514,8 @@ fig.tight_layout()
 plt.show()
 ```
 
+从 $6$ 个增至 $24$ 个矩形时，边缘误差减小。图中只检查两组等宽中点分割；Riemann 可积性要求所有足够细的分割和所有标记点选择都逼近同一个 $I$，其定义由下式给出。
+
 ## Riemann 积分的定义
 
 上图使用等宽矩形建立直觉。正式定义允许不等宽分割。取：
@@ -405,11 +540,12 @@ $$
 \max_{1\leq i\leq n}\Delta x_i.
 $$
 
-若存在唯一实数 $I$，使得：
+若存在唯一实数 $I$，使得对 $[a,b]$ 的每个带标记分割 $(P,\boldsymbol{\xi})$ 都有：
 
 $$
 \forall\varepsilon>0,
 \ \exists\eta>0,
+\ \forall(P,\boldsymbol{\xi}),
 \quad
 \lVert P\rVert<\eta
 \Rightarrow
@@ -418,7 +554,7 @@ S(f;P,\boldsymbol{\xi})-I
 \right\rvert<\varepsilon,
 $$
 
-并且这个保证对所有足够细的分割 $P$ 和所有标记点选择 $\boldsymbol{\xi}$ 都成立，就称 $f$ 在 $[a,b]$ 上 Riemann 可积，并定义：
+其中 $(P,\boldsymbol{\xi})$ 遍历 $[a,b]$ 的全部带标记分割。此时称 $f$ 在 $[a,b]$ 上 Riemann 可积，并定义：
 
 $$
 \int_a^b f(x)\,dx
@@ -447,7 +583,84 @@ A(x)
 \int_a^x f(t)\,dt.
 $$
 
-当右端点从 $x$ 增加到 $x+h$ 时，新增加的窄条面积约为 $f(x)h$。严格取极限后，在适当连续条件下：
+下图取 $h>0$。积分上限从 $x$ 右移到 $x+h$ 时，原有累积量保持不变，右侧新增窄带的有向面积为 $A(x+h)-A(x)$。
+
+```{python}
+#| label: fig-ftc-moving-upper-limit
+#| fig-format: svg
+#| fig-cap: "当 h>0 时，积分上限右移会增加一条窄带；其面积除以 h 后趋向边界高度 f(x)。"
+#| fig-alt: "在 h 大于零时比较积分上限为 x 和 x 加 h 的累积面积，第二幅突出显示右侧新增窄条"
+#| code-fold: true
+#| code-summary: "查看绘图代码"
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
+BLUE = "#274C77"
+TEAL = "#2A9D8F"
+GOLD = "#E9C46A"
+CORAL = "#E76F51"
+INK = "#243447"
+PAPER = "#FBFAF7"
+
+def f(t):
+    return 1.15 + 0.33 * t + 0.48 * np.sin(1.35 * t)
+
+a, x0, h = 0.0, 2.35, 0.34
+t = np.linspace(a, 3.35, 700)
+y = f(t)
+
+fig, axes = plt.subplots(1, 2, figsize=(10.4, 4.1), sharex=True, sharey=True)
+fig.patch.set_facecolor(PAPER)
+
+for ax in axes:
+    ax.set_facecolor(PAPER)
+    ax.plot(t, y, color=BLUE, linewidth=2.6)
+    ax.axhline(0, color=INK, linewidth=0.9)
+    ax.set_xlim(a, 3.35)
+    ax.set_ylim(0, 2.55)
+    ax.set_xlabel("t", color=INK)
+    ax.grid(alpha=0.13)
+    ax.spines[["top", "right"]].set_visible(False)
+
+old = t <= x0
+extended = t <= x0 + h
+strip = (t >= x0) & (t <= x0 + h)
+axes[0].fill_between(t[old], 0, y[old], color=TEAL, alpha=0.30)
+axes[0].axvline(x0, color=GOLD, linewidth=2.0)
+axes[0].text(x0, 0.08, "x", ha="center", color=INK, fontsize=11)
+axes[0].set_title("原来的累积量 A(x)", color=INK, fontsize=12)
+
+axes[1].fill_between(t[extended], 0, y[extended], color=TEAL, alpha=0.30)
+axes[1].fill_between(t[strip], 0, y[strip], color=CORAL, alpha=0.82)
+axes[1].axvline(x0, color=GOLD, linewidth=1.5, linestyle="--")
+axes[1].axvline(x0 + h, color=GOLD, linewidth=2.0)
+axes[1].annotate("新增窄条\nA(x+h) − A(x)", xy=(x0 + h / 2, f(x0 + h / 2) * 0.55), xytext=(1.22, 2.20), ha="center", color=CORAL, fontsize=11, arrowprops=dict(arrowstyle="->", color=CORAL))
+axes[1].annotate("宽度 h", xy=(x0 + h / 2, 0.10), ha="center", color=INK, fontsize=10)
+axes[1].set_title("上限右移到 x+h（h>0）", color=INK, fontsize=12)
+axes[0].set_ylabel("f(t)", color=INK)
+fig.suptitle("累积函数的增量等于移动上限产生的新增区域", color=INK, fontsize=13)
+fig.tight_layout()
+plt.show()
+```
+
+当 $h>0$ 较小时，窄带内的函数值接近 $f(x)$，因此新增面积近似为 $f(x)h$。更精确地，
+
+$$
+\frac{A(x+h)-A(x)}{h}
+=
+\frac{1}{h}\int_x^{x+h}f(t)\,dt,
+$$
+
+对图示的 $h>0$，右侧是区间 $[x,x+h]$ 上的平均高度。若 $f$ 在 $x$ 处连续，该平均高度在 $h\to0^+$ 时趋于 $f(x)$。图中未展示 $h<0$；此时上限左移，$\int_x^{x+h}f(t)\,dt$ 按有向积分解释，同一差商公式处理左侧极限。微积分基本定理的结论由连续性条件和该极限给出。
+
+因此，若 $f$ 在 $[a,b]$ 上连续，则 $A$ 在 $(a,b)$ 上可导，并且：
 
 $$
 A'(x)=f(x).

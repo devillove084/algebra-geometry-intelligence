@@ -21,6 +21,100 @@ title: "函数与映射"
 
 把直觉固定成精确语言后，就能讨论函数接受什么输入、声明什么输出、能否反向恢复输入，以及多个函数如何串联。神经网络正是由许多参数化函数复合而成。
 
+# 有限平方映射
+
+先在有限集合上考察平方映射。设定义域为
+
+$$
+A=\{-2,-1,0,1,2\},
+$$
+
+陪域为
+
+$$
+B=\{0,1,2,3,4\}.
+$$
+
+定义 $m(x)=x^2$。考察 $m$ 实际得到的输出是否等于整个陪域 $B$。
+
+```{python}
+#| label: fig-function-domain-codomain-range
+#| fig-format: svg
+#| fig-cap: "平方映射中的定义域、陪域和值域：陪域中的 2 和 3 不属于值域。"
+#| fig-alt: "左侧定义域负二到二通过箭头映射到右侧陪域零到四，零、一、四被高亮为值域"
+#| code-fold: true
+#| code-summary: "查看绘图代码"
+
+import matplotlib.pyplot as plt
+from matplotlib.patches import Circle, FancyArrowPatch, FancyBboxPatch
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+BLUE = "#274C77"
+TEAL = "#2A9D8F"
+GOLD = "#E9C46A"
+CORAL = "#E76F51"
+INK = "#243447"
+PAPER = "#FBFAF7"
+
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
+A = [-2, -1, 0, 1, 2]
+B = [0, 1, 2, 3, 4]
+y_positions = [4.5, 3.6, 2.7, 1.8, 0.9]
+y_A = dict(zip(A, y_positions))
+y_B = dict(zip(B, y_positions))
+range_values = {x**2 for x in A}
+
+fig, ax = plt.subplots(figsize=(10.5, 5.4), facecolor=PAPER)
+ax.set_facecolor(PAPER)
+ax.add_patch(FancyBboxPatch(
+    (0.4, 0.25), 3.0, 5.05,
+    boxstyle="round,pad=0.12,rounding_size=0.18",
+    facecolor=BLUE, edgecolor=BLUE, alpha=0.10, linewidth=2,
+))
+ax.add_patch(FancyBboxPatch(
+    (7.1, 0.25), 3.0, 5.05,
+    boxstyle="round,pad=0.12,rounding_size=0.18",
+    facecolor=TEAL, edgecolor=TEAL, alpha=0.10, linewidth=2,
+))
+
+for index, x in enumerate(A):
+    arrow = FancyArrowPatch(
+        (2.35, y_A[x]), (8.15, y_B[x**2]),
+        arrowstyle="-|>", mutation_scale=14,
+        connectionstyle=f"arc3,rad={(index - 2) * 0.035}",
+        color=CORAL, linewidth=1.8, alpha=0.82,
+    )
+    ax.add_patch(arrow)
+    ax.add_patch(Circle((1.8, y_A[x]), 0.27, facecolor=BLUE, edgecolor=BLUE, linewidth=1.5))
+    ax.text(1.8, y_A[x], str(x), ha="center", va="center", color=PAPER, weight="bold")
+
+for y in B:
+    is_reached = y in range_values
+    ax.add_patch(Circle(
+        (8.7, y_B[y]), 0.27,
+        facecolor=GOLD if is_reached else PAPER,
+        edgecolor=GOLD if is_reached else TEAL,
+        linewidth=2,
+    ))
+    ax.text(8.7, y_B[y], str(y), ha="center", va="center", color=INK, weight="bold")
+
+ax.text(1.9, 5.05, "定义域 A\n允许输入", ha="center", va="center", color=BLUE, fontsize=13, weight="bold")
+ax.text(8.6, 5.05, "陪域 B\n声明的输出集合", ha="center", va="center", color=TEAL, fontsize=13, weight="bold")
+ax.text(5.25, 5.02, "规则：m(x)=x²", ha="center", va="center", color=INK, fontsize=13)
+ax.text(9.15, 2.7, "金色点组成值域\nm(A)={0,1,4}", ha="left", va="center", color=INK, fontsize=11)
+ax.set_xlim(0, 11.4)
+ax.set_ylim(0, 5.55)
+ax.axis("off")
+fig.tight_layout()
+plt.show()
+```
+
+蓝色左框表示 $A$，青色右框表示 $B$，珊瑚色箭头表示 $x\mapsto m(x)$，金色点表示值域 $m(A)$。每个 $x\in A$ 恰有一个输出。该图只描述这个有限映射；一般定义如下。
+
 # 函数是什么
 
 设 $A$ 和 $B$ 是集合。一个从 $A$ 到 $B$ 的函数写作：
@@ -38,6 +132,22 @@ $$ {#eq-function-signature}
 - $B$：陪域；
 - $x$：函数的输入；
 - $f(x)$：输入 $x$ 对应的输出。
+
+上图中的函数类型和计算规则为：
+
+$$
+m:A\to B,
+\qquad
+m(x)\coloneqq x^2.
+$$
+
+其中 $m:A\to B$ 指定定义域和陪域，$m(x)=x^2$ 指定映射规则，并且
+
+$$
+m(A)=\{m(x)\mid x\in A\}=\{0,1,4\}.
+$$
+
+因此 $2,3\in B$，但 $2,3\notin m(A)$。
 
 ::: {.callout-important title="唯一输出"}
 同一个函数、同一个输入必须对应同一个输出。不同输入可以得到相同输出。
@@ -129,6 +239,104 @@ $$
 
 # 像与原像
 
+仍取有限平方映射 $m(x)=x^2$。对 $C=\{-2,-1,0\}$，求由 $C$ 中元素得到的输出；对 $D=\{1,4\}$，求所有满足 $m(x)\in D$ 的输入。
+
+```{python}
+#| label: fig-function-image-preimage
+#| fig-format: svg
+#| fig-cap: "像由输入子集的输出组成；原像由所有满足输出条件的输入组成。"
+#| fig-alt: "并排两幅有限平方映射图，左图高亮集合 C 及其像，右图高亮集合 D 及其原像"
+#| code-fold: true
+#| code-summary: "查看绘图代码"
+
+import matplotlib.pyplot as plt
+from matplotlib.patches import Circle, FancyArrowPatch, FancyBboxPatch
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+BLUE = "#274C77"
+TEAL = "#2A9D8F"
+GOLD = "#E9C46A"
+CORAL = "#E76F51"
+INK = "#243447"
+PAPER = "#FBFAF7"
+
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
+inputs = [-2, -1, 0, 1, 2]
+outputs = [0, 1, 2, 3, 4]
+positions = [4.2, 3.4, 2.6, 1.8, 1.0]
+y_input = dict(zip(inputs, positions))
+y_output = dict(zip(outputs, positions))
+
+
+def draw_mapping(ax, selected_inputs, selected_outputs, title, subtitle):
+    ax.set_facecolor(PAPER)
+    ax.add_patch(FancyBboxPatch(
+        (0.15, 0.45), 1.8, 4.35,
+        boxstyle="round,pad=0.08,rounding_size=0.12",
+        facecolor=BLUE, edgecolor=BLUE, alpha=0.08, linewidth=1.7,
+    ))
+    ax.add_patch(FancyBboxPatch(
+        (4.75, 0.45), 1.8, 4.35,
+        boxstyle="round,pad=0.08,rounding_size=0.12",
+        facecolor=TEAL, edgecolor=TEAL, alpha=0.08, linewidth=1.7,
+    ))
+    for x in inputs:
+        selected_arrow = x in selected_inputs and x**2 in selected_outputs
+        ax.add_patch(FancyArrowPatch(
+            (1.45, y_input[x]), (5.25, y_output[x**2]),
+            arrowstyle="-|>", mutation_scale=11,
+            color=CORAL if selected_arrow else TEAL,
+            linewidth=2.0 if selected_arrow else 1.0,
+            alpha=0.90 if selected_arrow else 0.18,
+        ))
+        ax.add_patch(Circle(
+            (1.1, y_input[x]), 0.22,
+            facecolor=BLUE if x in selected_inputs else PAPER,
+            edgecolor=BLUE, linewidth=1.6,
+        ))
+        ax.text(1.1, y_input[x], str(x), ha="center", va="center", color=PAPER if x in selected_inputs else INK)
+    for y in outputs:
+        ax.add_patch(Circle(
+            (5.6, y_output[y]), 0.22,
+            facecolor=GOLD if y in selected_outputs else PAPER,
+            edgecolor=GOLD if y in selected_outputs else TEAL,
+            linewidth=1.8,
+        ))
+        ax.text(5.6, y_output[y], str(y), ha="center", va="center", color=INK)
+    ax.text(1.05, 4.63, "输入集合 A", ha="center", color=BLUE, weight="bold")
+    ax.text(5.65, 4.63, "输出集合 B", ha="center", color=TEAL, weight="bold")
+    ax.set_title(title, color=INK, fontsize=13, weight="bold", pad=10)
+    ax.text(3.35, 0.16, subtitle, ha="center", va="center", color=INK, fontsize=10.5)
+    ax.set_xlim(-0.05, 6.75)
+    ax.set_ylim(0, 5.15)
+    ax.axis("off")
+
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 5.2), facecolor=PAPER)
+draw_mapping(
+    axes[0],
+    selected_inputs={-2, -1, 0},
+    selected_outputs={0, 1, 4},
+    title="输入子集 C 的像",
+    subtitle="C={−2,−1,0}  →  m(C)={0,1,4}",
+)
+draw_mapping(
+    axes[1],
+    selected_inputs={-2, -1, 1, 2},
+    selected_outputs={1, 4},
+    title="输出子集 D 的原像",
+    subtitle="m⁻¹(D)={−2,−1,1,2}  ←  D={1,4}",
+)
+fig.tight_layout()
+plt.show()
+```
+
+蓝色点表示选定的输入，金色点表示选定的输出，珊瑚色箭头表示相关映射。左图对应 $m(C)$，右图对应 $m^{-1}(D)$。由于不同输入可以映射到同一输出，原像包含所有满足条件的输入。该有限图只说明这两个具体集合；一般定义如下。
+
 设 $C\subseteq A$。集合 $C$ 在函数 $f$ 下的像是：
 
 $$
@@ -152,6 +360,21 @@ $$
 $$
 f^{-1}(D)=\{-2,2\}.
 $$
+
+对上图中的有限平方映射，定义可以逐项读成：
+
+$$
+\begin{aligned}
+m(C)
+&=\{m(x)\mid x\in\{-2,-1,0\}\}
+ =\{4,1,0\}=\{0,1,4\},\\
+m^{-1}(D)
+&=\{x\in A\mid m(x)\in\{1,4\}\}
+ =\{-2,-1,1,2\}.
+\end{aligned}
+$$
+
+$m^{-1}(D)$ 在这里表示“满足条件 $m(x)\in D$ 的所有输入”，不表示先要有逆函数。
 
 ## 像与原像的集合运算性质
 
@@ -202,6 +425,100 @@ $$
 这些等式都可以直接从原像的定义逐逻辑符号验证。原像"表现良好"的原因在于，原像的定义不涉及存在量词的方向性问题——它只是把条件"$f(x)\in D$"反向作用到定义域上。
 
 # 单射、满射与双射
+
+以下三个有限映射分别比较两个条件：是否存在不同输入映射到同一输出，以及陪域中的每个元素是否都有原像。
+
+```{python}
+#| label: fig-injective-surjective-bijective
+#| fig-format: svg
+#| fig-cap: "单射要求不同输入不映射到同一输出，满射要求陪域中的每个元素都有原像，双射同时满足两者。"
+#| fig-alt: "并排三幅映射图，分别展示单射但非满射、满射但非单射以及双射"
+#| code-fold: true
+#| code-summary: "查看绘图代码"
+
+import matplotlib.pyplot as plt
+from matplotlib.patches import Circle, FancyArrowPatch, FancyBboxPatch
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+BLUE = "#274C77"
+TEAL = "#2A9D8F"
+GOLD = "#E9C46A"
+CORAL = "#E76F51"
+INK = "#243447"
+PAPER = "#FBFAF7"
+
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
+
+def draw_finite_function(ax, domain, codomain, mapping, title, verdict):
+    ax.set_facecolor(PAPER)
+    ax.add_patch(FancyBboxPatch(
+        (0.0, 0.35), 1.5, 4.25,
+        boxstyle="round,pad=0.08,rounding_size=0.12",
+        facecolor=BLUE, edgecolor=BLUE, alpha=0.08, linewidth=1.6,
+    ))
+    ax.add_patch(FancyBboxPatch(
+        (3.5, 0.35), 1.5, 4.25,
+        boxstyle="round,pad=0.08,rounding_size=0.12",
+        facecolor=TEAL, edgecolor=TEAL, alpha=0.08, linewidth=1.6,
+    ))
+    domain_y = dict(zip(domain, [4.0, 3.0, 2.0, 1.0][:len(domain)]))
+    codomain_y = dict(zip(codomain, [4.0, 3.0, 2.0, 1.0][:len(codomain)]))
+    target_counts = {value: list(mapping.values()).count(value) for value in codomain}
+
+    for source, target in mapping.items():
+        shared_target = target_counts[target] > 1
+        ax.add_patch(FancyArrowPatch(
+            (1.05, domain_y[source]), (3.95, codomain_y[target]),
+            arrowstyle="-|>", mutation_scale=11,
+            color=CORAL if shared_target else TEAL,
+            linewidth=2.1 if shared_target else 1.7,
+            alpha=0.92,
+        ))
+    for source in domain:
+        ax.add_patch(Circle((0.75, domain_y[source]), 0.21, facecolor=BLUE, edgecolor=BLUE))
+        ax.text(0.75, domain_y[source], str(source), ha="center", va="center", color=PAPER, weight="bold")
+    for target in codomain:
+        reached = target_counts[target] > 0
+        ax.add_patch(Circle(
+            (4.25, codomain_y[target]), 0.21,
+            facecolor=GOLD if reached else PAPER,
+            edgecolor=GOLD if reached else TEAL,
+            linewidth=1.8,
+        ))
+        ax.text(4.25, codomain_y[target], str(target), ha="center", va="center", color=INK, weight="bold")
+
+    ax.set_title(title, color=INK, fontsize=12.5, weight="bold", pad=9)
+    ax.text(2.5, 0.05, verdict, ha="center", color=INK, fontsize=10.5)
+    ax.set_xlim(-0.2, 5.2)
+    ax.set_ylim(-0.15, 4.85)
+    ax.axis("off")
+
+
+fig, axes = plt.subplots(1, 3, figsize=(13, 4.8), facecolor=PAPER)
+draw_finite_function(
+    axes[0], ["a", "b", "c"], [1, 2, 3, 4],
+    {"a": 1, "b": 2, "c": 3},
+    "输出不重复，陪域存在无原像元素", "单射 ✓　满射 ✗",
+)
+draw_finite_function(
+    axes[1], ["a", "b", "c", "d"], [1, 2, 3],
+    {"a": 1, "b": 2, "c": 2, "d": 3},
+    "不同输入映射到 2，每个陪域元素均有原像", "单射 ✗　满射 ✓",
+)
+draw_finite_function(
+    axes[2], ["a", "b", "c"], [1, 2, 3],
+    {"a": 1, "b": 2, "c": 3},
+    "输出不重复，每个陪域元素均有原像", "单射 ✓　满射 ✓（双射）",
+)
+fig.tight_layout()
+plt.show()
+```
+
+蓝色点属于定义域，金色点表示有原像的陪域元素；当不同输入映射到同一输出时，相关箭头标为珊瑚色。左图为单射但非满射，中图为满射但非单射，右图为双射。该图只判定所示有限映射；一般函数须依据下面的量词定义证明。
 
 ## 单射
 
@@ -283,6 +600,99 @@ f^{-1}(y)=\frac{y-1}{2}.
 $$
 
 # 函数组合
+
+函数复合表示依次应用多个函数。定义 $f,g:\mathbb{R}\to\mathbb{R}$：
+
+$$
+f(x)=2x+1,
+\qquad
+g(x)=x^2,
+$$
+
+并取输入 $x=2$。
+
+比较“先应用 $f$ 再应用 $g$”与“先应用 $g$ 再应用 $f$”。
+
+```{python}
+#| label: fig-function-composition-order
+#| fig-format: svg
+#| fig-cap: "复合函数按箭头从左向右执行，但符号 g∘f 从右向左读作先 f 后 g。"
+#| fig-alt: "两种复合顺序展示输入二先经过 f 再经过 g 得到二十五，以及先经过 g 再经过 f 得到九"
+#| code-fold: true
+#| code-summary: "查看绘图代码"
+
+import matplotlib.pyplot as plt
+from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+BLUE = "#274C77"
+TEAL = "#2A9D8F"
+GOLD = "#E9C46A"
+CORAL = "#E76F51"
+INK = "#243447"
+PAPER = "#FBFAF7"
+
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
+
+def box(ax, xy, width, height, text, facecolor, edgecolor, textcolor=INK, fontsize=12):
+    ax.add_patch(FancyBboxPatch(
+        xy, width, height,
+        boxstyle="round,pad=0.08,rounding_size=0.1",
+        facecolor=facecolor, edgecolor=edgecolor,
+        linewidth=2, alpha=0.92,
+    ))
+    ax.text(xy[0] + width / 2, xy[1] + height / 2, text,
+            ha="center", va="center", color=textcolor, fontsize=fontsize, weight="bold")
+
+
+def arrow(ax, start, end, label):
+    ax.add_patch(FancyArrowPatch(
+        start, end, arrowstyle="-|>", mutation_scale=15,
+        color=CORAL, linewidth=2.2,
+    ))
+    ax.text((start[0] + end[0]) / 2, start[1] + 0.28, label,
+            ha="center", color=INK, fontsize=11)
+
+
+fig, ax = plt.subplots(figsize=(11, 5), facecolor=PAPER)
+ax.set_facecolor(PAPER)
+
+# 上方：g∘f 的复合顺序
+box(ax, (0.3, 3.2), 1.1, 0.75, "x=2", PAPER, BLUE)
+box(ax, (2.5, 3.05), 1.8, 1.05, "f\n2x+1", BLUE, BLUE, PAPER)
+box(ax, (5.4, 3.2), 1.1, 0.75, "5", GOLD, GOLD)
+box(ax, (7.6, 3.05), 1.8, 1.05, "g\ny²", TEAL, TEAL, PAPER)
+box(ax, (10.5, 3.2), 1.1, 0.75, "25", GOLD, GOLD)
+arrow(ax, (1.4, 3.58), (2.5, 3.58), "应用 f")
+arrow(ax, (4.3, 3.58), (5.4, 3.58), "f(2)=5")
+arrow(ax, (6.5, 3.58), (7.6, 3.58), "应用 g")
+arrow(ax, (9.4, 3.58), (10.5, 3.58), "g(5)=25")
+ax.text(0.3, 4.55, "g∘f：先 f，后 g", color=INK, fontsize=13, weight="bold")
+
+# 下方：f∘g 的复合顺序
+box(ax, (0.3, 1.0), 1.1, 0.75, "x=2", PAPER, BLUE)
+box(ax, (2.5, 0.85), 1.8, 1.05, "g\nx²", TEAL, TEAL, PAPER)
+box(ax, (5.4, 1.0), 1.1, 0.75, "4", GOLD, GOLD)
+box(ax, (7.6, 0.85), 1.8, 1.05, "f\n2x+1", BLUE, BLUE, PAPER)
+box(ax, (10.5, 1.0), 1.1, 0.75, "9", GOLD, GOLD)
+arrow(ax, (1.4, 1.38), (2.5, 1.38), "应用 g")
+arrow(ax, (4.3, 1.38), (5.4, 1.38), "g(2)=4")
+arrow(ax, (6.5, 1.38), (7.6, 1.38), "应用 f")
+arrow(ax, (9.4, 1.38), (10.5, 1.38), "f(4)=9")
+ax.text(0.3, 2.35, "f∘g：先 g，后 f", color=INK, fontsize=13, weight="bold")
+
+ax.set_xlim(0, 12)
+ax.set_ylim(0.35, 4.9)
+ax.axis("off")
+fig.tight_layout()
+plt.show()
+```
+
+蓝色方框表示 $f$，青色方框表示 $g$，金色方框表示中间值或最终值。上方对应 $(g\circ f)(2)=25$，下方对应 $(f\circ g)(2)=9$。输入 $x=2$ 已构成这两个具体复合函数不相等的反例，但不能据此断言任意两个函数的复合都不交换。一般定义如下。
 
 设：
 
