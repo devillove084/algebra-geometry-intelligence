@@ -39,7 +39,8 @@ number-sections: false
 2. [数学语言导论](chapters/00-foundations/index.qmd)；
 3. [数、集合与区间](chapters/00-foundations/numbers-and-sets.qmd)；
 4. [函数与映射](chapters/00-foundations/functions.qmd)；
-5. [线性代数导论](chapters/01-linear-algebra/index.qmd)；
-6. [标量与向量](chapters/01-linear-algebra/scalars-and-vectors.qmd)。
+5. [命题、量词与证明](chapters/00-foundations/logic-and-proofs.qmd)；
+6. [线性代数导论](chapters/01-linear-algebra/index.qmd)；
+7. [标量与向量](chapters/01-linear-algebra/scalars-and-vectors.qmd)。
 
 后续内容按知识依赖逐章加入。路线图中的高级主题是明确的内容规划，不代表章节已经完成。

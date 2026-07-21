@@ -1,0 +1,775 @@
+---
+title: "命题、量词与证明"
+description: "学习数学陈述的真假、逻辑连接词、量词、反例和常用证明方法。"
+---
+
+## 这章要解决什么问题
+
+数学不只是计算。看到一句话时，我们还需要判断：
+
+- 它是不是一个可以讨论真假的完整陈述？
+- 它对哪些对象成立？
+- 它是在声称“所有对象都满足”，还是“至少存在一个对象满足”？
+- 它的结论是由假设推出的，还是只在几个例子上观察到的？
+- 如果认为它正确，怎样证明？如果认为它错误，怎样找到反例？
+
+这些问题构成了数学推理的语法。后面学习线性代数、概率论、抽象代数和优化时，我们会不断使用它们。
+
+本章采用经典二值逻辑：一个完整命题要么为真，要么为假。
+
+## 命题与开放句
+
+### 命题
+
+**命题**是一个能够明确判断真假的陈述句。
+
+例如：
+
+- “$2<3$”是真命题；
+- “$5$ 是偶数”是假命题；
+- “矩阵乘法满足交换律”是假命题。
+
+最后一句虽然是假命题，但仍然是命题，因为它具有明确的真假值。
+
+问题、命令和主观感受通常不是数学命题。例如“请计算 $2+3$”是命令，不具有真假值。
+
+### 开放句
+
+考虑：
+
+$$
+x<3.
+$$
+
+如果没有说明 $x$ 是谁，这句话还不能判断真假。它称为含自由变量 $x$ 的**开放句**或**谓词**。
+
+我们可以用 $P(x)$ 表示这个谓词：
+
+$$
+P(x)\coloneqq (x<3).
+$$
+
+当指定 $x=2$ 时：
+
+$$
+P(2)\equiv(2<3),
+$$
+
+它是真命题。当指定 $x=5$ 时，$P(5)$ 是假命题。
+
+还可以使用量词把开放句变成命题：
+
+$$
+\forall x\in\mathbb{R},\ x^2\geq0.
+$$
+
+这里已经说明了讨论范围和对范围内对象提出的要求，因此它是完整命题。
+
+::: {.callout-note title="先找论域"}
+读到含变量的数学陈述时，首先确认变量属于哪个集合。命题“$x^2=2$ 有解”在 $\mathbb{Q}$ 和 $\mathbb{R}$ 中具有不同真假值。
+:::
+
+## 逻辑连接词
+
+设 $P$ 和 $Q$ 是两个命题。
+
+| 记号 | 读法 | 什么时候为真 |
+|---|---|---|
+| $\lnot P$ | 非 $P$ | $P$ 为假 |
+| $P\land Q$ | $P$ 且 $Q$ | $P,Q$ 都为真 |
+| $P\lor Q$ | $P$ 或 $Q$ | 至少一个为真 |
+| $P\Rightarrow Q$ | 若 $P$，则 $Q$ | 除了“$P$ 真而 $Q$ 假”之外 |
+| $P\Leftrightarrow Q$ | $P$ 当且仅当 $Q$ | $P,Q$ 真假相同 |
+
+数学中的“或”默认是**可兼或**：$P$ 和 $Q$ 同时为真时，$P\lor Q$ 仍然为真。
+
+### 真值表
+
+把 $P,Q$ 的所有真假组合列出来，就得到真值表。
+
+| $P$ | $Q$ | $\lnot P$ | $P\land Q$ | $P\lor Q$ | $P\Rightarrow Q$ | $P\Leftrightarrow Q$ |
+|---:|---:|---:|---:|---:|---:|---:|
+| 真 | 真 | 假 | 真 | 真 | 真 | 真 |
+| 真 | 假 | 假 | 假 | 真 | 假 | 假 |
+| 假 | 真 | 真 | 假 | 真 | 真 | 假 |
+| 假 | 假 | 真 | 假 | 假 | 真 | 真 |
+
+下面的 Python 代码不是在证明真值表，而是在按照定义枚举四种可能，并把结果画出来。
+
+```{python}
+#| label: fig-truth-table
+#| fig-format: svg
+#| fig-cap: "Python 枚举两个命题的全部真假组合。深色表示真，浅色表示假。"
+#| fig-alt: "包含非、且、或、蕴含和等价运算结果的真值表"
+
+import itertools
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
+
+def implies(p: bool, q: bool) -> bool:
+    return (not p) or q
+
+
+rows = []
+for p, q in itertools.product([True, False], repeat=2):
+    rows.append([
+        p,
+        q,
+        not p,
+        p and q,
+        p or q,
+        implies(p, q),
+        p == q,
+    ])
+
+values = np.array(rows, dtype=int)
+column_names = ["P", "Q", "not P", "P and Q", "P or Q", "P implies Q", "P iff Q"]
+
+fig, ax = plt.subplots(figsize=(10, 3.3))
+ax.imshow(values, cmap="YlGn", vmin=0, vmax=1, aspect="auto")
+ax.set_xticks(range(len(column_names)), labels=column_names)
+ax.set_yticks(range(len(rows)), labels=["T, T", "T, F", "F, T", "F, F"])
+ax.set_xlabel("logical expression")
+ax.set_ylabel("values of P and Q")
+
+for i in range(values.shape[0]):
+    for j in range(values.shape[1]):
+        ax.text(j, i, "T" if values[i, j] else "F", ha="center", va="center")
+
+for edge in np.arange(-0.5, values.shape[1], 1):
+    ax.axvline(edge, color="white", linewidth=1)
+for edge in np.arange(-0.5, values.shape[0], 1):
+    ax.axhline(edge, color="white", linewidth=1)
+
+fig.tight_layout()
+plt.show()
+```
+
+在 Python 中：
+
+- `not p` 对应 $\lnot P$；
+- `p and q` 对应 $P\land Q$；
+- `p or q` 对应 $P\lor Q$。
+
+Python 没有直接对应数学蕴含的常用运算符，但有逻辑等价式：
+
+$$
+P\Rightarrow Q
+\quad\Leftrightarrow\quad
+\lnot P\lor Q.
+$$ {#eq-implication-as-or}
+
+函数 `implies` 正是按 @eq-implication-as-or 实现的。
+
+## 蕴含：充分条件与必要条件
+
+### 为什么“假推出真”仍算真
+
+命题
+
+$$
+P\Rightarrow Q
+$$
+
+只排除一种情况：$P$ 已经发生，但 $Q$ 没有发生。
+
+例如：
+
+> 如果一个整数能被 $4$ 整除，那么它能被 $2$ 整除。
+
+令：
+
+- $P(n)$：“$n$ 能被 $4$ 整除”；
+- $Q(n)$：“$n$ 能被 $2$ 整除”。
+
+当 $n=6$ 时，$P(6)$ 为假而 $Q(6)$ 为真。这个例子没有违反原命题，因为原命题并没有声称“所有偶数都能被 $4$ 整除”。
+
+当 $n=3$ 时，$P(3)$ 和 $Q(3)$ 都为假，它同样没有违反原命题。
+
+真正能否定原命题的只能是：找到一个能被 $4$ 整除、却不能被 $2$ 整除的整数。
+
+### 集合包含视角
+
+把使 $P$ 为真的对象放入集合 $S_P$，把使 $Q$ 为真的对象放入集合 $S_Q$。那么：
+
+$$
+P\Rightarrow Q
+$$
+
+意味着：
+
+$$
+S_P\subseteq S_Q.
+$$
+
+```{python}
+#| label: fig-implication-as-inclusion
+#| fig-format: svg
+#| fig-cap: "蕴含的集合视角：所有满足 P 的对象也必须满足 Q。"
+#| fig-alt: "表示 P 的小椭圆完全包含在表示 Q 的大椭圆中"
+
+import matplotlib.pyplot as plt
+from matplotlib.patches import Ellipse, Rectangle
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
+fig, ax = plt.subplots(figsize=(8, 4.8))
+ax.add_patch(Rectangle((0, 0), 10, 6, facecolor="#f2e5c4", edgecolor="#5a3d2b", linewidth=2))
+ax.add_patch(Ellipse((5, 3), 7.5, 4.6, facecolor="#8fb9a8", edgecolor="#254f45", alpha=0.72, linewidth=2.5))
+ax.add_patch(Ellipse((4.3, 3), 3.2, 2.1, facecolor="#c46b5e", edgecolor="#6b2924", alpha=0.82, linewidth=2.5))
+ax.text(8.9, 5.45, "universe", ha="right", va="top", fontsize=12)
+ax.text(7.2, 4.25, "Q: necessary", ha="center", fontsize=13)
+ax.text(4.3, 3, "P: sufficient", ha="center", va="center", color="white", fontsize=13, weight="bold")
+ax.text(5, 0.42, r"$P \Rightarrow Q$  means  $S_P \subseteq S_Q$", ha="center", fontsize=14)
+ax.set_xlim(-0.2, 10.2)
+ax.set_ylim(-0.2, 6.2)
+ax.set_aspect("equal")
+ax.axis("off")
+fig.tight_layout()
+plt.show()
+```
+
+因此，在 $P\Rightarrow Q$ 中：
+
+- $P$ 是 $Q$ 的**充分条件**：只要 $P$ 成立，就足以保证 $Q$；
+- $Q$ 是 $P$ 的**必要条件**：如果连 $Q$ 都不成立，$P$ 一定不成立。
+
+记忆时不要只背术语，应该回到集合图：$P$ 的区域完全位于 $Q$ 内部。
+
+### 逆命题、否命题与逆否命题
+
+从 $P\Rightarrow Q$ 可以组成：
+
+| 名称 | 形式 | 是否与原命题等价 |
+|---|---|---|
+| 原命题 | $P\Rightarrow Q$ | 是 |
+| 逆命题 | $Q\Rightarrow P$ | 不一定 |
+| 否命题 | $\lnot P\Rightarrow\lnot Q$ | 不一定 |
+| 逆否命题 | $\lnot Q\Rightarrow\lnot P$ | 是 |
+
+继续使用整除例子：
+
+$$
+4\mid n\Rightarrow2\mid n
+$$
+
+为真，但逆命题
+
+$$
+2\mid n\Rightarrow4\mid n
+$$
+
+为假，反例是 $n=6$。
+
+逆否命题是：
+
+$$
+2\nmid n\Rightarrow4\nmid n,
+$$
+
+它与原命题等价。
+
+## 当且仅当
+
+表达式
+
+$$
+P\Leftrightarrow Q
+$$
+
+表示两个方向都成立：
+
+$$
+(P\Rightarrow Q)\land(Q\Rightarrow P).
+$$
+
+因此，要证明“$P$ 当且仅当 $Q$”，通常需要分别证明：
+
+1. $P\Rightarrow Q$；
+2. $Q\Rightarrow P$。
+
+例如，对整数 $n$：
+
+$$
+n\text{ 是偶数}
+\quad\Leftrightarrow\quad
+n^2\text{ 是偶数}.
+$$
+
+两个方向都需要证明，不能只证明其中一个方向。
+
+## 全称量词与存在量词
+
+### 全称量词
+
+$$
+\forall x\in A,\ P(x)
+$$
+
+读作“对集合 $A$ 中所有 $x$，$P(x)$ 都成立”。
+
+例如：
+
+$$
+\forall x\in\mathbb{R},\ x^2\geq0.
+$$
+
+要证明全称命题，必须给出一个能够覆盖任意 $x$ 的论证；只检查很多具体数值不够。
+
+### 存在量词
+
+$$
+\exists x\in A,\ P(x)
+$$
+
+读作“集合 $A$ 中至少存在一个 $x$，使 $P(x)$ 成立”。
+
+例如：
+
+$$
+\exists x\in\mathbb{R},\ x^2=2.
+$$
+
+要证明存在命题，给出一个满足条件的具体对象就足够。例如取 $x=\sqrt2$。
+
+### 量词顺序不能交换
+
+比较：
+
+$$
+\forall x\in\mathbb{R},\ \exists y\in\mathbb{R},\ y>x,
+$$ {#eq-forall-exists}
+
+以及：
+
+$$
+\exists y\in\mathbb{R},\ \forall x\in\mathbb{R},\ y>x.
+$$ {#eq-exists-forall}
+
+@eq-forall-exists 为真：给定任意 $x$，可以选择 $y=x+1$。
+
+@eq-exists-forall 为假：它声称存在一个固定实数 $y$，比所有实数都大。但给定任何候选 $y$，总能找到 $x=y+1$。
+
+两句话都包含“所有”和“存在”，但量词顺序改变了变量之间的依赖关系。
+
+## 如何否定带量词的命题
+
+否定“所有对象都满足 $P$”，等价于“至少存在一个对象不满足 $P$”：
+
+$$
+\lnot\bigl(\forall x\in A,\ P(x)\bigr)
+\quad\Leftrightarrow\quad
+\exists x\in A,\ \lnot P(x).
+$$ {#eq-negate-forall}
+
+否定“存在对象满足 $P$”，等价于“所有对象都不满足 $P$”：
+
+$$
+\lnot\bigl(\exists x\in A,\ P(x)\bigr)
+\quad\Leftrightarrow\quad
+\forall x\in A,\ \lnot P(x).
+$$ {#eq-negate-exists}
+
+例如，命题
+
+$$
+\forall x\in\mathbb{R},\ x^2>0
+$$
+
+的否定不是“所有 $x$ 都满足 $x^2\leq0$”，而是：
+
+$$
+\exists x\in\mathbb{R},\ x^2\leq0.
+$$
+
+取 $x=0$ 就得到反例。
+
+```{python}
+#| label: fig-counterexample
+#| fig-format: svg
+#| fig-cap: "一个反例足以否定全称命题：在 x=0 处，x² 并不严格大于 0。"
+#| fig-alt: "抛物线 y 等于 x 平方以及位于原点的反例标记"
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+plt.rcParams["font.family"] = "sans-serif"
+plt.rcParams["font.sans-serif"] = ["Noto Sans CJK SC", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
+x = np.linspace(-2.5, 2.5, 500)
+y = x**2
+
+fig, ax = plt.subplots(figsize=(8, 4.8))
+ax.plot(x, y, color="#274c77", linewidth=2.5, label=r"$y=x^2$")
+ax.axhline(0, color="#6c757d", linewidth=1)
+ax.axvline(0, color="#6c757d", linewidth=1)
+ax.scatter([0], [0], color="#9b2226", s=90, zorder=3)
+ax.annotate(
+    r"counterexample: $x=0$",
+    xy=(0, 0),
+    xytext=(0.65, 1.7),
+    arrowprops={"arrowstyle": "->", "color": "#9b2226"},
+    color="#9b2226",
+    fontsize=12,
+)
+ax.set_title(r"The claim $\forall x\in\mathbb{R},\ x^2>0$ is false")
+ax.set_xlabel("x")
+ax.set_ylabel(r"$x^2$")
+ax.set_ylim(-0.3, 6.5)
+ax.legend()
+ax.grid(alpha=0.2)
+fig.tight_layout()
+plt.show()
+```
+
+## 常用证明方法
+
+### 直接证明
+
+要证明 $P\Rightarrow Q$，可以从假设 $P$ 出发，使用定义和已经证明的结论逐步得到 $Q$。
+
+**命题：** 两个偶数之和仍是偶数。
+
+**证明：** 设 $a,b\in\mathbb{Z}$ 都是偶数。根据偶数定义，存在 $r,s\in\mathbb{Z}$，使得：
+
+$$
+a=2r,
+\qquad
+b=2s.
+$$
+
+于是：
+
+$$
+a+b
+=2r+2s
+=2(r+s).
+$$
+
+因为 $r+s\in\mathbb{Z}$，所以 $a+b$ 可以写成 $2$ 乘以某个整数，因此 $a+b$ 是偶数。$\square$
+
+这里没有通过列举若干偶数来“验证”，而是使用偶数定义覆盖了所有偶数。
+
+### 逆否证明
+
+要证明：
+
+$$
+P\Rightarrow Q,
+$$
+
+可以改为证明与之等价的逆否命题：
+
+$$
+\lnot Q\Rightarrow\lnot P.
+$$
+
+**命题：** 若整数 $n$ 满足 $n^2$ 为偶数，则 $n$ 为偶数。
+
+直接从 $n^2$ 为偶数推出 $n$ 为偶数并不直观。证明逆否命题更容易：
+
+> 若 $n$ 不是偶数，即 $n$ 是奇数，则 $n^2$ 是奇数。
+
+设 $n=2k+1$，其中 $k\in\mathbb{Z}$。则：
+
+$$
+\begin{aligned}
+n^2
+&=(2k+1)^2\\
+&=4k^2+4k+1\\
+&=2(2k^2+2k)+1.
+\end{aligned}
+$$
+
+因为 $2k^2+2k\in\mathbb{Z}$，所以 $n^2$ 是奇数。逆否命题成立，原命题也成立。$\square$
+
+### 反证法
+
+反证法先假设要证明的结论为假，然后推出矛盾。
+
+**命题：** 不存在最大的整数。
+
+**证明：** 假设存在最大的整数 $N$。因为整数对加法封闭，所以 $N+1$ 也是整数；同时：
+
+$$
+N+1>N.
+$$
+
+这与“$N$ 是最大整数”矛盾。因此不存在最大的整数。$\square$
+
+反证法不是“因为我想不到反例，所以它是真的”，而是从结论的否定严格推出不可能同时成立的陈述。
+
+### 分类讨论
+
+有时对象自然分成若干互斥并覆盖所有可能的情况，可以逐类证明。
+
+例如，对任意 $x\in\mathbb{R}$，证明：
+
+$$
+|x|\geq0.
+$$
+
+- 若 $x\geq0$，则 $|x|=x\geq0$；
+- 若 $x<0$，则 $|x|=-x>0$。
+
+两种情况覆盖所有实数，因此结论成立。
+
+### 数学归纳法
+
+归纳法用于证明由自然数索引的一族命题：
+
+$$
+P(1),P(2),P(3),\ldots
+$$
+
+它包含两步：
+
+1. **基础步骤**：证明 $P(1)$；
+2. **归纳步骤**：假设 $P(k)$ 成立，证明 $P(k+1)$ 成立。
+
+例如证明：
+
+$$
+1+2+\cdots+n
+=
+\frac{n(n+1)}{2},
+\qquad n\in\mathbb{N}_{>0}.
+$$ {#eq-arithmetic-series}
+
+基础步骤 $n=1$：
+
+$$
+1=\frac{1(1+1)}{2}=1.
+$$
+
+假设对某个 $k\geq1$：
+
+$$
+1+2+\cdots+k=\frac{k(k+1)}{2}.
+$$
+
+那么：
+
+$$
+\begin{aligned}
+1+2+\cdots+k+(k+1)
+&=\frac{k(k+1)}{2}+(k+1)\\
+&=(k+1)\left(\frac{k}{2}+1\right)\\
+&=\frac{(k+1)(k+2)}{2}.
+\end{aligned}
+$$
+
+这正是 @eq-arithmetic-series 在 $n=k+1$ 时的形式，因此命题对所有正整数 $n$ 成立。$\square$
+
+## 如何证明集合相等
+
+证明两个集合 $A$ 和 $B$ 相等，最常用的方法是证明双向包含：
+
+$$
+A=B
+\quad\Leftrightarrow\quad
+A\subseteq B\ \land\ B\subseteq A.
+$$
+
+以分配律为例：
+
+$$
+A\cap(B\cup C)
+=
+(A\cap B)\cup(A\cap C).
+$$ {#eq-set-distributive}
+
+先证明左侧是右侧的子集。任取：
+
+$$
+x\in A\cap(B\cup C).
+$$
+
+根据交集定义，$x\in A$，且 $x\in B\cup C$。根据并集定义，$x\in B$ 或 $x\in C$。
+
+- 若 $x\in B$，则 $x\in A\cap B$；
+- 若 $x\in C$，则 $x\in A\cap C$。
+
+所以 $x\in(A\cap B)\cup(A\cap C)$，得到：
+
+$$
+A\cap(B\cup C)
+\subseteq
+(A\cap B)\cup(A\cap C).
+$$
+
+反方向同理：任取 $x\in(A\cap B)\cup(A\cap C)$，按并集的两种情况展开，都能得到 $x\in A$ 且 $x\in B\cup C$。因此：
+
+$$
+(A\cap B)\cup(A\cap C)
+\subseteq
+A\cap(B\cup C).
+$$
+
+双向包含成立，所以 @eq-set-distributive 成立。
+
+## 反例与 Python 检查
+
+### 一个反例能做什么
+
+要否定全称命题：
+
+$$
+\forall x\in A,\ P(x),
+$$
+
+只需要找到一个 $x_0\in A$，使 $P(x_0)$ 为假。
+
+这个 $x_0$ 就是反例。
+
+### 有限枚举
+
+在有限论域中，Python 可以穷举所有对象，因此能够完成证明意义上的验证。
+
+```{python}
+#| label: lst-finite-logic-check
+#| echo: true
+
+finite_domain = range(-20, 21)
+
+nonnegative_squares = all(x**2 >= 0 for x in finite_domain)
+strictly_positive_squares = all(x**2 > 0 for x in finite_domain)
+counterexamples = [x for x in finite_domain if not (x**2 > 0)]
+
+print("区间内所有平方都非负：", nonnegative_squares)
+print("区间内所有平方都严格为正：", strictly_positive_squares)
+print("第二个命题的反例：", counterexamples)
+
+assert nonnegative_squares
+assert counterexamples == [0]
+```
+
+Python 的：
+
+- `all(...)` 对应有限列表上的全称检查；
+- `any(...)` 对应有限列表上的存在检查。
+
+### 采样不能证明无限论域上的全称命题
+
+即使程序检查了一百万个实数样本，也不能由此证明：
+
+$$
+\forall x\in\mathbb{R},\ P(x).
+$$
+
+原因是 $\mathbb{R}$ 有无限多个元素，而且样本之间还存在未检查的位置。
+
+采样的作用是：
+
+- 帮助寻找反例；
+- 检查推导或实现是否可能出错；
+- 建立直觉；
+- 在明确误差范围时支持数值论证。
+
+它不能自动替代解析证明。
+
+::: {.callout-warning title="测试通过不等于定理成立"}
+`assert` 只能说明程序在执行到的输入和数值精度下满足条件。除非论域是有限的并被完整枚举，否则它不是全称命题的证明。
+:::
+
+## 定义、定理与经验结论
+
+阅读后续内容时，需要区分以下陈述类型：
+
+| 类型 | 作用 | 是否需要证明 |
+|---|---|---|
+| 定义 | 规定一个术语或符号的含义 | 不证明，但要检查是否一致 |
+| 公理/假设 | 当前理论或论证接受的起点 | 在当前上下文中暂不证明 |
+| 定理 | 从定义和已知结果推出的重要结论 | 需要证明 |
+| 引理 | 为证明主要结果准备的辅助结论 | 需要证明 |
+| 推论 | 从已有定理较直接得到的结论 | 需要说明推导关系 |
+| 猜想 | 被认为可能正确但尚未证明的命题 | 尚无完整证明 |
+| 经验结论 | 来自实验、测量或训练观察 | 需要实验设计、统计与复现 |
+
+例如，在高维概率中可能出现：
+
+> 若 $q_i,k_i$ 相互独立、均值为 $0$、方差为 $1$，则点积 $\sum_i q_i k_i$ 的方差随维数 $d$ 增长。
+
+这里的独立性、均值和方差条件是数学假设。训练后的注意力向量未必满足这些假设，因此不能把相应定理无条件地应用到真实模型。
+
+## 常见误区
+
+1. **把逆命题当成原命题。** $P\Rightarrow Q$ 不自动推出 $Q\Rightarrow P$。
+2. **混淆必要与充分。** 在 $P\Rightarrow Q$ 中，$P$ 充分，$Q$ 必要。
+3. **忽略论域。** “存在平方根”在不同数集中可能真假不同。
+4. **交换量词顺序。** $\forall x\exists y$ 与 $\exists y\forall x$ 通常不同。
+5. **错误否定全称命题。** “并非所有”只表示“至少有一个不满足”。
+6. **用许多例子代替证明。** 例子帮助理解，反例可以否定，但有限正例通常不能证明无限全称命题。
+7. **把蕴含理解为因果。** $P\Rightarrow Q$ 只表达逻辑保证，不自动表示 $P$ 在物理或统计上导致 $Q$。
+8. **省略假设。** 一个结论可能只在线性、可微、独立、凸或有限维等条件下成立。
+
+## 练习
+
+### A. 读取命题
+
+1. 判断下面哪些是命题，并在是命题时判断真假：
+   - $3+4=7$；
+   - $x+1>0$；
+   - 对所有 $x\in\mathbb{R}$，$x^2+1>0$；
+   - 请计算矩阵的秩。
+2. 写出“$n$ 是偶数”的否定，其中 $n\in\mathbb{Z}$。
+3. 写出 $P\Rightarrow Q$ 的逆命题和逆否命题。
+
+### B. 量词与否定
+
+1. 否定：$\forall x\in\mathbb{R},\ f(x)\geq0$。
+2. 否定：$\exists x\in A,\ f(x)=0$。
+3. 判断真假，并解释量词顺序：
+   $$
+   \forall x\in\mathbb{R},\exists y\in\mathbb{R},\ x+y=0;
+   $$
+   $$
+   \exists y\in\mathbb{R},\forall x\in\mathbb{R},\ x+y=0.
+   $$
+
+### C. 证明与反例
+
+1. 直接证明：两个奇数之和是偶数。
+2. 使用逆否命题证明：若 $n^2$ 是奇数，则 $n$ 是奇数。
+3. 找出反例否定：“对所有实数 $x,y$，若 $xy=0$，则 $x=y=0$。”
+4. 证明集合恒等式：
+   $$
+   A\cup(B\cap C)=(A\cup B)\cap(A\cup C).
+   $$
+5. 用数学归纳法证明：
+   $$
+   1+3+5+\cdots+(2n-1)=n^2.
+   $$
+
+### D. Python 与证明边界
+
+1. 使用 Python 为命题“若 $n$ 能被 $6$ 整除，则 $n$ 能被 $3$ 整除”检查 $-100\leq n\leq100$。
+2. 使用程序找到命题“所有素数都是奇数”的反例。
+3. 解释为什么检查前一百万个正整数仍不能单独证明一个关于所有正整数的命题。
+4. 为一个有限集合实现函数 `forall(domain, predicate)` 和 `exists(domain, predicate)`，并与 Python 的 `all`、`any` 对照。
+
+## 小结
+
+- 命题是具有明确真假值的完整陈述；含自由变量的开放句需要指定变量或添加量词。
+- $P\Rightarrow Q$ 只在 $P$ 真、$Q$ 假时为假；它等价于 $\lnot P\lor Q$。
+- 在 $P\Rightarrow Q$ 中，$P$ 是充分条件，$Q$ 是必要条件。
+- 全称命题需要覆盖任意对象的证明；存在命题只需构造一个满足条件的对象。
+- 否定全称量词会变成存在量词，否定存在量词会变成全称量词。
+- 直接证明、逆否证明、反证法、分类讨论和归纳法适用于不同结构的命题。
+- Python 能穷举有限论域、寻找反例和验证实现，但有限采样不能替代无限论域上的证明。
+
+下一步进入矩阵时，我们会使用本章的语言准确表述：“对任意兼容形状的向量”“存在唯一解”“当且仅当矩阵可逆”等命题。

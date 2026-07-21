@@ -21,6 +21,19 @@ title: "符号索引"
 | $A\times B$ | 笛卡尔积 |
 | $\lvert A\rvert$ | 有限集合 $A$ 的元素数量 |
 
+# 逻辑与证明
+
+| 符号 | 含义 |
+|---|---|
+| $\lnot P$ | 命题 $P$ 的否定 |
+| $P\land Q$ | $P$ 且 $Q$ |
+| $P\lor Q$ | $P$ 或 $Q$，至少一个成立 |
+| $P\Rightarrow Q$ | $P$ 蕴含 $Q$ |
+| $P\Leftrightarrow Q$ | $P$ 与 $Q$ 等价，两个方向都成立 |
+| $\forall x\in A$ | 对集合 $A$ 中所有 $x$ |
+| $\exists x\in A$ | 集合 $A$ 中至少存在一个 $x$ |
+| $\square$ | 证明结束 |
+
 # 代数与线性代数
 
 | 符号 | 类型 | 含义 |

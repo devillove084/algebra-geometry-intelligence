@@ -23,6 +23,8 @@ number-sections: false
 
 ## 总体依赖图
 
+::: {.content-visible when-format="html"}
+
 ```{mermaid}
 graph TD
     A[集合、函数与证明] --> B[线性代数]
@@ -52,6 +54,14 @@ graph TD
     K --> Q
     L --> Q
 ```
+
+:::
+
+::: {.content-visible when-format="typst"}
+
+![总体数学依赖图](images/mathematical-roadmap.svg){fig-alt="从数学语言到代数、几何、学习系统与研究问题的依赖图" width="100%"}
+
+:::
 
 ## 主线一：从基础到现有模型
 

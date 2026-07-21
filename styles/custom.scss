@@ -6,7 +6,10 @@ $line-height-base: 1.75;
 
 /*-- scss:rules --*/
 
-.math.display {
+.math.display,
+mjx-container[display="true"] {
+  display: block;
+  max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   padding-block: 0.35rem;
@@ -21,6 +24,9 @@ $line-height-base: 1.75;
 }
 
 table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
   font-size: 0.95rem;
 }
 

@@ -21,6 +21,7 @@ book:
         - chapters/00-foundations/index.qmd
         - chapters/00-foundations/numbers-and-sets.qmd
         - chapters/00-foundations/functions.qmd
+        - chapters/00-foundations/logic-and-proofs.qmd
     - part: "第二部分：线性代数"
       chapters:
         - chapters/01-linear-algebra/index.qmd
@@ -47,9 +48,8 @@ crossref:
 format:
   html:
     theme:
-      light: cosmo
-      dark: darkly
-    css: styles/custom.scss
+      light: [cosmo, styles/custom.scss]
+      dark: [darkly, styles/custom.scss]
     toc: true
     toc-depth: 4
     number-sections: false
