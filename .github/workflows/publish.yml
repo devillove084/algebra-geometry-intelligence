@@ -42,6 +42,14 @@ jobs:
           uv venv --python 3.13 .venv
           uv pip install --python .venv/bin/python --requirement requirements.txt
 
+      - name: Install Chinese fonts
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends fonts-noto-cjk fontconfig
+          fc-cache --force
+          fc-match --format '%{family}\n' "Noto Sans CJK SC" | grep --fixed-strings --quiet "Noto Sans CJK SC"
+
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
         with:
