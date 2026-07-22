@@ -282,7 +282,7 @@ $$
 
 ## 数学列向量与代码批量矩阵
 
-本文默认单个向量写成列向量：
+这份笔记默认把单个向量写成列向量：
 
 $$
 \mathbf{x}\in\mathbb{R}^{d_{\mathrm{in}}},
@@ -407,9 +407,9 @@ $$
 
 # 这条学习路线借鉴了什么
 
-本部分借鉴 3Blue1Brown 以空间变换和基向量为核心的几何直觉 [@sanderson2016essence]，也吸收 Strang 从列组合、方程组和子空间出发的组织方式 [@strang2023linear]。机器学习连接主要参考经典模式识别中的向量与矩阵语言 [@bishop2006pattern]，并以 Transformer 的 scaled dot-product attention 作为后续持续展开的实例 [@vaswani2017attention]。
+整理几何直觉时，我主要参考 3Blue1Brown 对空间变换和基向量的可视化 [@sanderson2016essence]；整理列组合、方程组和子空间之间的联系时，我会对照 Strang [@strang2023linear]。证明部分会交叉查看丘维声老师的高等代数课程和 Axler 的线性映射视角 [@qiuAdvancedAlgebraCourse; @axler2015linear]；目前 B 站链接只作为查找第三方课程录像的入口，不当作官方版本。应用与数值计算部分参考 Boyd 与 Vandenberghe [@boyd2018applied]，机器学习例子则继续对照经典模式识别和 Transformer 原始论文 [@bishop2006pattern; @vaswani2017attention]。
 
-这些来源提供的是视角和问题选择；本文会根据自己的学习依赖重新组织内容，不复刻原书或视频的章节顺序。第一次阅读优先建立几何画面和对象类型，第二次再补证明、抽象结构与数值边界。
+这些资料帮助我核对概念和补足视角，但不会决定笔记顺序。我会按自己的知识缺口组织内容：先留下能工作的直觉、类型和例子，再补证明、抽象结构与数值边界。
 
 # 小结
 

@@ -44,6 +44,9 @@ title: "符号索引"
 | $\mathbf{A}$ | 矩阵 | 按行列排列的标量数组 |
 | $A_{ij}$ | 标量 | $\mathbf{A}$ 第 $i$ 行、第 $j$ 列元素 |
 | $\mathbf{A}^{\mathsf T}$ | 矩阵 | $\mathbf{A}$ 的转置 |
+| $\mathbf{A}\mathbf{x}$ | 向量 | 矩阵—向量乘积，也是矩阵各列按 $\mathbf{x}$ 分量形成的线性组合 |
+| $\mathbf{I}_n$ | 矩阵 | $n$ 阶单位矩阵 |
+| $T_{\mathbf{A}}$ | 线性映射 | 由 $T_{\mathbf{A}}(\mathbf{x})=\mathbf{A}\mathbf{x}$ 定义的映射 |
 | $\mathbf{0}$ | 向量或矩阵 | 形状由上下文确定的零对象 |
 | $\mathbf{e}_i$ | 向量 | 第 $i$ 个标准坐标向量 |
 | $\lVert\mathbf{x}\rVert_2$ | 标量 | $\mathbf{x}$ 的 Euclidean 范数 |
