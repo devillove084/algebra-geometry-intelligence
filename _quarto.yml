@@ -30,6 +30,8 @@ book:
         - chapters/01-linear-algebra/scalars-and-vectors.qmd
         - chapters/01-linear-algebra/matrices-and-linear-maps.qmd
         - chapters/01-linear-algebra/matrix-multiplication-and-composition.qmd
+        - chapters/01-linear-algebra/linear-systems-and-elimination.qmd
+        - chapters/01-linear-algebra/permutations-inversions-and-determinants.qmd
     - part: "附录"
       chapters:
         - appendices/symbol-index.qmd

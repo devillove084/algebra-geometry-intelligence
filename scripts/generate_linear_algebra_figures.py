@@ -33,7 +33,7 @@ def configure_matplotlib() -> None:
             "figure.facecolor": "white",
             "axes.facecolor": BACKGROUND,
             "svg.fonttype": "path",
-                        "svg.hashsalt": "algebra-geometry-intelligence",
+            "svg.hashsalt": "algebra-geometry-intelligence",
         }
     )
 
@@ -523,16 +523,377 @@ def figure_noncommutativity() -> Figure:
     return fig
 
 
+def figure_system_matrix_correspondence() -> Figure:
+    coefficient = np.array([[1, 1, 1], [2, 3, 4], [1, 2, 4]])
+    rhs = np.array([[2], [5], [5]])
+    augmented = np.hstack((coefficient, rhs))
+    column_colors = (BLUE, ORANGE, GREEN, "#7c3aed")
+
+    fig, ax = plt.subplots(figsize=(12.0, 5.8), constrained_layout=True)
+    ax.set_xlim(0, 16)
+    ax.set_ylim(0, 8)
+    ax.axis("off")
+
+    equations = (
+        r"$x_1+x_2+x_3=2$",
+        r"$2x_1+3x_2+4x_3=5$",
+        r"$x_1+2x_2+4x_3=5$",
+    )
+    ax.text(2.0, 6.55, "Linear system", ha="center", fontsize=14, color=SLATE, weight="bold")
+    for row, equation in enumerate(equations):
+        ax.text(2.0, 5.45 - row * 1.2, equation, ha="center", va="center", fontsize=14, color=SLATE)
+
+    def draw_matrix(matrix: np.ndarray, x: float, y: float, colors: tuple[str, ...], label: str) -> None:
+        cell_width = 0.72
+        cell_height = 0.72
+        for i in range(matrix.shape[0]):
+            for j in range(matrix.shape[1]):
+                ax.add_patch(
+                    Rectangle(
+                        (x + j * cell_width, y + (matrix.shape[0] - 1 - i) * cell_height),
+                        cell_width,
+                        cell_height,
+                        facecolor=colors[j],
+                        edgecolor="white",
+                        alpha=0.20,
+                        linewidth=1.0,
+                    )
+                )
+                ax.text(
+                    x + (j + 0.5) * cell_width,
+                    y + (matrix.shape[0] - i - 0.5) * cell_height,
+                    f"{matrix[i, j]:g}",
+                    ha="center",
+                    va="center",
+                    fontsize=13,
+                    color=SLATE,
+                )
+        ax.add_patch(
+            Rectangle(
+                (x, y),
+                matrix.shape[1] * cell_width,
+                matrix.shape[0] * cell_height,
+                fill=False,
+                edgecolor=GRID,
+                linewidth=1.8,
+            )
+        )
+        ax.text(x + matrix.shape[1] * cell_width / 2, y + matrix.shape[0] * cell_height + 0.5, label, ha="center", fontsize=14, color=SLATE, weight="bold")
+
+    draw_matrix(coefficient, 5.2, 3.2, column_colors[:3], r"$\mathbf{A}$")
+    ax.text(7.8, 4.25, r"$\times$", ha="center", va="center", fontsize=18, color=SLATE)
+    draw_matrix(np.array([[3], [-3], [2]]), 8.25, 3.2, ("#94a3b8",), r"$\mathbf{x}$")
+    ax.text(9.35, 4.25, r"$=$", ha="center", va="center", fontsize=18, color=SLATE)
+    draw_matrix(rhs, 9.75, 3.2, (column_colors[3],), r"$\mathbf{b}$")
+    ax.text(7.75, 1.95, r"$\mathbf{A}\mathbf{x}=\mathbf{b}$", ha="center", fontsize=14, color=GREEN, weight="bold")
+
+    draw_matrix(augmented, 12.25, 3.2, column_colors, r"$[\mathbf{A}\mid\mathbf{b}]$")
+    ax.plot([14.41, 14.41], [3.2, 5.36], color=SLATE, linewidth=2.0)
+    ax.text(14.77, 2.55, "right-hand side", ha="center", fontsize=10, color=column_colors[3])
+
+    ax.annotate("", xy=(4.65, 4.25), xytext=(3.35, 4.25), arrowprops={"arrowstyle": "->", "color": GRID, "lw": 2.0})
+    ax.annotate("", xy=(11.75, 4.25), xytext=(10.85, 4.25), arrowprops={"arrowstyle": "->", "color": GRID, "lw": 2.0})
+
+    ax.text(5.56, 2.62, r"$x_1$", ha="center", fontsize=10, color=column_colors[0])
+    ax.text(6.28, 2.62, r"$x_2$", ha="center", fontsize=10, color=column_colors[1])
+    ax.text(7.0, 2.62, r"$x_3$", ha="center", fontsize=10, color=column_colors[2])
+
+    fig.suptitle("The equations, matrix equation, and augmented matrix store the same system", fontsize=16, weight="bold")
+    return fig
+
+
+def figure_row_operation_same_solution() -> Figure:
+    x_values = np.linspace(-1.0, 4.0, 240)
+    first_line = 3.0 - x_values
+    second_line = 2.0 * x_values
+    replacement_line = np.full_like(x_values, 2.0)
+
+    fig, axes = plt.subplots(1, 2, figsize=(11.2, 4.8), constrained_layout=True)
+    for ax in axes:
+        style_plane(ax, xlim=(-1.0, 4.0), ylim=(-1.0, 4.0), title="")
+        ax.plot(x_values, first_line, color=BLUE, linewidth=2.4, label=r"$x_1+x_2=3$")
+        ax.scatter(1.0, 2.0, color=GREEN, s=58, zorder=7)
+        ax.annotate(r"$(1,2)$", (1.0, 2.0), xytext=(8, 8), textcoords="offset points", color=GREEN, fontsize=11, weight="bold")
+        ax.set_xlabel(r"$x_1$")
+        ax.set_ylabel(r"$x_2$")
+
+    axes[0].plot(x_values, second_line, color=ORANGE, linewidth=2.4, label=r"$2x_1-x_2=0$")
+    axes[0].set_title("Before the row operation", fontsize=13, weight="bold", pad=10)
+    axes[0].legend(loc="upper right", fontsize=9)
+
+    axes[1].plot(x_values, replacement_line, color=ORANGE, linewidth=2.4, label=r"$-3x_2=-6$")
+    axes[1].set_title(r"After $R_2\leftarrow R_2-2R_1$", fontsize=13, weight="bold", pad=10)
+    axes[1].legend(loc="upper right", fontsize=9)
+
+    fig.suptitle("A row operation changes an equation but preserves the common solution", fontsize=16, weight="bold")
+    return fig
+
+
+def figure_gaussian_elimination_steps() -> Figure:
+    matrices = (
+        np.array([[1, 1, 1, 2], [2, 3, 4, 5], [1, 2, 4, 5]]),
+        np.array([[1, 1, 1, 2], [0, 1, 2, 1], [0, 1, 3, 3]]),
+        np.array([[1, 1, 1, 2], [0, 1, 2, 1], [0, 0, 1, 2]]),
+    )
+
+    fig, axes = plt.subplots(1, 3, figsize=(12.0, 4.9), constrained_layout=True)
+
+    def draw_augmented(ax: Axes, matrix: np.ndarray, title: str, pivots: tuple[tuple[int, int], ...] = ()) -> None:
+        ax.imshow(np.ones_like(matrix), cmap="Greys", vmin=0, vmax=4, alpha=0.10)
+        for i in range(matrix.shape[0]):
+            for j in range(matrix.shape[1]):
+                ax.text(j, i, f"{matrix[i, j]:g}", ha="center", va="center", fontsize=15, color=SLATE)
+        ax.axvline(2.5, color=SLATE, linewidth=2.0)
+        for i, j in pivots:
+            ax.add_patch(Rectangle((j - 0.46, i - 0.46), 0.92, 0.92, fill=False, edgecolor=GREEN, linewidth=3.0))
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title(title, fontsize=13, weight="bold", pad=10)
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+
+    draw_augmented(axes[0], matrices[0], "Start")
+    draw_augmented(axes[1], matrices[1], "Eliminate below the first pivot")
+    draw_augmented(axes[2], matrices[2], "Row echelon form", ((0, 0), (1, 1), (2, 2)))
+
+    axes[0].text(1.5, 3.05, r"$R_2\leftarrow R_2-2R_1$" "\n" r"$R_3\leftarrow R_3-R_1$", ha="center", va="top", fontsize=10, color=SLATE)
+    axes[1].text(1.5, 3.05, r"$R_3\leftarrow R_3-R_2$", ha="center", va="top", fontsize=10, color=SLATE)
+    axes[2].text(1.5, 3.05, r"$x_3=2\;\longrightarrow\;x_2=-3\;\longrightarrow\;x_1=3$", ha="center", va="top", fontsize=10.5, color=GREEN, weight="bold")
+
+    fig.suptitle("Gaussian elimination moves downward; back substitution moves upward", fontsize=16, weight="bold")
+    return fig
+
+
+def figure_parameter_system_outcomes() -> Figure:
+    point = np.array([1.0, 1.0, 0.0])
+    direction = np.array([1.0, -2.0, 1.0])
+    parameter = np.linspace(-1.4, 2.6, 160)
+    line = point[:, None] + direction[:, None] * parameter[None, :]
+    x_grid, y_grid = np.meshgrid(np.linspace(-0.8, 3.8, 18), np.linspace(-3.8, 3.4, 18))
+
+    cases = (
+        (1.0, 2.0, "one point", GREEN),
+        (0.0, 0.0, "the whole line", BLUE),
+        (0.0, 1.0, "no intersection", ORANGE),
+    )
+
+    fig = plt.figure(figsize=(12.2, 4.8), constrained_layout=True)
+    for index, (lambda_value, mu_value, title, color) in enumerate(cases, start=1):
+        ax = fig.add_subplot(1, 3, index, projection="3d")
+        z_grid = (3.0 + mu_value - x_grid - 2.0 * y_grid) / (3.0 + lambda_value)
+        ax.plot_surface(x_grid, y_grid, z_grid, color=color, alpha=0.16, linewidth=0, shade=False)
+        ax.plot(line[0], line[1], line[2], color=SLATE, linewidth=2.6)
+        if lambda_value != 0:
+            intersection_parameter = mu_value / lambda_value
+            intersection = point + intersection_parameter * direction
+            ax.scatter(*intersection, color=GREEN, s=55)
+            ax.text(*(intersection + np.array([0.08, 0.08, 0.08])), r"$(3,-3,2)$", color=GREEN, fontsize=9, weight="bold")
+        elif mu_value == 0:
+            selected = np.array([-1.0, 0.0, 1.0])
+            selected_points = point[:, None] + direction[:, None] * selected[None, :]
+            ax.scatter(selected_points[0], selected_points[1], selected_points[2], color=BLUE, s=28)
+        ax.set_xlim(-1.0, 4.0)
+        ax.set_ylim(-4.0, 3.5)
+        ax.set_zlim(-1.8, 2.8)
+        ax.set_xlabel(r"$x_1$", labelpad=2)
+        ax.set_ylabel(r"$x_2$", labelpad=2)
+        ax.set_zlabel(r"$x_3$", labelpad=2)
+        ax.set_title(title + "\n" + rf"$\lambda={lambda_value:g},\;\mu={mu_value:g}$", fontsize=12, weight="bold", pad=8)
+        ax.view_init(elev=23, azim=-57)
+        ax.grid(True, color=GRID, alpha=0.6)
+
+    fig.suptitle("The full system has one point, a whole line, or no solution", fontsize=16, weight="bold")
+    return fig
+
+
+def figure_affine_solution_translation() -> Figure:
+    particular = np.array([1.0, 1.0, 0.0])
+    direction = np.array([1.0, -2.0, 1.0])
+    parameter = np.linspace(-1.5, 1.5, 160)
+    homogeneous = direction[:, None] * parameter[None, :]
+    nonhomogeneous = particular[:, None] + homogeneous
+
+    fig = plt.figure(figsize=(10.4, 5.6), constrained_layout=True)
+    ax = fig.add_subplot(111, projection="3d")
+    ax.plot(homogeneous[0], homogeneous[1], homogeneous[2], color=BLUE, linewidth=3.0, label="homogeneous solutions")
+    ax.plot(nonhomogeneous[0], nonhomogeneous[1], nonhomogeneous[2], color=GREEN, linewidth=3.0, label="nonhomogeneous solutions")
+
+    for t_value in (-1.0, 0.0, 1.0):
+        start = t_value * direction
+        end = particular + start
+        ax.scatter(*start, color=BLUE, s=32)
+        ax.scatter(*end, color=GREEN, s=32)
+        ax.quiver(*start, *particular, color=ORANGE, linewidth=1.8, arrow_length_ratio=0.14)
+
+    ax.scatter(0, 0, 0, color=SLATE, s=30)
+    ax.text(0.08, 0.08, 0.08, r"$\mathbf{0}$", color=SLATE, fontsize=10)
+    ax.text(*(particular + np.array([0.08, 0.08, 0.08])), r"$\mathbf{x}_p$", color=ORANGE, fontsize=11, weight="bold")
+    ax.set_xlim(-1.8, 2.8)
+    ax.set_ylim(-3.5, 3.5)
+    ax.set_zlim(-1.8, 1.8)
+    ax.set_xlabel(r"$x_1$")
+    ax.set_ylabel(r"$x_2$")
+    ax.set_zlabel(r"$x_3$")
+    ax.view_init(elev=23, azim=-57)
+    ax.legend(loc="upper left", fontsize=9)
+    ax.grid(True, color=GRID, alpha=0.6)
+
+    fig.suptitle("A consistent nonhomogeneous solution set is a translated homogeneous solution set", fontsize=16, weight="bold")
+    return fig
+
+
+def figure_two_by_two_determinant() -> Figure:
+    fig, ax = plt.subplots(figsize=(11.0, 5.2), constrained_layout=True)
+    ax.set_xlim(0, 12)
+    ax.set_ylim(0, 6)
+    ax.axis("off")
+
+    def draw_two_by_two(x: float, y: float, entries: tuple[tuple[str, str], tuple[str, str]], label: str) -> None:
+        offsets = ((-0.35, 0.35), (0.35, 0.35), (-0.35, -0.35), (0.35, -0.35))
+        values = (entries[0][0], entries[0][1], entries[1][0], entries[1][1])
+        for (x_offset, y_offset), value in zip(offsets, values):
+            ax.text(x + x_offset, y + y_offset, value, ha="center", va="center", fontsize=18, color=SLATE)
+        ax.plot([x - 0.85, x - 0.85, x - 0.68], [y + 0.85, y - 0.85, y - 0.85], color=SLATE, linewidth=2.0)
+        ax.plot([x - 0.85, x - 0.68], [y + 0.85, y + 0.85], color=SLATE, linewidth=2.0)
+        ax.plot([x + 0.85, x + 0.85, x + 0.68], [y + 0.85, y - 0.85, y - 0.85], color=SLATE, linewidth=2.0)
+        ax.plot([x + 0.85, x + 0.68], [y + 0.85, y + 0.85], color=SLATE, linewidth=2.0)
+        ax.text(x, y + 1.2, label, ha="center", va="center", fontsize=15, color=SLATE, weight="bold")
+
+    draw_two_by_two(1.8, 3.4, ((r"$a$", r"$b$"), (r"$c$", r"$d$")), r"$A$")
+    ax.text(1.8, 2.15, r"$a\ne0$", ha="center", va="center", fontsize=12, color=SLATE)
+
+    ax.annotate("", xy=(5.05, 3.4), xytext=(3.0, 3.4), arrowprops={"arrowstyle": "->", "color": ORANGE, "lw": 2.4})
+    ax.text(4.0, 4.05, r"$R_2\leftarrow R_2-\frac{c}{a}R_1$", ha="center", va="center", fontsize=13, color=ORANGE)
+
+    draw_two_by_two(
+        6.4,
+        3.4,
+        ((r"$a$", r"$b$"), (r"$0$", r"$d-\frac{cb}{a}$")),
+        r"$U$",
+    )
+
+    ax.annotate("", xy=(9.35, 3.4), xytext=(7.75, 3.4), arrowprops={"arrowstyle": "->", "color": GREEN, "lw": 2.4})
+    ax.text(10.45, 3.65, r"$a\left(d-\frac{cb}{a}\right)$", ha="center", va="center", fontsize=17, color=GREEN, weight="bold")
+    ax.text(10.45, 2.85, r"$=\;ad-bc$", ha="center", va="center", fontsize=18, color=GREEN, weight="bold")
+    ax.text(6.0, 1.15, "row addition preserves the quantity; the pivot product reveals it", ha="center", fontsize=11.5, color=SLATE)
+
+    fig.suptitle(r"For a $2\times2$ system, elimination naturally produces $ad-bc$", fontsize=16, weight="bold")
+    return fig
+
+
+def figure_permutation_selections() -> Figure:
+    permutations = (
+        ((1, 2, 3), 1, 0),
+        ((2, 3, 1), 1, 2),
+        ((3, 1, 2), 1, 2),
+        ((1, 3, 2), -1, 1),
+        ((2, 1, 3), -1, 1),
+        ((3, 2, 1), -1, 3),
+    )
+
+    fig, axes = plt.subplots(2, 3, figsize=(10.8, 7.0), constrained_layout=True)
+    for ax, (permutation, sign, inversion_count) in zip(axes.flat, permutations):
+        ax.imshow(np.ones((3, 3)), cmap="Greys", vmin=0, vmax=4, alpha=0.10)
+        color = GREEN if sign > 0 else ORANGE
+        for i in range(3):
+            for j in range(3):
+                ax.text(j, i, rf"$a_{{{i + 1}{j + 1}}}$", ha="center", va="center", fontsize=11, color=SLATE)
+            selected_column = permutation[i] - 1
+            ax.add_patch(Rectangle((selected_column - 0.46, i - 0.46), 0.92, 0.92, fill=False, edgecolor=color, linewidth=3.0))
+        sign_label = "+" if sign > 0 else "-"
+        ax.set_title(
+            rf"$\sigma={permutation}$   {sign_label}" + "\n" + rf"$\tau(\sigma)={inversion_count}$",
+            fontsize=11,
+            weight="bold",
+            color=color,
+        )
+        ax.set_xticks([])
+        ax.set_yticks([])
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+
+    fig.suptitle("A determinant term chooses exactly one entry from every row and every column", fontsize=16, weight="bold")
+    return fig
+
+
+def figure_inversion_crossings() -> Figure:
+    permutation = (3, 1, 4, 2)
+    colors = (BLUE, ORANGE, GREEN, "#7c3aed")
+
+    fig, ax = plt.subplots(figsize=(9.6, 5.4), constrained_layout=True)
+    ax.set_xlim(0.3, 4.7)
+    ax.set_ylim(0.2, 4.8)
+    ax.axis("off")
+
+    for position in range(1, 5):
+        ax.scatter(position, 4.0, s=280, facecolor="white", edgecolor=GRID, linewidth=2.0, zorder=4)
+        ax.scatter(position, 1.0, s=280, facecolor="white", edgecolor=GRID, linewidth=2.0, zorder=4)
+        ax.text(position, 4.0, str(position), ha="center", va="center", fontsize=13, color=SLATE, weight="bold", zorder=5)
+        ax.text(position, 1.0, str(position), ha="center", va="center", fontsize=13, color=SLATE, weight="bold", zorder=5)
+
+    for index, image in enumerate(permutation, start=1):
+        ax.plot([index, image], [3.78, 1.22], color=colors[index - 1], linewidth=2.8, zorder=2)
+
+    ax.text(0.55, 4.45, "positions", fontsize=12, color=SLATE, weight="bold")
+    ax.text(0.55, 0.45, "values", fontsize=12, color=SLATE, weight="bold")
+    ax.text(4.55, 3.0, r"$\sigma=(3,1,4,2)$", ha="right", fontsize=14, color=SLATE)
+    ax.text(4.55, 2.5, r"$\tau(\sigma)=3$", ha="right", fontsize=14, color=ORANGE, weight="bold")
+    ax.text(4.55, 2.0, r"$\operatorname{sgn}(\sigma)=-1$", ha="right", fontsize=14, color=ORANGE, weight="bold")
+
+    fig.suptitle("Each crossing is an inversion pair", fontsize=16, weight="bold")
+    return fig
+
+
+def figure_determinant_orientation() -> Figure:
+    matrix = np.array([[2.0, 0.5], [0.3, 1.2]])
+    swapped = matrix[:, [1, 0]]
+    square = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0]])
+
+    fig, axes = plt.subplots(1, 3, figsize=(12.0, 4.5), constrained_layout=True)
+
+    def transformed_polygon(transform: np.ndarray) -> np.ndarray:
+        return (transform @ square.T).T
+
+    panels = (
+        (np.eye(2), BLUE, r"$\det(I)=1$", "standard orientation"),
+        (matrix, GREEN, r"$\det(A)=2.25$", "area scaled, orientation kept"),
+        (swapped, ORANGE, r"$\det(A_{\mathrm{swap}})=-2.25$", "same area, orientation reversed"),
+    )
+
+    for ax, (transform, color, determinant_label, title) in zip(axes, panels):
+        style_plane(ax, xlim=(-0.6, 3.0), ylim=(-0.6, 2.4), title=title)
+        polygon = transformed_polygon(transform)
+        ax.fill(polygon[:, 0], polygon[:, 1], color=color, alpha=0.20)
+        ax.plot(polygon[:, 0], polygon[:, 1], color=color, linewidth=2.5)
+        first_column = transform[:, 0]
+        second_column = transform[:, 1]
+        arrow(ax, np.zeros(2), first_column, BLUE, r"$\mathbf{a}_1$")
+        arrow(ax, np.zeros(2), second_column, ORANGE, r"$\mathbf{a}_2$")
+        ax.text(0.96, 0.06, determinant_label, transform=ax.transAxes, ha="right", va="bottom", fontsize=12, color=color, weight="bold")
+
+    fig.suptitle("The determinant is signed area in two dimensions", fontsize=16, weight="bold")
+    return fig
+
+
+def normalize_svg(path: Path) -> None:
+    """Remove generator-introduced trailing whitespace from an SVG file."""
+    content = path.read_text(encoding="utf-8")
+    normalized = "\n".join(line.rstrip() for line in content.splitlines()) + "\n"
+    path.write_text(normalized, encoding="utf-8")
+
+
 def save_figure(figure: Figure, stem: str, formats: tuple[str, ...]) -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     for file_format in formats:
         target = OUTPUT_DIR / f"{stem}.{file_format}"
         figure.savefig(
-                    target,
-                    dpi=180,
-                    bbox_inches="tight",
-                    metadata={"Creator": "Matplotlib", "Date": "2026-07-20"},
-                )
+            target,
+            dpi=180,
+            bbox_inches="tight",
+            metadata={"Creator": "Matplotlib", "Date": "2026-07-20"},
+        )
+        if file_format == "svg":
+            normalize_svg(target)
         print(f"generated {target.relative_to(ROOT)}")
     plt.close(figure)
 
@@ -563,6 +924,15 @@ def main() -> None:
     save_figure(figure_matrix_product_entry(), "matrix-product-entry", formats)
     save_figure(figure_product_columns(), "product-columns", formats)
     save_figure(figure_noncommutativity(), "matrix-noncommutativity", formats)
+    save_figure(figure_system_matrix_correspondence(), "system-matrix-correspondence", formats)
+    save_figure(figure_row_operation_same_solution(), "row-operation-same-solution", formats)
+    save_figure(figure_gaussian_elimination_steps(), "gaussian-elimination-steps", formats)
+    save_figure(figure_parameter_system_outcomes(), "parameter-system-outcomes", formats)
+    save_figure(figure_affine_solution_translation(), "affine-solution-translation", formats)
+    save_figure(figure_two_by_two_determinant(), "two-by-two-determinant", formats)
+    save_figure(figure_permutation_selections(), "permutation-selections", formats)
+    save_figure(figure_inversion_crossings(), "inversion-crossings", formats)
+    save_figure(figure_determinant_orientation(), "determinant-orientation", formats)
 
 
 if __name__ == "__main__":
