@@ -358,6 +358,171 @@ def figure_batch_layout() -> Figure:
     return fig
 
 
+def figure_composition_spaces() -> Figure:
+    fig, ax = plt.subplots(figsize=(11.2, 5.0), constrained_layout=True)
+    ax.set_xlim(0, 12)
+    ax.set_ylim(0, 6)
+    ax.axis("off")
+
+    space_box = {"boxstyle": "round,pad=0.55", "facecolor": "white", "edgecolor": GRID, "linewidth": 1.6}
+    matrix_box = {"boxstyle": "round,pad=0.55", "facecolor": "#fff7ed", "edgecolor": ORANGE, "linewidth": 1.8}
+
+    ax.text(1.2, 3.2, r"$\mathbb{R}^{n}$", ha="center", va="center", fontsize=19, color=BLUE, bbox=space_box)
+    ax.text(4.5, 3.2, r"$\mathbb{R}^{p}$", ha="center", va="center", fontsize=19, color=SLATE, bbox=space_box)
+    ax.text(7.8, 3.2, r"$\mathbb{R}^{m}$", ha="center", va="center", fontsize=19, color=GREEN, bbox=space_box)
+
+    ax.annotate("", xy=(3.7, 3.2), xytext=(2.0, 3.2), arrowprops={"arrowstyle": "->", "color": BLUE, "lw": 2.2})
+    ax.text(2.85, 3.75, r"$\mathbf{B}$", ha="center", va="center", fontsize=17, color=BLUE, bbox=matrix_box)
+    ax.text(2.85, 2.55, r"$p\times n$", ha="center", va="center", fontsize=11, color=SLATE)
+
+    ax.annotate("", xy=(7.0, 3.2), xytext=(5.3, 3.2), arrowprops={"arrowstyle": "->", "color": ORANGE, "lw": 2.2})
+    ax.text(6.15, 3.75, r"$\mathbf{A}$", ha="center", va="center", fontsize=17, color=ORANGE, bbox=matrix_box)
+    ax.text(6.15, 2.55, r"$m\times p$", ha="center", va="center", fontsize=11, color=SLATE)
+
+    ax.annotate(
+        "",
+        xy=(7.3, 4.05),
+        xytext=(1.7, 4.05),
+        arrowprops={"arrowstyle": "->", "color": GREEN, "lw": 2.4, "connectionstyle": "arc3,rad=-0.24"},
+    )
+    ax.text(4.5, 5.05, r"$\mathbf{A}\mathbf{B}$", ha="center", va="center", fontsize=18, color=GREEN, bbox=space_box)
+    ax.text(4.5, 4.45, r"$m\times n$", ha="center", va="center", fontsize=11, color=SLATE)
+
+    ax.text(9.65, 3.75, "The right matrix acts first", ha="center", va="center", fontsize=12, color=SLATE, weight="bold")
+    ax.text(9.65, 3.1, r"$\mathbf{x}\mapsto\mathbf{B}\mathbf{x}\mapsto\mathbf{A}(\mathbf{B}\mathbf{x})$", ha="center", va="center", fontsize=12, color=SLATE)
+    ax.text(9.65, 2.45, r"$=\,(\mathbf{A}\mathbf{B})\mathbf{x}$", ha="center", va="center", fontsize=13, color=GREEN)
+
+    fig.suptitle("Matrix multiplication records the composition of two linear maps", fontsize=16, weight="bold")
+    return fig
+
+
+def figure_matrix_product_entry() -> Figure:
+    matrix_a = np.array([[1, 2, 0], [-1, 0, 1]])
+    matrix_b = np.array([[1, 0, 2, -1], [0, 1, -1, 2], [2, -1, 0, 1]])
+    product = matrix_a @ matrix_b
+
+    fig, axes = plt.subplots(1, 3, figsize=(11.4, 4.8), constrained_layout=True)
+
+    def draw_matrix(ax: Axes, matrix: np.ndarray, title: str) -> None:
+        ax.imshow(np.ones_like(matrix), cmap="Greys", vmin=0, vmax=4, alpha=0.12)
+        for i in range(matrix.shape[0]):
+            for j in range(matrix.shape[1]):
+                ax.text(j, i, f"{matrix[i, j]:g}", ha="center", va="center", fontsize=15, color=SLATE)
+        ax.set_xticks(range(matrix.shape[1]), [str(j) for j in range(1, matrix.shape[1] + 1)])
+        ax.set_yticks(range(matrix.shape[0]), [str(i) for i in range(1, matrix.shape[0] + 1)])
+        ax.set_xlabel("column")
+        ax.set_ylabel("row")
+        ax.set_title(title, fontsize=14, weight="bold", pad=12)
+        ax.tick_params(length=0, colors="#64748b", labelsize=9)
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+
+    draw_matrix(axes[0], matrix_a, r"$\mathbf{A}\;(2\times3)$")
+    draw_matrix(axes[1], matrix_b, r"$\mathbf{B}\;(3\times4)$")
+    draw_matrix(axes[2], product, r"$\mathbf{C}=\mathbf{A}\mathbf{B}\;(2\times4)$")
+
+    axes[0].add_patch(Rectangle((-0.48, 0.52), 2.96, 0.96, facecolor=ORANGE, alpha=0.22, edgecolor=ORANGE, linewidth=2.2))
+    axes[1].add_patch(Rectangle((1.52, -0.48), 0.96, 2.96, facecolor=BLUE, alpha=0.20, edgecolor=BLUE, linewidth=2.2))
+    axes[2].add_patch(Rectangle((1.52, 0.52), 0.96, 0.96, fill=False, edgecolor=GREEN, linewidth=3.0))
+
+    fig.text(
+        0.5,
+        0.02,
+        r"$C_{2,3}=(-1)\cdot2+0\cdot(-1)+1\cdot0=-2$",
+        ha="center",
+        va="bottom",
+        fontsize=13,
+        color=GREEN,
+        weight="bold",
+    )
+    fig.suptitle("One product entry pairs one row of A with one column of B", fontsize=16, weight="bold")
+    return fig
+
+
+def figure_product_columns() -> Figure:
+    fig, ax = plt.subplots(figsize=(11.2, 5.2), constrained_layout=True)
+    ax.set_xlim(0, 13)
+    ax.set_ylim(0, 6)
+    ax.axis("off")
+
+    colors = (BLUE, ORANGE, GREEN, "#7c3aed")
+
+    def draw_column_matrix(x: float, y: float, rows: int, columns: int, label: str, row_label: str) -> None:
+        cell_width = 0.72
+        cell_height = 0.72
+        for j in range(columns):
+            for i in range(rows):
+                ax.add_patch(
+                    Rectangle(
+                        (x + j * cell_width, y + (rows - 1 - i) * cell_height),
+                        cell_width,
+                        cell_height,
+                        facecolor=colors[j],
+                        edgecolor="white",
+                        alpha=0.24,
+                        linewidth=1.2,
+                    )
+                )
+            ax.add_patch(
+                Rectangle(
+                    (x + j * cell_width, y),
+                    cell_width,
+                    rows * cell_height,
+                    fill=False,
+                    edgecolor=colors[j],
+                    linewidth=2.0,
+                )
+            )
+            ax.text(x + (j + 0.5) * cell_width, y - 0.38, rf"${label}_{j + 1}$", ha="center", va="center", fontsize=11, color=colors[j])
+        ax.text(x + columns * cell_width / 2, y + rows * cell_height + 0.48, row_label, ha="center", va="center", fontsize=14, color=SLATE, weight="bold")
+
+    draw_column_matrix(0.9, 1.35, 3, 4, r"\mathbf{b}", r"columns of $\mathbf{B}$")
+    draw_column_matrix(8.8, 1.7, 2, 4, r"\mathbf{c}", r"columns of $\mathbf{C}=\mathbf{A}\mathbf{B}$")
+
+    ax.text(5.55, 3.0, r"apply $\mathbf{A}$", ha="center", va="center", fontsize=15, color=ORANGE, weight="bold")
+    ax.annotate("", xy=(8.35, 2.85), xytext=(3.95, 2.85), arrowprops={"arrowstyle": "->", "color": ORANGE, "lw": 2.5})
+    ax.text(6.15, 2.25, r"$\mathbf{c}_j=\mathbf{A}\mathbf{b}_j$ for every $j$", ha="center", va="center", fontsize=13, color=SLATE)
+    ax.text(6.15, 0.55, r"$(\mathbf{A}\mathbf{B})_{:,j}=\mathbf{A}\mathbf{B}_{:,j}$", ha="center", va="center", fontsize=14, color=GREEN, weight="bold")
+
+    fig.suptitle("Left multiplication transforms every column without changing its position", fontsize=16, weight="bold")
+    return fig
+
+
+def figure_noncommutativity() -> Figure:
+    shear = np.array([[1.0, 1.0], [0.0, 1.0]])
+    scale = np.array([[2.0, 0.0], [0.0, 1.0]])
+    square = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0]])
+
+    fig, axes = plt.subplots(1, 3, figsize=(12.0, 4.4), constrained_layout=True)
+
+    def draw_shape(ax: Axes, vertices: np.ndarray, color: str, label: str, *, alpha: float, linestyle: str = "-") -> None:
+        ax.fill(vertices[:, 0], vertices[:, 1], color=color, alpha=alpha, zorder=2)
+        ax.plot(vertices[:, 0], vertices[:, 1], color=color, linewidth=2.3, linestyle=linestyle, label=label, zorder=3)
+
+    for ax in axes:
+        style_plane(ax, xlim=(-0.5, 4.6), ylim=(-0.5, 2.2), title="")
+        draw_shape(ax, square, SLATE, "original", alpha=0.05, linestyle="--")
+
+    axes[0].set_title("Original unit square", fontsize=13, weight="bold", pad=10)
+    draw_shape(axes[0], square, BLUE, "original", alpha=0.16)
+
+    intermediate_ab = (scale @ square.T).T
+    final_ab = (shear @ intermediate_ab.T).T
+    axes[1].set_title(r"$\mathbf{A}\mathbf{B}$: scale, then shear", fontsize=13, weight="bold", pad=10)
+    draw_shape(axes[1], intermediate_ab, GRID, "after B", alpha=0.10, linestyle=":")
+    draw_shape(axes[1], final_ab, GREEN, "after A", alpha=0.18)
+
+    intermediate_ba = (shear @ square.T).T
+    final_ba = (scale @ intermediate_ba.T).T
+    axes[2].set_title(r"$\mathbf{B}\mathbf{A}$: shear, then scale", fontsize=13, weight="bold", pad=10)
+    draw_shape(axes[2], intermediate_ba, GRID, "after A", alpha=0.10, linestyle=":")
+    draw_shape(axes[2], final_ba, ORANGE, "after B", alpha=0.18)
+
+    axes[1].text(0.96, 0.08, r"$\mathbf{A}\mathbf{B}\ne\mathbf{B}\mathbf{A}$", transform=axes[1].transAxes, ha="right", va="bottom", fontsize=13, color=SLATE, weight="bold")
+    fig.suptitle("Changing the order changes the transformation", fontsize=16, weight="bold")
+    return fig
+
+
 def save_figure(figure: Figure, stem: str, formats: tuple[str, ...]) -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     for file_format in formats:
@@ -394,6 +559,10 @@ def main() -> None:
     save_figure(figure_row_column_views(), "row-column-views", formats)
     save_figure(figure_rectangular_linear_map(), "rectangular-linear-map", formats)
     save_figure(figure_batch_layout(), "batch-layout", formats)
+    save_figure(figure_composition_spaces(), "composition-spaces", formats)
+    save_figure(figure_matrix_product_entry(), "matrix-product-entry", formats)
+    save_figure(figure_product_columns(), "product-columns", formats)
+    save_figure(figure_noncommutativity(), "matrix-noncommutativity", formats)
 
 
 if __name__ == "__main__":

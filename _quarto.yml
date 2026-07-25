@@ -29,6 +29,7 @@ book:
         - chapters/01-linear-algebra/index.qmd
         - chapters/01-linear-algebra/scalars-and-vectors.qmd
         - chapters/01-linear-algebra/matrices-and-linear-maps.qmd
+        - chapters/01-linear-algebra/matrix-multiplication-and-composition.qmd
     - part: "附录"
       chapters:
         - appendices/symbol-index.qmd
