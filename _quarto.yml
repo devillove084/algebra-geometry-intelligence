@@ -32,6 +32,7 @@ book:
         - chapters/01-linear-algebra/matrix-multiplication-and-composition.qmd
         - chapters/01-linear-algebra/linear-systems-and-elimination.qmd
         - chapters/01-linear-algebra/permutations-inversions-and-determinants.qmd
+        - chapters/01-linear-algebra/determinants-and-linear-systems.qmd
     - part: "附录"
       chapters:
         - appendices/symbol-index.qmd

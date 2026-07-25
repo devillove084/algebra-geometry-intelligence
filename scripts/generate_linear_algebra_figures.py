@@ -875,6 +875,202 @@ def figure_determinant_orientation() -> Figure:
     return fig
 
 
+def figure_invertibility_equivalences() -> Figure:
+    fig, ax = plt.subplots(figsize=(8.6, 8.6), constrained_layout=True)
+    ax.set_xlim(0, 10)
+    ax.set_ylim(0, 10)
+    ax.axis("off")
+
+    statements = (
+        (8.8, r"$\det(A)\ne0$", "determinant", BLUE),
+        (7.0, r"$n$ pivots", "elimination", GREEN),
+        (5.2, r"$Ah=0\Rightarrow h=0$", "homogeneous directions", ORANGE),
+        (3.4, r"$Ax=b$ has one solution for every $b$", "linear systems", "#7c3aed"),
+        (1.6, r"$A^{-1}$ exists", "inverse map", BLUE),
+    )
+    box = {"boxstyle": "round,pad=0.55", "facecolor": "white", "edgecolor": GRID, "linewidth": 1.8}
+
+    for index, (y_pos, statement, viewpoint, color) in enumerate(statements):
+        ax.text(5.2, y_pos, statement, ha="center", va="center", fontsize=15, color=color, weight="bold", bbox=box)
+        ax.text(8.15, y_pos, viewpoint, ha="left", va="center", fontsize=10.5, color=SLATE)
+        if index < len(statements) - 1:
+            next_y = statements[index + 1][0]
+            ax.annotate(
+                "",
+                xy=(5.2, next_y + 0.55),
+                xytext=(5.2, y_pos - 0.55),
+                arrowprops={"arrowstyle": "<->", "color": "#94a3b8", "lw": 2.0},
+            )
+
+    ax.text(1.0, 5.2, "same\nnondegeneracy", ha="center", va="center", fontsize=12, color=SLATE, weight="bold")
+    ax.annotate("", xy=(2.25, 8.8), xytext=(2.25, 1.6), arrowprops={"arrowstyle": "<->", "color": GRID, "lw": 2.0})
+    fig.suptitle("Five equivalent views of an invertible square matrix", fontsize=16, weight="bold")
+    return fig
+
+
+def figure_inverse_solves_basis() -> Figure:
+    fig, ax = plt.subplots(figsize=(12.0, 5.4), constrained_layout=True)
+    ax.set_xlim(0, 13)
+    ax.set_ylim(0, 6)
+    ax.axis("off")
+
+    box = {"boxstyle": "round,pad=0.5", "facecolor": "white", "edgecolor": GRID, "linewidth": 1.6}
+    inverse_box = {"boxstyle": "round,pad=0.55", "facecolor": "#eff6ff", "edgecolor": BLUE, "linewidth": 2.0}
+
+    for y_pos, basis_label, solution_label in (
+        (4.6, r"$\mathbf{e}_1$", r"$\mathbf{x}_1$"),
+        (3.0, r"$\vdots$", r"$\vdots$"),
+        (1.4, r"$\mathbf{e}_n$", r"$\mathbf{x}_n$"),
+    ):
+        ax.text(0.9, y_pos, basis_label, ha="center", va="center", fontsize=16, color=ORANGE, bbox=box)
+        ax.annotate("", xy=(3.6, y_pos), xytext=(1.55, y_pos), arrowprops={"arrowstyle": "->", "color": GRID, "lw": 2.0})
+        if basis_label != r"$\vdots$":
+            ax.text(2.55, y_pos + 0.35, r"solve $A\mathbf{x}_j=\mathbf{e}_j$", ha="center", fontsize=9.5, color=SLATE)
+        ax.text(4.2, y_pos, solution_label, ha="center", va="center", fontsize=16, color=GREEN, bbox=box)
+
+    ax.annotate("", xy=(6.5, 3.0), xytext=(4.9, 3.0), arrowprops={"arrowstyle": "->", "color": GREEN, "lw": 2.3})
+    ax.text(5.7, 3.45, "collect columns", ha="center", fontsize=10.5, color=SLATE)
+    ax.text(7.25, 3.0, r"$A^{-1}=[\,\mathbf{x}_1\;\cdots\;\mathbf{x}_n\,]$", ha="center", va="center", fontsize=14, color=BLUE, bbox=inverse_box)
+
+    ax.text(9.45, 4.55, r"$\mathbf{b}$", ha="center", va="center", fontsize=16, color=ORANGE, bbox=box)
+    ax.annotate("", xy=(11.25, 4.55), xytext=(10.1, 4.55), arrowprops={"arrowstyle": "->", "color": BLUE, "lw": 2.2})
+    ax.text(10.68, 4.9, r"$A^{-1}$", ha="center", fontsize=11, color=BLUE, weight="bold")
+    ax.text(11.85, 4.55, r"$\mathbf{x}$", ha="center", va="center", fontsize=16, color=GREEN, bbox=box)
+    ax.annotate("", xy=(9.95, 1.45), xytext=(11.35, 1.45), arrowprops={"arrowstyle": "->", "color": ORANGE, "lw": 2.2})
+    ax.text(10.68, 1.8, r"$A$", ha="center", fontsize=11, color=ORANGE, weight="bold")
+    ax.text(9.35, 1.45, r"$\mathbf{b}$", ha="center", va="center", fontsize=16, color=ORANGE, bbox=box)
+    ax.text(11.85, 1.45, r"$\mathbf{x}$", ha="center", va="center", fontsize=16, color=GREEN, bbox=box)
+    ax.text(10.65, 3.0, r"$A^{-1}$ reverses $A$", ha="center", va="center", fontsize=12, color=SLATE, weight="bold")
+
+    fig.suptitle("Solving for the basis vectors builds the inverse matrix column by column", fontsize=16, weight="bold")
+    return fig
+
+
+def figure_cramer_column_replacement() -> Figure:
+    fig, ax = plt.subplots(figsize=(12.0, 5.2), constrained_layout=True)
+    ax.set_xlim(0, 13)
+    ax.set_ylim(0, 6)
+    ax.axis("off")
+
+    box = {"boxstyle": "round,pad=0.55", "facecolor": "white", "edgecolor": GRID, "linewidth": 1.6}
+    ax.text(1.9, 3.4, r"$\det(\mathbf{a}_1,\ldots,\mathbf{b},\ldots,\mathbf{a}_n)$", ha="center", va="center", fontsize=14, color=BLUE, bbox=box)
+    ax.text(1.9, 2.4, r"$\mathbf{b}=\sum_k x_k\mathbf{a}_k$", ha="center", va="center", fontsize=13, color=SLATE)
+
+    ax.annotate("", xy=(5.1, 3.35), xytext=(3.65, 3.35), arrowprops={"arrowstyle": "->", "color": ORANGE, "lw": 2.3})
+    ax.text(4.38, 3.75, "column linearity", ha="center", fontsize=10.5, color=ORANGE, weight="bold")
+
+    ax.text(6.45, 4.35, r"$k\ne j:$ repeated column", ha="center", va="center", fontsize=13, color=ORANGE, bbox=box)
+    ax.text(6.45, 3.35, r"$x_k\det(\ldots,\mathbf{a}_k,\ldots,\mathbf{a}_k,\ldots)=0$", ha="center", va="center", fontsize=12, color=ORANGE)
+    ax.text(6.45, 2.05, r"$k=j:$ original columns", ha="center", va="center", fontsize=13, color=GREEN, bbox=box)
+    ax.text(6.45, 1.05, r"$x_j\det(A)$", ha="center", va="center", fontsize=15, color=GREEN, weight="bold")
+
+    ax.annotate("", xy=(10.0, 3.0), xytext=(8.55, 3.0), arrowprops={"arrowstyle": "->", "color": GREEN, "lw": 2.4})
+    ax.text(11.35, 3.65, r"$\det(A_j(\mathbf{b}))$", ha="center", va="center", fontsize=15, color=BLUE, bbox=box)
+    ax.text(11.35, 2.55, r"$=x_j\det(A)$", ha="center", va="center", fontsize=16, color=GREEN, weight="bold")
+    ax.text(11.35, 1.55, r"$x_j=\frac{\det(A_j(\mathbf{b}))}{\det(A)}$", ha="center", va="center", fontsize=13.5, color=SLATE)
+
+    fig.suptitle("Cramer's rule isolates one coordinate because every duplicate-column term vanishes", fontsize=16, weight="bold")
+    return fig
+
+
+def figure_singular_system_two_rhs() -> Figure:
+    fig, axes = plt.subplots(1, 3, figsize=(12.0, 4.8), constrained_layout=True)
+
+    output_ax, input_ax, text_ax = axes
+    style_plane(output_ax, xlim=(-0.5, 4.0), ylim=(-1.0, 8.2), title="Output: only one reachable line")
+    output_x = np.linspace(-0.5, 4.0, 120)
+    output_ax.plot(output_x, 2.0 * output_x, color=BLUE, linewidth=2.8, label=r"$y_2=2y_1$")
+    output_ax.scatter(3.0, 6.0, s=70, color=GREEN, zorder=6)
+    output_ax.scatter(3.0, 7.0, s=70, color=ORANGE, zorder=6)
+    output_ax.annotate(r"$\mathbf{b}_{\mathrm{on}}=(3,6)$", (3.0, 6.0), xytext=(-88, -18), textcoords="offset points", color=GREEN, fontsize=10, weight="bold")
+    output_ax.annotate(r"$\mathbf{b}_{\mathrm{off}}=(3,7)$", (3.0, 7.0), xytext=(-92, 10), textcoords="offset points", color=ORANGE, fontsize=10, weight="bold")
+    output_ax.legend(loc="upper left", fontsize=9)
+
+    style_plane(input_ax, xlim=(-3.0, 5.0), ylim=(-2.0, 3.5), title="Input: infinitely many preimages")
+    parameter = np.linspace(-1.8, 3.0, 120)
+    solution_x1 = 3.0 - 2.0 * parameter
+    input_ax.plot(solution_x1, parameter, color=GREEN, linewidth=2.8)
+    input_ax.scatter(3.0, 0.0, s=60, color=ORANGE, zorder=6)
+    arrow(input_ax, np.array([3.0, 0.0]), np.array([1.0, 1.0]), BLUE, r"$\mathbf{h}=(-2,1)$")
+    input_ax.text(0.04, 0.94, r"$x_1+2x_2=3$", transform=input_ax.transAxes, ha="left", va="top", fontsize=11, color=GREEN, weight="bold")
+
+    text_ax.set_xlim(0, 1)
+    text_ax.set_ylim(0, 1)
+    text_ax.axis("off")
+    result_box = {"boxstyle": "round,pad=0.55", "facecolor": "white", "edgecolor": GRID, "linewidth": 1.6}
+    text_ax.text(0.5, 0.78, r"$\mathbf{b}_{\mathrm{on}}$", ha="center", va="center", fontsize=14, color=GREEN, weight="bold")
+    text_ax.text(0.5, 0.60, "[1  2 | 3]\n[0  0 | 0]", ha="center", va="center", family="monospace", fontsize=12, color=SLATE, bbox=result_box)
+    text_ax.text(0.5, 0.43, "consistent + free variable", ha="center", fontsize=10.5, color=GREEN, weight="bold")
+    text_ax.text(0.5, 0.28, r"$\mathbf{b}_{\mathrm{off}}$", ha="center", va="center", fontsize=14, color=ORANGE, weight="bold")
+    text_ax.text(0.5, 0.11, "[1  2 | 3]\n[0  0 | 1]", ha="center", va="center", family="monospace", fontsize=12, color=SLATE, bbox=result_box)
+    text_ax.text(0.5, -0.02, "contradiction", ha="center", fontsize=10.5, color=ORANGE, weight="bold")
+
+    fig.suptitle(r"The same singular matrix can give infinitely many solutions or no solution", fontsize=16, weight="bold")
+    return fig
+
+
+def figure_rank_minor_pivots() -> Figure:
+    original = np.array([[1, 2, 0, 1], [0, 1, 1, 1], [1, 3, 1, 2]])
+    echelon = np.array([[1, 2, 0, 1], [0, 1, 1, 1], [0, 0, 0, 0]])
+    fig, axes = plt.subplots(1, 2, figsize=(11.0, 5.4), constrained_layout=True)
+
+    def draw_rank_matrix(ax: Axes, matrix: np.ndarray, title: str, *, highlight_minor: bool) -> None:
+        ax.imshow(np.ones_like(matrix), cmap="Greys", vmin=0, vmax=4, alpha=0.10)
+        for row in range(matrix.shape[0]):
+            for column in range(matrix.shape[1]):
+                ax.text(column, row, str(matrix[row, column]), ha="center", va="center", fontsize=15, color=SLATE)
+        if highlight_minor:
+            ax.add_patch(Rectangle((-0.47, -0.47), 1.94, 1.94, fill=False, edgecolor=BLUE, linewidth=3.0))
+        else:
+            for row, column in ((0, 0), (1, 1)):
+                ax.add_patch(Rectangle((column - 0.46, row - 0.46), 0.92, 0.92, fill=False, edgecolor=GREEN, linewidth=3.0))
+            ax.add_patch(Rectangle((-0.47, 1.53), 3.94, 0.94, facecolor=ORANGE, edgecolor=ORANGE, alpha=0.12, linewidth=2.0))
+        ax.set_xticks(range(matrix.shape[1]), [f"c{index}" for index in range(1, 5)])
+        ax.set_yticks(range(matrix.shape[0]), [f"r{index}" for index in range(1, 4)])
+        ax.tick_params(length=0, colors="#64748b", labelsize=9)
+        ax.set_title(title, fontsize=13, weight="bold", pad=12)
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+
+    draw_rank_matrix(axes[0], original, "A square window survives", highlight_minor=True)
+    draw_rank_matrix(axes[1], echelon, "Elimination reveals the same count", highlight_minor=False)
+    fig.text(0.5, 0.025, r"nonzero $2\times2$ minor $\Longleftrightarrow$ 2 pivots $\Longleftrightarrow\operatorname{rank}(A)=2$", ha="center", fontsize=12.5, color=SLATE, weight="bold")
+    fig.suptitle("Rank connects determinant witnesses to elimination pivots", fontsize=16, weight="bold")
+    return fig
+
+
+def figure_rank_consistency_criterion() -> Figure:
+    fig, ax = plt.subplots(figsize=(9.2, 7.0), constrained_layout=True)
+    ax.set_xlim(0, 10)
+    ax.set_ylim(0, 10)
+    ax.axis("off")
+
+    box = {"boxstyle": "round,pad=0.55", "facecolor": "white", "edgecolor": GRID, "linewidth": 1.7}
+    ax.text(5.0, 8.8, r"compare $\operatorname{rank}(A)$ and $\operatorname{rank}([A\mid b])$", ha="center", va="center", fontsize=14, color=BLUE, weight="bold", bbox=box)
+
+    ax.annotate("", xy=(2.5, 6.8), xytext=(4.45, 8.15), arrowprops={"arrowstyle": "->", "color": ORANGE, "lw": 2.2})
+    ax.text(2.25, 7.75, "different", ha="center", fontsize=10.5, color=ORANGE, weight="bold")
+    ax.text(2.5, 6.1, "no solution", ha="center", va="center", fontsize=15, color=ORANGE, weight="bold", bbox=box)
+    ax.text(2.5, 5.2, "new pivot in the\naugmented column", ha="center", va="center", fontsize=10.5, color=SLATE)
+
+    ax.annotate("", xy=(7.5, 6.8), xytext=(5.55, 8.15), arrowprops={"arrowstyle": "->", "color": GREEN, "lw": 2.2})
+    ax.text(7.75, 7.75, "equal", ha="center", fontsize=10.5, color=GREEN, weight="bold")
+    ax.text(7.5, 6.1, r"compare $\operatorname{rank}(A)$ with $n$", ha="center", va="center", fontsize=13, color=GREEN, weight="bold", bbox=box)
+
+    ax.annotate("", xy=(6.1, 3.35), xytext=(7.1, 5.45), arrowprops={"arrowstyle": "->", "color": BLUE, "lw": 2.2})
+    ax.text(5.7, 4.65, r"$=n$", ha="center", fontsize=11, color=BLUE, weight="bold")
+    ax.text(5.6, 2.7, "unique solution", ha="center", va="center", fontsize=15, color=BLUE, weight="bold", bbox=box)
+    ax.text(5.6, 1.75, "no free variables", ha="center", fontsize=10.5, color=SLATE)
+
+    ax.annotate("", xy=(8.7, 3.35), xytext=(7.9, 5.45), arrowprops={"arrowstyle": "->", "color": "#7c3aed", "lw": 2.2})
+    ax.text(9.0, 4.65, r"$<n$", ha="center", fontsize=11, color="#7c3aed", weight="bold")
+    ax.text(8.55, 2.7, "infinitely many", ha="center", va="center", fontsize=15, color="#7c3aed", weight="bold", bbox=box)
+    ax.text(8.55, 1.75, r"$n-r$ free variables", ha="center", fontsize=10.5, color=SLATE)
+
+    fig.suptitle("Rank first decides consistency, then counts the remaining freedom", fontsize=16, weight="bold")
+    return fig
+
+
 def normalize_svg(path: Path) -> None:
     """Remove generator-introduced trailing whitespace from an SVG file."""
     content = path.read_text(encoding="utf-8")
@@ -933,6 +1129,12 @@ def main() -> None:
     save_figure(figure_permutation_selections(), "permutation-selections", formats)
     save_figure(figure_inversion_crossings(), "inversion-crossings", formats)
     save_figure(figure_determinant_orientation(), "determinant-orientation", formats)
+    save_figure(figure_invertibility_equivalences(), "invertibility-equivalences", formats)
+    save_figure(figure_inverse_solves_basis(), "inverse-solves-basis", formats)
+    save_figure(figure_cramer_column_replacement(), "cramer-column-replacement", formats)
+    save_figure(figure_singular_system_two_rhs(), "singular-system-two-rhs", formats)
+    save_figure(figure_rank_minor_pivots(), "rank-minor-pivots", formats)
+    save_figure(figure_rank_consistency_criterion(), "rank-consistency-criterion", formats)
 
 
 if __name__ == "__main__":

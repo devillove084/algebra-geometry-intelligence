@@ -49,6 +49,11 @@ title: "符号索引"
 | $\tau(\sigma)$ | 非负整数 | 排列 $\sigma$ 的逆序数，即逆序对的总数 |
 | $\operatorname{sgn}(\sigma)$ | $\{-1,+1\}$ 中的标量 | 排列的符号，等于 $(-1)^{\tau(\sigma)}$ |
 | $\det(\mathbf{A})$ | 标量 | 方阵 $\mathbf{A}$ 的行列式 |
+| $\mathbf{A}^{-1}$ | 矩阵 | 方阵 $\mathbf{A}$ 的逆矩阵，满足 $\mathbf{A}\mathbf{A}^{-1}=\mathbf{A}^{-1}\mathbf{A}=\mathbf{I}_n$ |
+| $\mathbf{A}_j(\mathbf{b})$ | 矩阵 | 把方阵 $\mathbf{A}$ 的第 $j$ 列替换为 $\mathbf{b}$ 后得到的矩阵 |
+| $\mathbf{A}[I,J]$ | 矩阵 | 从 $\mathbf{A}$ 中选取行指标集 $I$ 与列指标集 $J$ 得到的子矩阵 |
+| $\Delta_{I,J}$ | 标量 | 方形子矩阵 $\mathbf{A}[I,J]$ 的行列式，即对应子式 |
+| $\operatorname{rank}(\mathbf{A})$ | 非负整数 | $\mathbf{A}$ 的秩；等于最大非零子式阶数，也等于消元后的主元个数 |
 | $\mathbf{A}^{\mathsf T}$ | 矩阵 | $\mathbf{A}$ 的转置 |
 | $\mathbf{A}\mathbf{x}$ | 向量 | 矩阵—向量乘积，也是矩阵各列按 $\mathbf{x}$ 分量形成的线性组合 |
 | $\mathbf{A}\mathbf{B}$ | 矩阵 | 矩阵乘积，表示先应用 $\mathbf{B}$、再应用 $\mathbf{A}$ 的线性映射复合 |
