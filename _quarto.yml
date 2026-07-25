@@ -65,9 +65,10 @@ format:
     code-copy: true
     code-overflow: scroll
     html-math-method: mathjax
+    include-in-header: styles/webfonts.html
   typst:
     papersize: a4
-    mainfont: "Noto Serif CJK SC"
+    mainfont: "Noto Sans CJK SC"
     sansfont: "Noto Sans CJK SC"
     monofont: "DejaVu Sans Mono"
     fontsize: 11pt
