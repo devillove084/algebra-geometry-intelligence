@@ -1071,6 +1071,206 @@ def figure_rank_consistency_criterion() -> Figure:
     return fig
 
 
+def figure_subspace_vs_affine() -> Figure:
+    """A through-origin plane is a subspace; a shifted plane is only affine."""
+    fig = plt.figure(figsize=(11.4, 4.8), constrained_layout=True)
+
+    # Left panel: subspace plane  x + 2y - z = 0  (through origin)
+    ax_sub = fig.add_subplot(1, 2, 1, projection="3d")
+    xx, yy = np.meshgrid(np.linspace(-2.0, 2.0, 16), np.linspace(-2.0, 2.0, 16))
+    zz_sub = xx + 2.0 * yy
+    ax_sub.plot_surface(xx, yy, zz_sub, color=BLUE, alpha=0.16, linewidth=0, shade=False)
+    # two in-plane basis vectors
+    b1 = np.array([1.0, 0.0, 1.0])
+    b2 = np.array([0.0, 1.0, 2.0])
+    for vec, color, label in ((b1, BLUE, r"$\mathbf{b}_1$"), (b2, ORANGE, r"$\mathbf{b}_2$")):
+        ax_sub.quiver(0, 0, 0, *vec, color=color, linewidth=2.6, arrow_length_ratio=0.12)
+        ax_sub.text(*(1.12 * vec), label, color=color, fontsize=11, weight="bold")
+    ax_sub.scatter(0, 0, 0, color=SLATE, s=30, zorder=8)
+    ax_sub.text(0.1, 0.1, 0.1, r"$\mathbf{0}$", color=SLATE, fontsize=9)
+    ax_sub.set_xlim(-2.2, 2.2)
+    ax_sub.set_ylim(-2.2, 2.2)
+    ax_sub.set_zlim(-2.2, 2.2)
+    ax_sub.set_xlabel(r"$x$")
+    ax_sub.set_ylabel(r"$y$")
+    ax_sub.set_zlabel(r"$z$")
+    ax_sub.set_title(r"Subspace: $x+2y-z=0$", fontsize=12, weight="bold", pad=8)
+    ax_sub.view_init(elev=20, azim=-55)
+    ax_sub.grid(True, color=GRID, alpha=0.5)
+
+    # Right panel: affine plane  x + 2y - z = 1  (shifted)
+    ax_aff = fig.add_subplot(1, 2, 2, projection="3d")
+    zz_aff = xx + 2.0 * yy - 1.0
+    ax_aff.plot_surface(xx, yy, zz_aff, color=ORANGE, alpha=0.16, linewidth=0, shade=False)
+    # particular solution
+    xp = np.array([1.0, 0.0, 0.0])
+    ax_aff.scatter(*xp, color=GREEN, s=50, zorder=8)
+    ax_aff.text(*(xp + np.array([0.1, 0.1, 0.1])), r"$\mathbf{x}_p$", color=GREEN, fontsize=11, weight="bold")
+    # show the shift from origin
+    ax_aff.quiver(0, 0, 0, *xp, color=GREEN, linewidth=2.0, arrow_length_ratio=0.14)
+    ax_aff.scatter(0, 0, 0, color=SLATE, s=24, zorder=7)
+    ax_aff.set_xlim(-2.2, 2.2)
+    ax_aff.set_ylim(-2.2, 2.2)
+    ax_aff.set_zlim(-2.2, 2.2)
+    ax_aff.set_xlabel(r"$x$")
+    ax_aff.set_ylabel(r"$y$")
+    ax_aff.set_zlabel(r"$z$")
+    ax_aff.set_title(r"Affine: $x+2y-z=1$", fontsize=12, weight="bold", pad=8)
+    ax_aff.view_init(elev=20, azim=-55)
+    ax_aff.grid(True, color=GRID, alpha=0.5)
+
+    fig.suptitle("A subspace passes through the origin; an affine plane does not", fontsize=15, weight="bold")
+    return fig
+
+
+def figure_span_and_dependence() -> Figure:
+    """Span of one vector is a line; two independent vectors fill the plane; a redundant third adds nothing."""
+    v1 = np.array([1.0, 2.0])
+    v2 = np.array([1.0, -0.5])
+    v3 = v1 + v2  # redundant
+
+    fig, axes = plt.subplots(1, 3, figsize=(12.0, 4.2), constrained_layout=True)
+
+    # Panel 1: span of one vector = line
+    style_plane(axes[0], xlim=(-3.0, 3.0), ylim=(-3.0, 3.0), title=r"$\operatorname{span}(\mathbf{v}_1)$: a line")
+    t = np.linspace(-1.4, 1.4, 100)
+    axes[0].plot(v1[0] * t, v1[1] * t, color=BLUE, linewidth=3.0, zorder=2)
+    arrow(axes[0], np.zeros(2), v1, BLUE, r"$\mathbf{v}_1$")
+    axes[0].scatter(0, 0, color=SLATE, s=24, zorder=7)
+
+    # Panel 2: span of two independent vectors = R^2
+    style_plane(axes[1], xlim=(-3.0, 3.0), ylim=(-3.0, 3.0), title=r"$\operatorname{span}(\mathbf{v}_1,\mathbf{v}_2)$: the plane")
+    # fill a parallelogram to suggest coverage
+    for s in np.linspace(-1.2, 1.2, 13):
+        axes[1].plot(v1[0] * s + v2[0] * t, v1[1] * s + v2[1] * t, color=GRID, linewidth=0.5, alpha=0.6, zorder=1)
+        axes[1].plot(v1[0] * t + v2[0] * s, v1[1] * t + v2[1] * s, color=GRID, linewidth=0.5, alpha=0.6, zorder=1)
+    arrow(axes[1], np.zeros(2), v1, BLUE, r"$\mathbf{v}_1$")
+    arrow(axes[1], np.zeros(2), v2, ORANGE, r"$\mathbf{v}_2$")
+    axes[1].scatter(0, 0, color=SLATE, s=24, zorder=7)
+
+    # Panel 3: adding v3 = v1 + v2 adds nothing
+    style_plane(axes[2], xlim=(-3.0, 3.0), ylim=(-3.0, 3.0), title=r"$\mathbf{v}_3=\mathbf{v}_1+\mathbf{v}_2$: no new direction")
+    arrow(axes[2], np.zeros(2), v1, BLUE, r"$\mathbf{v}_1$")
+    arrow(axes[2], v1, v3, ORANGE, r"$\mathbf{v}_2$")
+    arrow(axes[2], np.zeros(2), v3, GREEN, r"$\mathbf{v}_3$")
+    axes[2].plot([0, v3[0]], [0, v3[1]], color="white", linewidth=0, zorder=0)
+    axes[2].scatter(0, 0, color=SLATE, s=24, zorder=7)
+    axes[2].text(0.97, 0.06, r"$\operatorname{span}(\mathbf{v}_1,\mathbf{v}_2,\mathbf{v}_3)$" + "\n" + r"$=\operatorname{span}(\mathbf{v}_1,\mathbf{v}_2)$",
+                 transform=axes[2].transAxes, ha="right", va="bottom", fontsize=10, color=SLATE,
+                 bbox={"boxstyle": "round,pad=0.4", "facecolor": "white", "edgecolor": GRID})
+
+    fig.suptitle("Span grows only when a vector provides a genuinely new direction", fontsize=15, weight="bold")
+    return fig
+
+
+def figure_basis_coordinates() -> Figure:
+    """The same vector has different coordinates under the standard basis and a non-standard basis."""
+    x = np.array([5.0, 1.0])
+    e1, e2 = np.eye(2)
+    b1 = np.array([1.0, 1.0])
+    b2 = np.array([1.0, -1.0])
+
+    fig, axes = plt.subplots(1, 2, figsize=(12.0, 5.4), constrained_layout=True)
+
+    # Left: standard basis
+    style_plane(axes[0], xlim=(-0.8, 6.8), ylim=(-1.6, 6.0), title=r"Standard basis $\{\mathbf{e}_1,\mathbf{e}_2\}$")
+    arrow(axes[0], np.zeros(2), e1, BLUE, r"$\mathbf{e}_1$")
+    arrow(axes[0], np.zeros(2), e2, ORANGE, r"$\mathbf{e}_2$")
+    arrow(axes[0], np.zeros(2), x, GREEN, r"$\mathbf{x}$")
+    axes[0].text(0.97, 0.94, r"$[\mathbf{x}]_{\mathcal{E}}=(5,\,1)$",
+                 transform=axes[0].transAxes, ha="right", va="top", fontsize=13, color=GREEN,
+                 bbox={"boxstyle": "round,pad=0.45", "facecolor": "white", "edgecolor": GRID})
+    axes[0].scatter(0, 0, color=SLATE, s=24, zorder=7)
+
+    # Right: non-standard basis  b1=(1,1), b2=(1,-1)
+    style_plane(axes[1], xlim=(-0.8, 6.8), ylim=(-1.6, 6.0), title=r"Non-standard basis $\{\mathbf{b}_1,\mathbf{b}_2\}$")
+    arrow(axes[1], np.zeros(2), b1, BLUE, r"$\mathbf{b}_1$")
+    arrow(axes[1], np.zeros(2), b2, ORANGE, r"$\mathbf{b}_2$")
+    # show 3*b1 + 2*b2 head-to-tail
+    arrow(axes[1], np.zeros(2), 3.0 * b1, BLUE, r"$3\mathbf{b}_1$")
+    arrow(axes[1], 3.0 * b1, x, ORANGE, r"$2\mathbf{b}_2$")
+    arrow(axes[1], np.zeros(2), x, GREEN, r"$\mathbf{x}$")
+    axes[1].text(0.97, 0.94, r"$[\mathbf{x}]_{\mathcal{B}}=(3,\,2)$",
+                 transform=axes[1].transAxes, ha="right", va="top", fontsize=13, color=GREEN,
+                 bbox={"boxstyle": "round,pad=0.45", "facecolor": "white", "edgecolor": GRID})
+    axes[1].scatter(0, 0, color=SLATE, s=24, zorder=7)
+
+    fig.suptitle(r"The same vector $\mathbf{x}$ has different coordinates under different bases", fontsize=15, weight="bold")
+    return fig
+
+
+def figure_rank_nullity_spaces() -> Figure:
+    """Input space R^n splits into null space; output space R^m contains the column space."""
+    fig, ax = plt.subplots(figsize=(11.2, 5.6), constrained_layout=True)
+    ax.set_xlim(0, 13)
+    ax.set_ylim(0, 6.5)
+    ax.axis("off")
+
+    box = {"boxstyle": "round,pad=0.5", "facecolor": "white", "edgecolor": GRID, "linewidth": 1.7}
+    dim_box = {"boxstyle": "round,pad=0.4", "facecolor": "#eff6ff", "edgecolor": BLUE, "linewidth": 1.8}
+
+    # Input space R^n
+    ax.add_patch(Rectangle((0.4, 1.0), 4.0, 4.5, facecolor=BLUE, alpha=0.08, edgecolor=BLUE, linewidth=2.0))
+    ax.text(2.4, 5.8, r"Input space $\mathbb{R}^n$", ha="center", fontsize=13, color=BLUE, weight="bold")
+    # Null space inside
+    ax.add_patch(Rectangle((0.8, 1.4), 1.6, 3.7, facecolor=ORANGE, alpha=0.16, edgecolor=ORANGE, linewidth=2.0))
+    ax.text(1.6, 3.25, r"$\mathcal{N}(A)$", ha="center", va="center", fontsize=14, color=ORANGE, weight="bold")
+    ax.text(1.6, 2.6, r"$\dim=n-r$", ha="center", va="center", fontsize=11, color=ORANGE)
+    ax.text(3.5, 3.25, r"complement", ha="center", va="center", fontsize=10, color=SLATE)
+    ax.text(3.5, 2.6, r"$\dim=r$", ha="center", va="center", fontsize=11, color=SLATE)
+
+    # Arrow: A maps input to output
+    ax.annotate("", xy=(7.6, 3.25), xytext=(4.6, 3.25), arrowprops={"arrowstyle": "-|>", "color": SLATE, "lw": 2.5})
+    ax.text(6.1, 3.9, r"$\mathbf{x}\mapsto A\mathbf{x}$", ha="center", fontsize=13, color=SLATE, weight="bold")
+    ax.text(6.1, 2.5, r"$A\in\mathbb{R}^{m\times n}$", ha="center", fontsize=11, color=SLATE)
+
+    # Output space R^m
+    ax.add_patch(Rectangle((7.8, 1.0), 4.0, 4.5, facecolor=GREEN, alpha=0.08, edgecolor=GREEN, linewidth=2.0))
+    ax.text(9.8, 5.8, r"Output space $\mathbb{R}^m$", ha="center", fontsize=13, color=GREEN, weight="bold")
+    # Column space inside
+    ax.add_patch(Rectangle((8.2, 1.4), 3.2, 3.7, facecolor=GREEN, alpha=0.18, edgecolor=GREEN, linewidth=2.0))
+    ax.text(9.8, 3.6, r"$\mathcal{C}(A)$", ha="center", va="center", fontsize=14, color=GREEN, weight="bold")
+    ax.text(9.8, 2.9, r"$\dim=r$", ha="center", va="center", fontsize=11, color=GREEN)
+    ax.text(9.8, 2.1, r"$=\operatorname{rank}(A)$", ha="center", va="center", fontsize=10, color=GREEN)
+
+    # Rank-nullity equation at bottom
+    ax.text(6.5, 0.3, r"$\operatorname{rank}(A)+\dim\,\mathcal{N}(A)=n$",
+           ha="center", va="center", fontsize=15, color=SLATE, bbox=dim_box)
+
+    fig.suptitle("Rank-nullity balances the input freedom against the output reach", fontsize=15, weight="bold")
+    return fig
+
+
+def figure_four_spaces_summary() -> Figure:
+    """Three questions about a matrix correspond to three different spaces."""
+    fig, ax = plt.subplots(figsize=(10.0, 5.8), constrained_layout=True)
+    ax.set_xlim(0, 10)
+    ax.set_ylim(0, 7)
+    ax.axis("off")
+
+    box = {"boxstyle": "round,pad=0.55", "facecolor": "white", "edgecolor": GRID, "linewidth": 1.7}
+
+    rows = (
+        (5.8, r"Which $\mathbf{b}$ are reachable?", r"$\mathcal{C}(A)\subseteq\mathbb{R}^m$", BLUE, r"column space"),
+        (3.5, r"Which $\mathbf{x}$ vanish?", r"$\mathcal{N}(A)\subseteq\mathbb{R}^n$", ORANGE, r"null space"),
+        (1.2, r"How many output directions?", r"$\operatorname{rank}(A)=\dim\mathcal{C}(A)$", GREEN, r"rank"),
+    )
+
+    for y_pos, question, space, color, label in rows:
+        ax.text(1.8, y_pos, question, ha="center", va="center", fontsize=12, color=SLATE, weight="bold", bbox=box)
+        ax.annotate("", xy=(4.3, y_pos), xytext=(3.05, y_pos), arrowprops={"arrowstyle": "->", "color": GRID, "lw": 1.8})
+        ax.text(6.2, y_pos, space, ha="center", va="center", fontsize=14, color=color, weight="bold", bbox=box)
+        ax.text(9.0, y_pos, label, ha="center", va="center", fontsize=10.5, color=color)
+
+    ax.text(0.4, 6.5, r"$A\in\mathbb{R}^{m\times n}$", ha="left", va="center", fontsize=14, color=SLATE, weight="bold")
+    ax.annotate("", xy=(5.0, 5.0), xytext=(5.0, 6.2), arrowprops={"arrowstyle": "->", "color": "#94a3b8", "lw": 1.5})
+    ax.annotate("", xy=(5.0, 2.7), xytext=(5.0, 4.6), arrowprops={"arrowstyle": "->", "color": "#94a3b8", "lw": 1.5})
+    ax.annotate("", xy=(5.0, 0.4), xytext=(5.0, 2.1), arrowprops={"arrowstyle": "->", "color": "#94a3b8", "lw": 1.5})
+
+    fig.suptitle("Three questions about a matrix lead to three different spaces", fontsize=15, weight="bold")
+    return fig
+
+
 def normalize_svg(path: Path) -> None:
     """Remove generator-introduced trailing whitespace from an SVG file."""
     content = path.read_text(encoding="utf-8")
@@ -1135,6 +1335,11 @@ def main() -> None:
     save_figure(figure_singular_system_two_rhs(), "singular-system-two-rhs", formats)
     save_figure(figure_rank_minor_pivots(), "rank-minor-pivots", formats)
     save_figure(figure_rank_consistency_criterion(), "rank-consistency-criterion", formats)
+    save_figure(figure_subspace_vs_affine(), "subspace-vs-affine", formats)
+    save_figure(figure_span_and_dependence(), "span-and-dependence", formats)
+    save_figure(figure_basis_coordinates(), "basis-coordinates", formats)
+    save_figure(figure_rank_nullity_spaces(), "rank-nullity-spaces", formats)
+    save_figure(figure_four_spaces_summary(), "four-spaces-summary", formats)
 
 
 if __name__ == "__main__":

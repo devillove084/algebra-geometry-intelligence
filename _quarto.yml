@@ -33,6 +33,7 @@ book:
         - chapters/01-linear-algebra/linear-systems-and-elimination.qmd
         - chapters/01-linear-algebra/permutations-inversions-and-determinants.qmd
         - chapters/01-linear-algebra/determinants-and-linear-systems.qmd
+        - chapters/01-linear-algebra/vector-spaces-bases-and-dimension.qmd
     - part: "附录"
       chapters:
         - appendices/symbol-index.qmd
