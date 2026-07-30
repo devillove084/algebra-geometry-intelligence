@@ -617,7 +617,7 @@ $$
 \dim(\mathcal{C}(\mathbf{A})).
 $$ {#eq-rank-column-space}
 
-这与上一页“主元个数”或“最大非零子式阶数”的定义相等。做行化简时，主元列标出哪些列提供了新方向；**原矩阵中**对应的主元列构成列空间的一组基。不能把化简后矩阵的列直接当作原列空间的基，因为行变换会改变列向量所在的具体空间位置。
+这与上一页以“最大非零子式阶数”给出的定义相等，也等于行阶梯形中的主元个数。做行化简时，主元列标出哪些列提供了新方向；**原矩阵中**对应的主元列构成列空间的一组基。不能把化简后矩阵的列直接当作原列空间的基，因为行变换会改变列向量所在的具体空间位置。
 
 ## 秩—零度定理
 
@@ -657,7 +657,7 @@ $$
 \end{bmatrix}.
 $$
 
-第三列等于前两列之和，且第三行等于前两行之和，因此
+第三列等于前两列之和，所以秩至多为 $2$；前两列线性无关，例如它们前两个分量组成的 $2\times 2$ 子式行列式为 $1$，所以秩至少为 $2$。因此
 
 $$
 \operatorname{rank}(\mathbf{A})=2.
@@ -680,7 +680,7 @@ $$
 -\mathbf{a}_1-\mathbf{a}_2+\mathbf{a}_3=\mathbf{0}.
 $$
 
-![输入空间 $\mathbb{R}^n$ 中橙色零空间消耗 $n-r$ 维；输出空间 $\mathbb{R}^m$ 中绿色列空间提供 $r$ 个可达方向；秩-零度定理保证两端的自由度之和恰为 $n$。](../../images/linear-algebra/rank-nullity-spaces.svg){#fig-rank-nullity-spaces fig-alt="左框是输入空间 Rn，内含橙色的零空间和补集；中间箭头标注 A 映射；右框是输出空间 Rm，内含绿色列空间；底部公式 rank A 加 dim 零空间等于 n。" width="92%"}
+![输入空间 $\mathbb{R}^n$ 可选一个 $r$ 维补空间 $U$ 与 $n-r$ 维零空间直和；矩阵 $\mathbf{A}$ 把 $U$ 一一映到输出空间中的 $r$ 维列空间；秩—零度定理精确平衡输入空间的维数。](../../images/linear-algebra/rank-nullity-spaces.svg){#fig-rank-nullity-spaces fig-alt="左侧输入空间 Rn 由橙色零空间 N(A) 与选定的补空间 U 直和组成，维数分别为 n-r 和 r；中间箭头表示 A 的映射；右侧绿色列空间 C(A) 的维数为 r；底部给出秩—零度公式。" width="92%"}
 
 ::: {.callout-tip title="三个空间问题，三个不同答案"}
 对 $\mathbf{A}\in\mathbb{R}^{m\times n}$：
@@ -708,23 +708,29 @@ $$
 \mathbf{W}\in\mathbb{R}^{d_{\mathrm{out}}\times d_{\mathrm{in}}}.
 $$
 
-无论输入怎样变化，输出始终属于
+当 $\mathbf{x}$ 遍历整个输入空间时，全部可能输出恰好组成列空间：
 
 $$
+\{\mathbf{W}\mathbf{x}:\mathbf{x}\in\mathbb{R}^{d_{\mathrm{in}}}\}
+=
 \mathcal{C}(\mathbf{W}).
 $$
 
-因此无偏置线性映射输出的独立方向数最多是
+因此这个输出子空间的维数恰好是
 
 $$
+\dim\mathcal{C}(\mathbf{W})
+=
 \operatorname{rank}(\mathbf{W})
 \leq
 \min(d_{\mathrm{out}},d_{\mathrm{in}}).
 $$
 
-若 $\mathbf{W}$ 真正低秩，输出会被限制在一个更低维的子空间。这是低秩分解和一些参数高效微调方法能够压缩线性更新的代数前提。对于深度学习框架中常见的带偏置层 $\mathbf{y}=\mathbf{W}\mathbf{x}+\mathbf{b}$，输出属于偏移后的仿射子空间 $\mathbf{b}+\mathcal{C}(\mathbf{W})$；此时独立方向数仍由 $\operatorname{rank}(\mathbf{W})$ 决定，只是整个输出集合被平移到另一个位置。
+若只观察一个受限数据集，样本输出的张成维数还可能更小。若 $\operatorname{rank}(\mathbf{W})<d_{\mathrm{out}}$，全部输出会被限制在 $\mathbb{R}^{d_{\mathrm{out}}}$ 的一个真子空间中；当秩远小于矩阵两边的维数时，低秩分解可以减少精确表示 $\mathbf{W}$ 所需的参数。
 
-但“某层的激活在少数方向上方差较大”不自动等于“该层严格位于低维子空间”。前者是近似、数据相关且需要阈值的统计陈述；后者是精确的代数陈述。诊断表示时应报告奇异值、误差阈值、数据分布与任务变化，而不是只报告一个“有效维数”。
+对于带偏置层 $\mathbf{y}=\mathbf{W}\mathbf{x}+\mathbf{b}$，全部可能输出恰好组成仿射子空间 $\mathbf{b}+\mathcal{C}(\mathbf{W})$，其仿射维数仍为 $\operatorname{rank}(\mathbf{W})$。若微调只学习低秩权重更新 $\Delta\mathbf{W}=\mathbf{B}\mathbf{A}$，低维限制作用于输出增量 $\Delta\mathbf{y}=\Delta\mathbf{W}\mathbf{x}$；这并不意味着完整权重 $\mathbf{W}+\Delta\mathbf{W}$ 的输出也位于同一个低维子空间。
+
+但“中心化后的激活在少数主方向上解释了大部分方差”不自动等于“中心化后的激活严格位于低维线性子空间”；等价地，原激活也未必严格位于相应的低维仿射子空间。前者是近似且依赖样本、中心化方式和阈值的统计陈述，后者是精确的代数陈述。诊断表示时应说明激活矩阵怎样构造、是否经过中心化或归一化，并报告奇异值谱、解释方差或近似误差阈值、数据分布与任务，而不是只报告一个“有效维数”。
 
 ## 隐藏状态集合与它的张成
 
@@ -740,9 +746,26 @@ $$
 \operatorname{span}(\mathbf{h}_1,\ldots,\mathbf{h}_N).
 $$
 
-它至多有 $\min(N,d)$ 个维度，且会随数据集选择改变。这个张成空间描述“这批样本在线性意义下访问了哪些方向”，并不直接给出语义类别、因果机制或整个模型所有可能状态的结构。
+它至多有 $\min(N,d)$ 个维度，且会随数据集选择改变。这个未中心化的张成空间记录样本位置向量相对于原点覆盖的线性方向，并不直接给出语义类别、因果机制或整个模型所有可能状态的结构。
 
-# 用 NumPy 核对张成、坐标与零空间关系
+若关心样本之间的变化方向，应先令
+
+$$
+\bar{\mathbf{h}}
+=
+\frac{1}{N}\sum_{i=1}^{N}\mathbf{h}_i,
+$$
+
+再研究中心化张成
+
+$$
+\operatorname{span}
+(\mathbf{h}_1-\bar{\mathbf{h}},\ldots,\mathbf{h}_N-\bar{\mathbf{h}}).
+$$
+
+因为这些中心化向量之和为零，它的维数至多为 $\min(N-1,d)$，并对应这批点的仿射变化方向。未中心化张成与中心化张成回答的是不同问题。
+
+# 用 NumPy 核对秩、坐标与零空间关系
 
 ```{python}
 #| label: lst-spaces-bases-and-rank
@@ -774,13 +797,13 @@ np.testing.assert_allclose(coordinate, [3.0, 2.0])
 np.testing.assert_allclose(B @ coordinate, x)
 
 print("rank(A) =", rank)
-print("一个零空间方向：", null_vector)
+print("一个零空间基向量：", null_vector)
 print("x 在非标准基下的坐标：", coordinate)
 ```
 
-`np.linalg.matrix_rank` 基于浮点奇异值阈值给出数值秩；在接近相关的真实数据上，改变阈值可能改变结果。本页的整数例子有精确关系，因此不会暴露这种数值歧义。
+`np.linalg.matrix_rank` 根据浮点奇异值和阈值估计数值秩；在接近相关的真实数据上，改变阈值可能改变结果。本例的非零奇异值为 $3$ 和 $1$，与零之间有明显间隔，因此默认阈值会稳定给出秩 $2$；整数元素本身并不能普遍排除数值秩歧义。
 
-# 本页小结与下一步
+# 本页小结与后续方向
 
 本页把此前分散出现的概念接成了同一条结构链：
 
@@ -796,4 +819,9 @@ $$
 
 对矩阵 $\mathbf{A}$：列空间说明能到达哪些输出，零空间说明哪些输入方向会消失，秩—零度定理则精确平衡二者的自由度。
 
-下一步需要在向量空间上加入额外结构：怎样定义长度、夹角和正交性？内积、范数与投影会回答这些问题，并把“一个子空间中的最佳近似”连接到最小二乘、attention 相似度和表示比较 [@strang2023linear; @axler2015linear; @boyd2018applied]。
+前文已在 $\mathbb{R}^n$ 中初步定义标准内积与 Euclidean 范数；后续还可以在一般内积空间中系统研究正交、投影与子空间中的最佳近似，并连接到最小二乘 [@strang2023linear; @axler2015linear; @boyd2018applied]。标准 Transformer 则用缩放内积构造注意力得分 [@vaswani2017attention]。
+
+# 参考资料
+
+::: {#refs}
+:::

@@ -1200,7 +1200,7 @@ def figure_basis_coordinates() -> Figure:
 
 
 def figure_rank_nullity_spaces() -> Figure:
-    """Input space R^n splits into null space; output space R^m contains the column space."""
+    """Split R^n into the null space and a chosen complement, then map onto the column space."""
     fig, ax = plt.subplots(figsize=(11.2, 5.6), constrained_layout=True)
     ax.set_xlim(0, 13)
     ax.set_ylim(0, 6.5)
@@ -1216,8 +1216,8 @@ def figure_rank_nullity_spaces() -> Figure:
     ax.add_patch(Rectangle((0.8, 1.4), 1.6, 3.7, facecolor=ORANGE, alpha=0.16, edgecolor=ORANGE, linewidth=2.0))
     ax.text(1.6, 3.25, r"$\mathcal{N}(A)$", ha="center", va="center", fontsize=14, color=ORANGE, weight="bold")
     ax.text(1.6, 2.6, r"$\dim=n-r$", ha="center", va="center", fontsize=11, color=ORANGE)
-    ax.text(3.5, 3.25, r"complement", ha="center", va="center", fontsize=10, color=SLATE)
-    ax.text(3.5, 2.6, r"$\dim=r$", ha="center", va="center", fontsize=11, color=SLATE)
+    ax.text(3.5, 3.25, r"chosen complement $U$", ha="center", va="center", fontsize=10, color=SLATE)
+    ax.text(3.5, 2.6, r"$\dim U=r$", ha="center", va="center", fontsize=11, color=SLATE)
 
     # Arrow: A maps input to output
     ax.annotate("", xy=(7.6, 3.25), xytext=(4.6, 3.25), arrowprops={"arrowstyle": "-|>", "color": SLATE, "lw": 2.5})
