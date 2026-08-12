@@ -35,6 +35,7 @@ book:
         - chapters/01-linear-algebra/determinants-and-linear-systems.qmd
         - chapters/01-linear-algebra/vector-spaces-bases-and-dimension.qmd
         - chapters/01-linear-algebra/basis-exchange-and-dimension-theorems.qmd
+        - chapters/01-linear-algebra/coordinate-matrices-change-of-basis-and-similarity.qmd
     - part: "附录"
       chapters:
         - appendices/symbol-index.qmd

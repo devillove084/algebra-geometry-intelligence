@@ -63,6 +63,11 @@ title: "符号索引"
 | $U+W$ | 向量空间 | 子空间之和，由所有 $\mathbf{u}+\mathbf{w}$ 组成，其中 $\mathbf{u}\in U,\mathbf{w}\in W$ |
 | $U\oplus W$ | 向量空间 | 子空间的直和；每个向量都能唯一写成 $\mathbf{u}+\mathbf{w}$ |
 | $\dim(V)$ | 非负整数 | 有限维向量空间 $V$ 的维数，即任意一组基所含的向量数 |
+| $[\mathbf v]_{\mathcal B}$ | 坐标列 | 向量 $\mathbf v$ 在有序基 $\mathcal B$ 下的唯一坐标 |
+| $\kappa_{\mathcal B}$ | 线性同构 | 坐标映射，把 $\mathbf v\in V$ 送到 $[\mathbf v]_{\mathcal B}\in\mathbb R^n$ |
+| $[T]_{\mathcal C\leftarrow\mathcal B}$ | 矩阵 | 线性映射 $T$ 的坐标矩阵，接收 $\mathcal B$-坐标并输出 $\mathcal C$-坐标 |
+| $\mathbf P_{\mathcal C\leftarrow\mathcal B}$ | 可逆矩阵 | 从 $\mathcal B$-坐标转换到 $\mathcal C$-坐标的换基矩阵 |
+| $\mathbf B=\mathbf P^{-1}\mathbf A\mathbf P$ | 矩阵关系 | $\mathbf A$ 与 $\mathbf B$ 相似；二者可记录同一线性算子在不同基下的矩阵 |
 | $\mathbf{A}^{\mathsf T}$ | 矩阵 | $\mathbf{A}$ 的转置 |
 | $\mathbf{A}\mathbf{x}$ | 向量 | 矩阵—向量乘积，也是矩阵各列按 $\mathbf{x}$ 分量形成的线性组合 |
 | $\mathbf{A}\mathbf{B}$ | 矩阵 | 矩阵乘积，表示先应用 $\mathbf{B}$、再应用 $\mathbf{A}$ 的线性映射复合 |

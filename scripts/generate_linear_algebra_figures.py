@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
-from matplotlib.patches import Rectangle
+from matplotlib.patches import FancyBboxPatch, Rectangle
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_DIR = ROOT / "images" / "linear-algebra"
@@ -1857,6 +1857,446 @@ def figure_row_column_rank_geometries() -> Figure:
     return fig
 
 
+def draw_matrix_card(
+    ax: Axes,
+    center: tuple[float, float],
+    entries: tuple[tuple[object, ...], ...],
+    label: str,
+    *,
+    width: float = 1.9,
+    height: float = 1.45,
+    edgecolor: str = SLATE,
+    column_colors: tuple[str, ...] | None = None,
+    fontsize: float = 11.5,
+) -> None:
+    """Draw a compact matrix whose columns can carry semantic colors."""
+    x_center, y_center = center
+    row_count = len(entries)
+    column_count = len(entries[0])
+    left = x_center - width / 2
+    bottom = y_center - height / 2
+    card = FancyBboxPatch(
+        (left, bottom),
+        width,
+        height,
+        boxstyle="round,pad=0.08",
+        facecolor="white",
+        edgecolor=edgecolor,
+        linewidth=1.7,
+        zorder=2,
+    )
+    ax.add_patch(card)
+
+    inner_left = left + 0.23 * width
+    inner_right = left + 0.77 * width
+    inner_bottom = bottom + 0.20 * height
+    inner_top = bottom + 0.80 * height
+    x_positions = np.linspace(inner_left, inner_right, column_count)
+    y_positions = np.linspace(inner_top, inner_bottom, row_count)
+
+    if column_colors is not None:
+        cell_width = (inner_right - inner_left) / max(column_count - 0.15, 1.0)
+        for column, color in enumerate(column_colors):
+            highlight = Rectangle(
+                (x_positions[column] - cell_width / 2, bottom + 0.08 * height),
+                cell_width,
+                0.84 * height,
+                facecolor=color,
+                edgecolor="none",
+                alpha=0.10,
+                zorder=2.2,
+            )
+            highlight.set_clip_path(card)
+            ax.add_patch(highlight)
+
+    ax.text(left + 0.10 * width, y_center, "[", ha="center", va="center", fontsize=fontsize + 8, color=edgecolor, zorder=4)
+    ax.text(left + 0.90 * width, y_center, "]", ha="center", va="center", fontsize=fontsize + 8, color=edgecolor, zorder=4)
+    for row, y_position in enumerate(y_positions):
+        for column, x_position in enumerate(x_positions):
+            color = column_colors[column] if column_colors is not None else SLATE
+            ax.text(
+                x_position,
+                y_position,
+                str(entries[row][column]),
+                ha="center",
+                va="center",
+                family="monospace",
+                fontsize=fontsize,
+                color=color,
+                weight="bold" if column_colors is not None else "normal",
+                zorder=4,
+            )
+    ax.text(x_center, bottom + height + 0.22, label, ha="center", va="bottom", fontsize=11.2, color=edgecolor, weight="bold", zorder=4)
+
+
+def figure_coordinate_map_isomorphism() -> Figure:
+    """Separate a vector in V from its coordinate column in a model copy of R^2."""
+    basis = np.array([[1.0, 1.0], [1.0, -1.0]])
+    coordinates = np.array([3.0, 2.0])
+    x = basis @ coordinates
+    assert np.allclose(x, np.array([5.0, 1.0]))
+
+    fig = plt.figure(figsize=(12.0, 5.3))
+    fig.subplots_adjust(left=0.045, right=0.98, bottom=0.16, top=0.85, wspace=0.18)
+    grid_spec = fig.add_gridspec(1, 3, width_ratios=(1.0, 0.32, 1.0))
+    object_ax = fig.add_subplot(grid_spec[0, 0])
+    map_ax = fig.add_subplot(grid_spec[0, 1])
+    coordinate_ax = fig.add_subplot(grid_spec[0, 2])
+    zero = np.zeros(2)
+    b1, b2 = basis[:, 0], basis[:, 1]
+
+    style_plane(object_ax, xlim=(-1.0, 6.2), ylim=(-2.2, 4.1), title=r"Actual space $V=\mathbb{R}^2$", grid=False)
+    draw_basis_lattice(object_ax, b1, b2, extent=4.5, line_count=19)
+    draw_vector_2d(object_ax, zero, b1, BLUE, r"$\mathbf{b}_1$", alpha=0.70, label_offset=(5, 4))
+    draw_vector_2d(object_ax, zero, b2, ORANGE, r"$\mathbf{b}_2$", alpha=0.70, label_offset=(5, -16))
+    draw_vector_2d(object_ax, zero, 3.0 * b1, BLUE, r"$3\mathbf{b}_1$", label_offset=(-38, 6), label_position=0.76)
+    draw_vector_2d(object_ax, 3.0 * b1, x, ORANGE, r"$2\mathbf{b}_2$", label_offset=(6, -16), label_position=0.52)
+    draw_vector_2d(object_ax, zero, x, GREEN, r"$\mathbf{x}$", label_offset=(7, 8), label_position=0.82)
+    object_ax.scatter(0, 0, color=SLATE, s=24, zorder=7)
+    object_ax.text(
+        0.04,
+        0.93,
+        r"$\mathbf{x}=3\mathbf{b}_1+2\mathbf{b}_2$" + "\n" + r"$[\mathbf{x}]_{\mathcal{E}}=(5,1)^T$",
+        transform=object_ax.transAxes,
+        fontsize=11.5,
+        color=SLATE,
+        bbox={"boxstyle": "round,pad=0.35", "facecolor": "white", "edgecolor": GRID, "alpha": 0.94},
+    )
+
+    map_ax.set_xlim(0, 1)
+    map_ax.set_ylim(0, 1)
+    map_ax.axis("off")
+    map_ax.annotate("", xy=(0.94, 0.58), xytext=(0.06, 0.58), arrowprops={"arrowstyle": "-|>", "color": GREEN, "lw": 2.7})
+    map_ax.text(0.5, 0.68, r"$\kappa_{\mathcal{B}}$", ha="center", fontsize=15, color=GREEN, weight="bold")
+    map_ax.text(0.5, 0.42, r"$\mathbf{b}_1\mapsto\mathbf{e}_1$", ha="center", fontsize=10.5, color=BLUE)
+    map_ax.text(0.5, 0.32, r"$\mathbf{b}_2\mapsto\mathbf{e}_2$", ha="center", fontsize=10.5, color=ORANGE)
+    map_ax.text(0.5, 0.16, "encode", ha="center", fontsize=9.5, color=SLATE, weight="bold")
+
+    style_plane(
+        coordinate_ax,
+        xlim=(-0.8, 4.2),
+        ylim=(-0.8, 3.6),
+        title=r"Coordinate space $\mathbb{R}^{2}$: a column",
+    )
+    draw_vector_2d(coordinate_ax, zero, np.array([1.0, 0.0]), BLUE, r"$\mathbf{e}_1$", label_offset=(5, -15))
+    draw_vector_2d(coordinate_ax, zero, np.array([0.0, 1.0]), ORANGE, r"$\mathbf{e}_2$", label_offset=(-24, 5))
+    draw_vector_2d(coordinate_ax, zero, coordinates, GREEN, r"$[\mathbf{x}]_{\mathcal{B}}=(3,2)^T$", label_offset=(8, 5), label_position=0.74)
+    coordinate_ax.scatter(0, 0, color=SLATE, s=24, zorder=7)
+    coordinate_ax.text(
+        0.96,
+        0.08,
+        "[ 3 ]\n[ 2 ]",
+        transform=coordinate_ax.transAxes,
+        ha="right",
+        va="bottom",
+        family="monospace",
+        fontsize=13,
+        color=GREEN,
+        bbox={"boxstyle": "round,pad=0.35", "facecolor": "white", "edgecolor": GREEN, "alpha": 0.94},
+    )
+
+    fig.text(0.5, 0.035, r"$\mathbf{x}\in V$ is not the coordinate column $[\mathbf{x}]_{\mathcal{B}}\in\mathbb{R}^{2}$", ha="center", fontsize=12.3, color=SLATE, weight="bold")
+    fig.suptitle("A coordinate map is an isomorphism between different spaces", fontsize=15.5, weight="bold", y=0.97)
+    return fig
+
+
+def figure_coordinate_matrix_square() -> Figure:
+    """Show the concrete map and its coordinate matrix as a commuting square."""
+    standard_matrix = np.array([[2.0, 1.0], [-1.0, 1.0]])
+    basis_b = np.array([[1.0, 1.0], [1.0, -1.0]])
+    basis_c = np.array([[1.0, 1.0], [0.0, 1.0]])
+    x_b = np.array([2.0, -1.0])
+    x = basis_b @ x_b
+    tx = standard_matrix @ x
+    tx_c = np.linalg.solve(basis_c, tx)
+    coordinate_matrix = np.linalg.solve(basis_c, standard_matrix @ basis_b)
+    assert np.allclose(x, np.array([1.0, 3.0]))
+    assert np.allclose(tx, np.array([5.0, 2.0]))
+    assert np.allclose(tx_c, np.array([3.0, 2.0]))
+    assert np.allclose(coordinate_matrix, np.array([[3.0, 3.0], [0.0, -2.0]]))
+    assert np.allclose(coordinate_matrix @ x_b, tx_c)
+
+    fig, axes = plt.subplots(2, 2, figsize=(11.8, 7.8))
+    fig.subplots_adjust(left=0.07, right=0.97, bottom=0.13, top=0.88, wspace=0.30, hspace=0.48)
+    domain_ax, codomain_ax = axes[0]
+    b_coordinate_ax, c_coordinate_ax = axes[1]
+    zero = np.zeros(2)
+
+    style_plane(domain_ax, xlim=(-1.2, 3.8), ylim=(-1.5, 4.2), title=r"Actual domain $V$ with basis $\mathcal{B}$", grid=False)
+    draw_basis_lattice(domain_ax, basis_b[:, 0], basis_b[:, 1], extent=3.7, line_count=15)
+    draw_vector_2d(domain_ax, zero, basis_b[:, 0], BLUE, r"$\mathbf{b}_1$", label_offset=(5, 4))
+    draw_vector_2d(domain_ax, zero, basis_b[:, 1], ORANGE, r"$\mathbf{b}_2$", label_offset=(5, -15))
+    draw_vector_2d(domain_ax, zero, x, GREEN, r"$\mathbf{x}=(1,3)$", label_offset=(7, 4), label_position=0.72)
+    domain_ax.text(0.04, 0.91, r"$[\mathbf{x}]_{\mathcal{B}}=(2,-1)^T$", transform=domain_ax.transAxes, fontsize=10.8, color=SLATE, bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": GRID})
+
+    style_plane(codomain_ax, xlim=(-1.0, 6.2), ylim=(-1.0, 4.3), title=r"Actual codomain $W$ with basis $\mathcal{C}$", grid=False)
+    draw_basis_lattice(codomain_ax, basis_c[:, 0], basis_c[:, 1], extent=4.5, line_count=17)
+    draw_vector_2d(codomain_ax, zero, basis_c[:, 0], BLUE, r"$\mathbf{c}_1$", label_offset=(5, -15))
+    draw_vector_2d(codomain_ax, zero, basis_c[:, 1], ORANGE, r"$\mathbf{c}_2$", label_offset=(5, 5))
+    draw_vector_2d(codomain_ax, zero, tx, GREEN, r"$T(\mathbf{x})=(5,2)$", label_offset=(7, 5), label_position=0.73)
+    codomain_ax.text(0.04, 0.91, r"$[T(\mathbf{x})]_{\mathcal{C}}=(3,2)^T$", transform=codomain_ax.transAxes, fontsize=10.8, color=SLATE, bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": GRID})
+
+    style_plane(b_coordinate_ax, xlim=(-1.0, 3.2), ylim=(-2.0, 2.7), title=r"Numerical input in $\mathbb{R}^{2}$: $\mathcal{B}$-coordinates")
+    draw_vector_2d(b_coordinate_ax, zero, np.array([1.0, 0.0]), BLUE, r"$\mathbf{e}_1$", label_offset=(5, -15))
+    draw_vector_2d(b_coordinate_ax, zero, np.array([0.0, 1.0]), ORANGE, r"$\mathbf{e}_2$", label_offset=(-24, 5))
+    draw_vector_2d(b_coordinate_ax, zero, x_b, GREEN, r"$[\mathbf{x}]_{\mathcal{B}}=(2,-1)^T$", label_offset=(5, -16), label_position=0.66)
+
+    style_plane(c_coordinate_ax, xlim=(-0.8, 4.2), ylim=(-0.8, 3.5), title=r"Numerical output in $\mathbb{R}^{2}$: $\mathcal{C}$-coordinates")
+    draw_vector_2d(c_coordinate_ax, zero, np.array([1.0, 0.0]), BLUE, r"$\mathbf{e}_1$", label_offset=(5, -15))
+    draw_vector_2d(c_coordinate_ax, zero, np.array([0.0, 1.0]), ORANGE, r"$\mathbf{e}_2$", label_offset=(-24, 5))
+    draw_vector_2d(c_coordinate_ax, zero, tx_c, GREEN, r"$[T(\mathbf{x})]_{\mathcal{C}}=(3,2)^T$", label_offset=(7, 5), label_position=0.69)
+
+    overlay = fig.add_axes((0, 0, 1, 1), facecolor="none")
+    overlay.set_xlim(0, 1)
+    overlay.set_ylim(0, 1)
+    overlay.axis("off")
+    arrow_box = {"boxstyle": "round,pad=0.22", "facecolor": "white", "edgecolor": GRID, "alpha": 0.96}
+    overlay.annotate("", xy=(0.56, 0.70), xytext=(0.45, 0.70), arrowprops={"arrowstyle": "-|>", "color": GREEN, "lw": 2.5})
+    overlay.text(0.505, 0.735, r"$T$", ha="center", fontsize=13.5, color=GREEN, weight="bold", bbox=arrow_box)
+    overlay.text(0.505, 0.655, "A = [ 2  1 ]\n    [-1  1 ]", ha="center", va="center", family="monospace", fontsize=8.8, color=SLATE)
+    overlay.annotate("", xy=(0.56, 0.295), xytext=(0.45, 0.295), arrowprops={"arrowstyle": "-|>", "color": GREEN, "lw": 2.5})
+    overlay.text(0.505, 0.335, r"$M_{\mathcal{C}\leftarrow\mathcal{B}}$", ha="center", fontsize=11.5, color=GREEN, weight="bold", bbox=arrow_box)
+    overlay.text(0.505, 0.255, "[ 3  3 ]\n[ 0 -2 ]", ha="center", va="center", family="monospace", fontsize=8.8, color=SLATE)
+    overlay.annotate("", xy=(0.275, 0.455), xytext=(0.275, 0.585), arrowprops={"arrowstyle": "-|>", "color": BLUE, "lw": 2.3})
+    overlay.text(0.23, 0.52, r"$\kappa_{\mathcal{B}}$", ha="right", va="center", fontsize=11.5, color=BLUE, bbox=arrow_box)
+    overlay.annotate("", xy=(0.75, 0.455), xytext=(0.75, 0.585), arrowprops={"arrowstyle": "-|>", "color": ORANGE, "lw": 2.3})
+    overlay.text(0.79, 0.52, r"$\kappa_{\mathcal{C}}$", ha="left", va="center", fontsize=11.5, color=ORANGE, bbox=arrow_box)
+
+    fig.text(0.5, 0.045, r"$[T(\mathbf{x})]_{\mathcal{C}}=M_{\mathcal{C}\leftarrow\mathcal{B}}[\mathbf{x}]_{\mathcal{B}}=(3,2)^T$ — both paths agree", ha="center", fontsize=12.2, color=SLATE, weight="bold")
+    fig.suptitle("A coordinate matrix makes the square commute", fontsize=15.5, weight="bold", y=0.97)
+    return fig
+
+
+def figure_polynomial_derivative_matrix() -> Figure:
+    """Build the derivative matrix from coefficient cards and verify one polynomial."""
+    derivative_matrix = np.array([[0.0, 1.0, 0.0], [0.0, 0.0, 2.0]])
+    coefficients = np.array([2.0, -3.0, 4.0])
+    derivative_coefficients = derivative_matrix @ coefficients
+    assert np.allclose(derivative_coefficients, np.array([-3.0, 8.0]))
+
+    fig, ax = plt.subplots(figsize=(12.0, 6.8), constrained_layout=True)
+    ax.set_xlim(0, 12)
+    ax.set_ylim(0, 7)
+    ax.axis("off")
+    card = {"boxstyle": "round,pad=0.45", "facecolor": "white", "edgecolor": GRID, "linewidth": 1.6}
+    basis_actions = (
+        (1.25, r"$1$", r"$0$", BLUE),
+        (3.85, r"$t$", r"$1$", ORANGE),
+        (6.45, r"$t^2$", r"$2t$", GREEN),
+    )
+    ax.text(3.85, 6.35, r"Basis actions for $D:P_2\to P_1$", ha="center", fontsize=12.8, color=SLATE, weight="bold")
+    for x_position, source, image, color in basis_actions:
+        ax.text(x_position, 5.45, source, ha="center", va="center", fontsize=16, color=color, weight="bold", bbox=card)
+        ax.annotate("", xy=(x_position, 3.75), xytext=(x_position, 5.02), arrowprops={"arrowstyle": "-|>", "color": color, "lw": 2.3})
+        ax.text(x_position + 0.20, 4.38, r"$D$", fontsize=10.5, color=color, weight="bold")
+        ax.text(x_position, 3.35, image, ha="center", va="center", fontsize=16, color=color, weight="bold", bbox=card)
+
+    ax.annotate("", xy=(8.65, 4.35), xytext=(7.35, 4.35), arrowprops={"arrowstyle": "-|>", "color": SLATE, "lw": 2.0})
+    ax.text(8.0, 4.65, "images become columns", ha="center", fontsize=9.7, color=SLATE, weight="bold")
+    draw_matrix_card(
+        ax,
+        (10.15, 4.35),
+        ((0, 1, 0), (0, 0, 2)),
+        r"$[D]_{\mathcal{C}\leftarrow\mathcal{B}}$",
+        width=2.55,
+        height=1.65,
+        edgecolor=SLATE,
+        column_colors=(BLUE, ORANGE, GREEN),
+        fontsize=12.0,
+    )
+    ax.text(10.15, 2.95, r"columns: $(0,0)^T,(1,0)^T,(0,2)^T$", ha="center", fontsize=9.8, color=SLATE)
+
+    ax.plot((0.45, 11.55), (2.25, 2.25), color=GRID, linewidth=1.2)
+    ax.text(0.55, 1.93, "Coefficient check", fontsize=11.2, color=SLATE, weight="bold")
+    ax.text(1.55, 1.05, r"$p=2-3t+4t^2$", ha="center", va="center", fontsize=12.5, color=BLUE, bbox=card)
+    ax.annotate("", xy=(3.25, 1.05), xytext=(2.55, 1.05), arrowprops={"arrowstyle": "-|>", "color": BLUE, "lw": 2.0})
+    draw_matrix_card(ax, (4.05, 1.05), ((2,), (-3,), (4,)), r"$[p]_{\mathcal{B}}$", width=1.15, height=1.55, edgecolor=BLUE, fontsize=10.5)
+    ax.annotate("", xy=(6.55, 1.05), xytext=(4.75, 1.05), arrowprops={"arrowstyle": "-|>", "color": GREEN, "lw": 2.2})
+    ax.text(5.65, 1.33, r"$[D]_{\mathcal{C}\leftarrow\mathcal{B}}$", ha="center", fontsize=9.8, color=GREEN, weight="bold")
+    draw_matrix_card(ax, (7.25, 1.05), ((-3,), (8,)), r"$[p']_{\mathcal{C}}$", width=1.15, height=1.45, edgecolor=GREEN, fontsize=11.0)
+    ax.annotate("", xy=(9.05, 1.05), xytext=(7.95, 1.05), arrowprops={"arrowstyle": "-|>", "color": GREEN, "lw": 2.0})
+    ax.text(10.25, 1.05, r"$p'=-3+8t$", ha="center", va="center", fontsize=13, color=GREEN, weight="bold", bbox=card)
+
+    fig.suptitle("Differentiation moves coefficients through matrix columns", fontsize=15.5, weight="bold")
+    return fig
+
+
+def figure_change_of_basis_identity() -> Figure:
+    """Keep one vector fixed while the coordinate grid changes from B to E."""
+    basis_b = np.array([[1.0, 1.0], [1.0, -1.0]])
+    coordinates_b = np.array([3.0, 2.0])
+    transition = basis_b.copy()
+    x = transition @ coordinates_b
+    assert np.allclose(x, np.array([5.0, 1.0]))
+
+    fig = plt.figure(figsize=(12.0, 5.5), constrained_layout=True)
+    grid_spec = fig.add_gridspec(1, 3, width_ratios=(1.0, 0.45, 1.0))
+    b_ax = fig.add_subplot(grid_spec[0, 0])
+    transition_ax = fig.add_subplot(grid_spec[0, 1])
+    e_ax = fig.add_subplot(grid_spec[0, 2])
+    zero = np.zeros(2)
+
+    style_plane(b_ax, xlim=(-1.0, 6.2), ylim=(-2.4, 4.2), title=r"Frame 1: $\mathcal{B}$-grid on $V$", grid=False)
+    draw_basis_lattice(b_ax, basis_b[:, 0], basis_b[:, 1], extent=4.5, line_count=19)
+    draw_vector_2d(b_ax, zero, basis_b[:, 0], BLUE, r"$\mathbf{b}_1$", label_offset=(5, 4))
+    draw_vector_2d(b_ax, zero, basis_b[:, 1], ORANGE, r"$\mathbf{b}_2$", label_offset=(5, -16))
+    draw_vector_2d(b_ax, zero, 3.0 * basis_b[:, 0], BLUE, r"$3\mathbf{b}_1$", label_offset=(-37, 5), label_position=0.75)
+    draw_vector_2d(b_ax, 3.0 * basis_b[:, 0], x, ORANGE, r"$2\mathbf{b}_2$", label_offset=(5, -16), label_position=0.52)
+    draw_vector_2d(b_ax, zero, x, GREEN, r"$\mathbf{x}$", label_offset=(7, 7), label_position=0.83)
+    b_ax.scatter(*x, color=GREEN, s=40, zorder=8)
+    b_ax.text(0.04, 0.92, r"$[\mathbf{x}]_{\mathcal{B}}=(3,2)^T$", transform=b_ax.transAxes, fontsize=11.2, color=SLATE, bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": GRID})
+
+    transition_ax.set_xlim(0, 4)
+    transition_ax.set_ylim(0, 6)
+    transition_ax.axis("off")
+    transition_ax.annotate("", xy=(3.75, 4.75), xytext=(0.25, 4.75), arrowprops={"arrowstyle": "-|>", "color": GREEN, "lw": 2.6})
+    transition_ax.text(2.0, 5.12, r"$\operatorname{id}_V$", ha="center", fontsize=13.5, color=GREEN, weight="bold")
+    transition_ax.text(2.0, 4.32, r"$\mathbf{x}\mapsto\mathbf{x}$", ha="center", fontsize=11.5, color=SLATE)
+    draw_matrix_card(
+        transition_ax,
+        (2.0, 2.75),
+        ((1, 1), (1, -1)),
+        r"$P_{\mathcal{E}\leftarrow\mathcal{B}}$",
+        width=2.45,
+        height=1.55,
+        edgecolor=GREEN,
+        fontsize=11.5,
+    )
+    transition_ax.text(2.0, 1.35, r"$(3,2)^T\mapsto(5,1)^T$", ha="center", fontsize=10.8, color=GREEN, weight="bold")
+    transition_ax.text(2.0, 0.70, "same endpoint", ha="center", fontsize=9.5, color=SLATE)
+
+    style_plane(e_ax, xlim=(-1.0, 6.2), ylim=(-2.4, 4.2), title=r"Frame 2: $\mathcal{E}$-grid on the same $V$")
+    draw_vector_2d(e_ax, zero, np.array([1.0, 0.0]), BLUE, r"$\mathbf{e}_1$", label_offset=(5, -15))
+    draw_vector_2d(e_ax, zero, np.array([0.0, 1.0]), ORANGE, r"$\mathbf{e}_2$", label_offset=(-24, 5))
+    e_ax.plot((0.0, x[0]), (x[1], x[1]), color=GREEN, linestyle="--", linewidth=1.3, alpha=0.55)
+    e_ax.plot((x[0], x[0]), (0.0, x[1]), color=GREEN, linestyle="--", linewidth=1.3, alpha=0.55)
+    draw_vector_2d(e_ax, zero, x, GREEN, r"$\mathbf{x}$", label_offset=(7, 7), label_position=0.83)
+    e_ax.scatter(*x, color=GREEN, s=40, zorder=8)
+    e_ax.text(0.04, 0.92, r"$[\mathbf{x}]_{\mathcal{E}}=(5,1)^T$", transform=e_ax.transAxes, fontsize=11.2, color=SLATE, bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "edgecolor": GRID})
+
+    fig.text(0.5, 0.02, "The identity map changes coordinates, not the vector", ha="center", fontsize=12.5, color=SLATE, weight="bold")
+    fig.suptitle("Change the basis description while the vector stays fixed", fontsize=15.5, weight="bold")
+    return fig
+
+
+def figure_two_sided_basis_change() -> Figure:
+    """Read a two-sided basis change as a right-to-left action on coordinates."""
+    standard_matrix = np.array([[2.0, 1.0], [-1.0, 1.0]])
+    basis_b = np.array([[1.0, 1.0], [1.0, -1.0]])
+    basis_c = np.array([[1.0, 1.0], [0.0, 1.0]])
+    old_matrix = np.array([[3.0, 3.0], [0.0, -2.0]])
+    p_e_from_c = basis_c
+    p_b_from_e = np.linalg.inv(basis_b)
+    rebuilt = p_e_from_c @ old_matrix @ p_b_from_e
+    assert np.allclose(rebuilt, standard_matrix)
+
+    values = (
+        np.array([1.0, 3.0]),
+        np.array([2.0, -1.0]),
+        np.array([3.0, 2.0]),
+        np.array([5.0, 2.0]),
+    )
+    assert np.allclose(p_b_from_e @ values[0], values[1])
+    assert np.allclose(old_matrix @ values[1], values[2])
+    assert np.allclose(p_e_from_c @ values[2], values[3])
+
+    fig, ax = plt.subplots(figsize=(12.2, 6.4))
+    fig.subplots_adjust(left=0.035, right=0.98, bottom=0.08, top=0.87)
+    ax.set_xlim(0, 15)
+    ax.set_ylim(0, 8.2)
+    ax.axis("off")
+
+    ax.text(
+        7.5,
+        7.65,
+        r"$A_{\mathcal{E}\leftarrow\mathcal{E}}=P_{\mathcal{E}\leftarrow\mathcal{C}}\,M_{\mathcal{C}\leftarrow\mathcal{B}}\,P_{\mathcal{B}\leftarrow\mathcal{E}}$",
+        ha="center",
+        fontsize=14.5,
+        color=SLATE,
+        weight="bold",
+    )
+    ax.text(7.5, 7.05, "=  [ 2  1 ]\n   [-1  1 ]", ha="center", va="center", family="monospace", fontsize=10.8, color=GREEN, weight="bold")
+
+    factor_specs = (
+        (3.1, ((1, 1), (0, 1)), r"$P_{\mathcal{E}\leftarrow\mathcal{C}}$", ORANGE, "acts 3rd"),
+        (7.2, ((3, 3), (0, -2)), r"$M_{\mathcal{C}\leftarrow\mathcal{B}}$", GREEN, "acts 2nd"),
+        (11.45, (("1/2", "1/2"), ("1/2", "-1/2")), r"$P_{\mathcal{B}\leftarrow\mathcal{E}}$", BLUE, "acts 1st"),
+    )
+    for x_position, entries, label, color, order_label in factor_specs:
+        draw_matrix_card(ax, (x_position, 5.25), entries, label, width=2.55, height=1.55, edgecolor=color, fontsize=10.7)
+        ax.text(x_position, 4.18, order_label, ha="center", fontsize=10, color=color, weight="bold")
+        ax.plot((x_position, x_position), (4.02, 3.10), color=color, linewidth=1.4, linestyle="--", alpha=0.55)
+
+    value_box = {"boxstyle": "round,pad=0.40", "facecolor": "white", "edgecolor": GRID, "linewidth": 1.5}
+    value_specs = (
+        (13.55, r"$[\mathbf{x}]_{\mathcal{E}}$" + "\n" + r"$(1,3)^T$", BLUE),
+        (9.35, r"$[\mathbf{x}]_{\mathcal{B}}$" + "\n" + r"$(2,-1)^T$", BLUE),
+        (5.05, r"$[T\mathbf{x}]_{\mathcal{C}}$" + "\n" + r"$(3,2)^T$", ORANGE),
+        (1.20, r"$[T\mathbf{x}]_{\mathcal{E}}$" + "\n" + r"$(5,2)^T$", GREEN),
+    )
+    for x_position, label, color in value_specs:
+        ax.text(x_position, 2.05, label, ha="center", va="center", fontsize=11.4, color=color, weight="bold", bbox=value_box)
+
+    action_arrows = (
+        ((12.55, 2.05), (10.35, 2.05), r"$P_{\mathcal{B}\leftarrow\mathcal{E}}$", BLUE),
+        ((8.30, 2.05), (6.08, 2.05), r"$M_{\mathcal{C}\leftarrow\mathcal{B}}$", GREEN),
+        ((4.00, 2.05), (2.18, 2.05), r"$P_{\mathcal{E}\leftarrow\mathcal{C}}$", ORANGE),
+    )
+    for start, end, label, color in action_arrows:
+        ax.annotate("", xy=end, xytext=start, arrowprops={"arrowstyle": "-|>", "color": color, "lw": 2.4})
+        ax.text((start[0] + end[0]) / 2, 2.42, label, ha="center", fontsize=9.8, color=color, weight="bold")
+
+    ax.text(7.5, 0.62, "Start at the right: domain coordinates change first, then M acts, then codomain coordinates change", ha="center", fontsize=11.5, color=SLATE, weight="bold")
+    fig.suptitle("Two-sided basis change is a directed composition", fontsize=15.5, weight="bold", y=0.97)
+    return fig
+
+
+def figure_similar_matrices_same_operator() -> Figure:
+    """Show one operator as mixed standard coordinates and axial B-coordinates."""
+    standard_matrix = np.array([[2.0, 1.0], [1.0, 2.0]])
+    basis_b = np.array([[1.0, 1.0], [1.0, -1.0]])
+    inverse_basis = np.linalg.inv(basis_b)
+    b_matrix = inverse_basis @ standard_matrix @ basis_b
+    assert np.allclose(b_matrix, np.diag([3.0, 1.0]))
+
+    fig, axes = plt.subplots(1, 3, figsize=(12.3, 5.2))
+    fig.subplots_adjust(left=0.05, right=0.98, bottom=0.20, top=0.86, wspace=0.30)
+    physical_ax, standard_ax, b_ax = axes
+    zero = np.zeros(2)
+
+    style_plane(physical_ax, xlim=(-1.0, 3.8), ylim=(-1.8, 3.8), title=r"One operator $T$ on one plane", grid=False)
+    draw_basis_lattice(physical_ax, np.eye(2)[:, 0], np.eye(2)[:, 1], extent=4.0, line_count=17)
+    b1, b2 = basis_b[:, 0], basis_b[:, 1]
+    draw_vector_2d(physical_ax, zero, b1, BLUE, r"$\mathbf{b}_1$", alpha=0.30, linestyle="--", label_offset=(-32, 5))
+    draw_vector_2d(physical_ax, zero, 3.0 * b1, BLUE, r"$T(\mathbf{b}_1)=3\mathbf{b}_1$", label_offset=(-76, 7), label_position=0.78)
+    draw_vector_2d(physical_ax, zero, b2, ORANGE, r"$T(\mathbf{b}_2)=\mathbf{b}_2$", label_offset=(5, -17), label_position=0.72)
+    physical_ax.text(0.05, 0.92, "same plane\nsame transformation", transform=physical_ax.transAxes, fontsize=10.8, color=SLATE, weight="bold", bbox={"boxstyle": "round,pad=0.32", "facecolor": "white", "edgecolor": GRID})
+
+    style_plane(standard_ax, xlim=(-0.6, 3.4), ylim=(-0.6, 3.4), title=r"Standard coordinates $\mathcal{E}$: mixed")
+    draw_vector_2d(standard_ax, zero, np.array([1.0, 0.0]), BLUE, None, alpha=0.28, linestyle="--")
+    draw_vector_2d(standard_ax, zero, np.array([0.0, 1.0]), ORANGE, None, alpha=0.28, linestyle="--")
+    draw_vector_2d(standard_ax, zero, standard_matrix[:, 0], BLUE, r"$T(\mathbf{e}_1)=(2,1)$", label_offset=(-62, 5), label_position=0.73)
+    draw_vector_2d(standard_ax, zero, standard_matrix[:, 1], ORANGE, r"$T(\mathbf{e}_2)=(1,2)$", label_offset=(7, 4), label_position=0.70)
+    standard_ax.text(0.96, 0.08, "$A_{\\mathcal{E}}$\n[ 2  1 ]\n[ 1  2 ]", transform=standard_ax.transAxes, ha="right", va="bottom", family="monospace", fontsize=10.5, color=SLATE, bbox={"boxstyle": "round,pad=0.35", "facecolor": "white", "edgecolor": GRID})
+
+    style_plane(b_ax, xlim=(-0.6, 3.6), ylim=(-0.6, 2.4), title=r"$\mathcal{B}$-coordinates: axis-aligned")
+    draw_vector_2d(b_ax, zero, np.array([3.0, 0.0]), BLUE, r"first coordinate $\times3$", label_offset=(-58, -17), label_position=0.72)
+    draw_vector_2d(b_ax, zero, np.array([0.0, 1.0]), ORANGE, r"second coordinate $\times1$", label_offset=(6, 4), label_position=0.70)
+    b_ax.text(0.96, 0.95, "$A_{\\mathcal{B}}$\n[ 3  0 ]\n[ 0  1 ]", transform=b_ax.transAxes, ha="right", va="top", family="monospace", fontsize=10.5, color=SLATE, bbox={"boxstyle": "round,pad=0.35", "facecolor": "white", "edgecolor": GRID})
+
+    fig.text(
+        0.5,
+        0.055,
+        r"$A_{\mathcal{B}}=P_{\mathcal{B}\leftarrow\mathcal{E}}A_{\mathcal{E}}P_{\mathcal{E}\leftarrow\mathcal{B}}=S^{-1}A_{\mathcal{E}}S=\operatorname{diag}(3,1)$",
+        ha="center",
+        fontsize=12.0,
+        color=SLATE,
+        weight="bold",
+    )
+    fig.suptitle("Similar matrices describe the same operator in different coordinates", fontsize=15.5, weight="bold")
+    return fig
+
+
 def normalize_svg(path: Path) -> None:
     """Remove generator-introduced trailing whitespace from an SVG file."""
     content = path.read_text(encoding="utf-8")
@@ -1933,6 +2373,12 @@ def main() -> None:
     save_figure(figure_rank_nullity_collapse_r3_r2(), "rank-nullity-collapse-r3-r2", formats)
     save_figure(figure_pivot_columns_preserve_relations(), "pivot-columns-preserve-relations", formats)
     save_figure(figure_row_column_rank_geometries(), "row-column-rank-geometries", formats)
+    save_figure(figure_coordinate_map_isomorphism(), "coordinate-map-isomorphism", formats)
+    save_figure(figure_coordinate_matrix_square(), "coordinate-matrix-square", formats)
+    save_figure(figure_polynomial_derivative_matrix(), "polynomial-derivative-matrix", formats)
+    save_figure(figure_change_of_basis_identity(), "change-of-basis-identity", formats)
+    save_figure(figure_two_sided_basis_change(), "two-sided-basis-change", formats)
+    save_figure(figure_similar_matrices_same_operator(), "similar-matrices-same-operator", formats)
 
 
 if __name__ == "__main__":
