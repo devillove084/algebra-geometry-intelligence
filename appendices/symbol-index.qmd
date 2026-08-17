@@ -48,7 +48,13 @@ title: "符号索引"
 | $i<j,\ \sigma(i)>\sigma(j)$ | 条件 | 位置对 $(i,j)$ 构成排列 $\sigma$ 的一个逆序对 |
 | $\tau(\sigma)$ | 非负整数 | 排列 $\sigma$ 的逆序数，即逆序对的总数 |
 | $\operatorname{sgn}(\sigma)$ | $\{-1,+1\}$ 中的标量 | 排列的符号，等于 $(-1)^{\tau(\sigma)}$ |
-| $\det(\mathbf{A})$ | 标量 | 方阵 $\mathbf{A}$ 的行列式 |
+| $\det(\mathbf{A})$ | 标量 | 方阵 $\mathbf{A}$ 的行列式，也是对应线性变换的有向体积倍率 |
+| $M_{ij}$ | 标量 | 删除方阵第 $i$ 行、第 $j$ 列后所得矩阵的行列式，即元素 $a_{ij}$ 的余子式 |
+| $C_{ij}$ | 标量 | 元素 $a_{ij}$ 的代数余子式，等于 $(-1)^{i+j}M_{ij}$ |
+| $\operatorname{adj}(\mathbf A)$ | 矩阵 | 方阵 $\mathbf A$ 的伴随矩阵，即代数余子式矩阵的转置 |
+| $\operatorname{tr}(\mathbf A)$ | 标量 | 方阵 $\mathbf A$ 的迹，即主对角元素之和 |
+| $\det(T)$ | 标量 | 有限维线性算子 $T$ 的行列式；等于其任意同基输入输出表示矩阵的行列式 |
+| $\operatorname{tr}(T)$ | 标量 | 有限维线性算子 $T$ 的迹；等于其任意同基输入输出表示矩阵的迹 |
 | $\mathbf{A}^{-1}$ | 矩阵 | 方阵 $\mathbf{A}$ 的逆矩阵，满足 $\mathbf{A}\mathbf{A}^{-1}=\mathbf{A}^{-1}\mathbf{A}=\mathbf{I}_n$ |
 | $\mathbf{A}_j(\mathbf{b})$ | 矩阵 | 把方阵 $\mathbf{A}$ 的第 $j$ 列替换为 $\mathbf{b}$ 后得到的矩阵 |
 | $\mathbf{A}[I,J]$ | 矩阵 | 从 $\mathbf{A}$ 中选取行指标集 $I$ 与列指标集 $J$ 得到的子矩阵 |

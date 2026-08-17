@@ -2297,6 +2297,414 @@ def figure_similar_matrices_same_operator() -> Figure:
     return fig
 
 
+def figure_determinant_composition_area() -> Figure:
+    """Track ordinary area and orientation through two determinant factors."""
+    matrix_a = np.array([[0.0, 2.0], [1.0, 0.0]])
+    matrix_b = np.array([[0.0, 1.0], [2.0, 0.0]])
+    composition = matrix_b @ matrix_a
+    square = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0]])
+
+    def signed_polygon_area(vertices: np.ndarray) -> float:
+        return 0.5 * float(
+            np.sum(vertices[:-1, 0] * vertices[1:, 1] - vertices[1:, 0] * vertices[:-1, 1])
+        )
+
+    after_a = (matrix_a @ square.T).T
+    after_b = (composition @ square.T).T
+    assert np.isclose(np.linalg.det(matrix_a), -2.0)
+    assert np.isclose(np.linalg.det(matrix_b), -2.0)
+    assert np.allclose(composition, np.diag([1.0, 4.0]))
+    assert np.isclose(np.linalg.det(composition), 4.0)
+    assert np.allclose(
+        [signed_polygon_area(square), signed_polygon_area(after_a), signed_polygon_area(after_b)],
+        [1.0, -2.0, 4.0],
+    )
+
+    fig, axes = plt.subplots(1, 3, figsize=(12.4, 4.9))
+    fig.subplots_adjust(left=0.045, right=0.98, bottom=0.19, top=0.82, wspace=0.28)
+    panels = (
+        (square, np.eye(2), BLUE, "Unit square", r"ordinary area $=1$", r"signed factor $=+1$", "CCW orientation"),
+        (after_a, matrix_a, ORANGE, r"After $A$ (first)", r"ordinary area $=2$", r"signed factor $=\det(A)=-2$", "reversed once: CW"),
+        (after_b, composition, GREEN, r"After $B$: composition $BA$", r"ordinary area $=4$", r"signed factor $=\det(BA)=+4$", "reversed twice: CCW restored"),
+    )
+
+    for ax, (polygon, transform, color, title, area_label, signed_label, orientation_label) in zip(axes, panels):
+        style_plane(ax, xlim=(-0.55, 4.55), ylim=(-0.55, 4.55), title=title)
+        ax.set_xticks(range(5))
+        ax.set_yticks(range(5))
+        ax.fill(polygon[:, 0], polygon[:, 1], color=color, alpha=0.18, zorder=2)
+        ax.plot(polygon[:, 0], polygon[:, 1], color=color, linewidth=2.5, zorder=3)
+        draw_vector_2d(ax, np.zeros(2), transform[:, 0], BLUE, None)
+        draw_vector_2d(ax, np.zeros(2), transform[:, 1], ORANGE, None)
+        ax.text(
+            0.96,
+            0.92,
+            area_label,
+            transform=ax.transAxes,
+            ha="right",
+            fontsize=11.5,
+            color=color,
+            weight="bold",
+            bbox={"boxstyle": "round,pad=0.28", "facecolor": "white", "edgecolor": GRID, "alpha": 0.94},
+        )
+        ax.text(0.96, 0.83, signed_label, transform=ax.transAxes, ha="right", fontsize=10.8, color=SLATE)
+        ax.text(0.96, 0.75, orientation_label, transform=ax.transAxes, ha="right", fontsize=9.8, color=color, weight="bold")
+
+    fig.text(
+        0.5,
+        0.045,
+        r"First $A$, then $B$ means $B(A\mathbf{x})=(BA)\mathbf{x}$; two orientation reversals restore orientation.",
+        ha="center",
+        fontsize=11.8,
+        color=SLATE,
+        weight="bold",
+    )
+    fig.suptitle("Determinants multiply signed area factors under composition", fontsize=15.5, weight="bold", y=0.96)
+    return fig
+
+
+def figure_laplace_cofactor_expansion() -> Figure:
+    """Separate minors, cofactors, and first-row Laplace terms."""
+    matrix = np.array([[2, 1, 3], [0, -1, 2], [1, 2, 0]])
+    minors = tuple(np.delete(np.delete(matrix, 0, axis=0), column, axis=1) for column in range(3))
+    minor_values = np.array([round(np.linalg.det(minor)) for minor in minors], dtype=int)
+    position_signs = np.array([1, -1, 1])
+    cofactors = position_signs * minor_values
+    terms = matrix[0] * cofactors
+    assert all(
+        np.array_equal(actual, expected)
+        for actual, expected in zip(
+            minors,
+            (
+                np.array([[-1, 2], [2, 0]]),
+                np.array([[0, 2], [1, 0]]),
+                np.array([[0, -1], [1, 2]]),
+            ),
+        )
+    )
+    assert np.array_equal(minor_values, np.array([-4, -2, 1]))
+    assert np.array_equal(cofactors, np.array([-4, 2, 1]))
+    assert np.array_equal(terms, np.array([-8, 2, 3]))
+    assert round(np.linalg.det(matrix)) == int(np.sum(terms)) == -3
+
+    fig, ax = plt.subplots(figsize=(12.6, 6.4))
+    fig.subplots_adjust(left=0.03, right=0.98, bottom=0.11, top=0.87)
+    ax.set_xlim(0, 16)
+    ax.set_ylim(0, 7.2)
+    ax.axis("off")
+    colors = (BLUE, ORANGE, GREEN)
+
+    x_positions = np.array([1.35, 2.25, 3.15])
+    y_positions = np.array([5.05, 4.15, 3.25])
+    ax.text(2.25, 6.15, r"$A$", ha="center", fontsize=14, color=SLATE, weight="bold")
+    ax.text(0.55, 4.15, "[", ha="center", va="center", fontsize=38, color=SLATE)
+    ax.text(3.95, 4.15, "]", ha="center", va="center", fontsize=38, color=SLATE)
+    for row, y_position in enumerate(y_positions):
+        for column, x_position in enumerate(x_positions):
+            if row == 0:
+                ax.add_patch(
+                    Rectangle(
+                        (x_position - 0.38, y_position - 0.36),
+                        0.76,
+                        0.72,
+                        facecolor=colors[column],
+                        edgecolor=colors[column],
+                        alpha=0.15,
+                        linewidth=1.8,
+                    )
+                )
+            ax.text(
+                x_position,
+                y_position,
+                rf"${matrix[row, column]}$",
+                ha="center",
+                va="center",
+                fontsize=16,
+                color=colors[column] if row == 0 else SLATE,
+                weight="bold" if row == 0 else "normal",
+            )
+    ax.text(2.25, 2.35, "expand along row 1", ha="center", fontsize=11, color=SLATE, weight="bold")
+
+    card_centers = (6.25, 10.05, 13.85)
+    sign_labels = (r"$+$ position", r"$-$ position", r"$+$ position")
+    for column, (x_center, minor, color, sign_label) in enumerate(zip(card_centers, minors, colors, sign_labels)):
+        ax.annotate(
+            "",
+            xy=(x_center - 1.25, 4.75),
+            xytext=(x_positions[column] + 0.42, 5.05),
+            arrowprops={"arrowstyle": "->", "color": color, "lw": 1.7, "alpha": 0.65},
+        )
+        ax.text(x_center, 6.35, sign_label, ha="center", fontsize=11.5, color=color, weight="bold")
+        draw_matrix_card(
+            ax,
+            (x_center, 4.65),
+            tuple(tuple(int(value) for value in row) for row in minor),
+            rf"delete row $1$, column ${column + 1}$",
+            width=2.55,
+            height=1.65,
+            edgecolor=color,
+            fontsize=12.0,
+        )
+        ax.text(x_center, 3.25, rf"minor: $M_{{1{column + 1}}}={minor_values[column]}$", ha="center", fontsize=11, color=SLATE)
+        sign_symbol = "+" if position_signs[column] > 0 else "-"
+        ax.text(
+            x_center,
+            2.58,
+            rf"cofactor: $C_{{1{column + 1}}}=({sign_symbol})({minor_values[column]})={cofactors[column]}$",
+            ha="center",
+            fontsize=10.7,
+            color=color,
+            weight="bold",
+        )
+        ax.text(
+            x_center,
+            1.82,
+            rf"term: $a_{{1{column + 1}}}C_{{1{column + 1}}}={terms[column]:+d}$",
+            ha="center",
+            fontsize=11.2,
+            color=color,
+            weight="bold",
+            bbox={"boxstyle": "round,pad=0.28", "facecolor": "white", "edgecolor": color, "alpha": 0.94},
+        )
+
+    ax.plot((0.55, 15.45), (1.18, 1.18), color=GRID, linewidth=1.3)
+    ax.text(
+        8.0,
+        0.53,
+        r"$\det(A)=2(-4)+1(2)+3(1)=-8+2+3=-3$",
+        ha="center",
+        fontsize=14,
+        color=SLATE,
+        weight="bold",
+    )
+    fig.suptitle("Laplace expansion: position signs turn minors into cofactors", fontsize=15.5, weight="bold")
+    return fig
+
+
+def figure_adjugate_identity() -> Figure:
+    """Build the adjugate by transposing cofactors and verify its columns."""
+    matrix = np.array([[2, 1], [3, 4]])
+    determinant = round(np.linalg.det(matrix))
+    cofactor = np.array([[4, -3], [-1, 2]])
+    adjugate = cofactor.T
+    q1, q2 = adjugate[:, 0], adjugate[:, 1]
+    assert determinant == 5
+    assert np.array_equal(cofactor, np.array([[4, -3], [-1, 2]]))
+    assert np.array_equal(adjugate, np.array([[4, -1], [-3, 2]]))
+    assert np.array_equal(matrix @ q1, np.array([5, 0]))
+    assert np.array_equal(matrix @ q2, np.array([0, 5]))
+    assert np.array_equal(matrix @ adjugate, 5 * np.eye(2, dtype=int))
+
+    fig, ax = plt.subplots(figsize=(12.2, 6.7))
+    fig.subplots_adjust(left=0.035, right=0.98, bottom=0.09, top=0.87)
+    ax.set_xlim(0, 13)
+    ax.set_ylim(0, 7.5)
+    ax.axis("off")
+
+    draw_matrix_card(
+        ax,
+        (3.0, 5.75),
+        ((4, -3), (-1, 2)),
+        r"cofactor matrix $C$",
+        width=2.45,
+        height=1.65,
+        edgecolor=ORANGE,
+        fontsize=12.0,
+    )
+    ax.annotate("", xy=(8.15, 5.75), xytext=(4.35, 5.75), arrowprops={"arrowstyle": "-|>", "color": GREEN, "lw": 2.5})
+    ax.text(6.25, 6.12, "transpose", ha="center", fontsize=11, color=GREEN, weight="bold")
+    ax.text(6.25, 5.35, r"$C^T$", ha="center", fontsize=12.5, color=GREEN)
+    draw_matrix_card(
+        ax,
+        (9.5, 5.75),
+        ((4, -1), (-3, 2)),
+        r"$\operatorname{adj}(A)=C^T$",
+        width=2.45,
+        height=1.65,
+        edgecolor=GREEN,
+        column_colors=(BLUE, ORANGE),
+        fontsize=12.0,
+    )
+
+    ax.plot((0.6, 12.4), (4.42, 4.42), color=GRID, linewidth=1.3)
+    ax.text(6.5, 4.68, r"$\operatorname{adj}(A)=[\,\mathbf{q}_1\ \mathbf{q}_2\,]$", ha="center", fontsize=12.2, color=SLATE, weight="bold")
+    vector_box = {"boxstyle": "round,pad=0.42", "facecolor": "white", "edgecolor": GRID, "linewidth": 1.5}
+    rows = (
+        (3.35, r"$\mathbf{q}_1=(4,-3)^T$", BLUE, r"$A\mathbf{q}_1=(5,0)^T=5\mathbf{e}_1$"),
+        (1.85, r"$\mathbf{q}_2=(-1,2)^T$", ORANGE, r"$A\mathbf{q}_2=(0,5)^T=5\mathbf{e}_2$"),
+    )
+    for y_position, source_label, color, target_label in rows:
+        ax.text(1.75, y_position, source_label, ha="center", va="center", fontsize=12.5, color=color, weight="bold", bbox=vector_box)
+        ax.annotate("", xy=(4.62, y_position), xytext=(3.20, y_position), arrowprops={"arrowstyle": "-|>", "color": color, "lw": 2.2})
+        ax.text(5.18, y_position, r"$A$", ha="center", va="center", fontsize=17, color=SLATE, weight="bold", bbox={"boxstyle": "circle,pad=0.38", "facecolor": "white", "edgecolor": SLATE})
+        ax.annotate("", xy=(7.15, y_position), xytext=(5.73, y_position), arrowprops={"arrowstyle": "-|>", "color": color, "lw": 2.2})
+        ax.text(9.35, y_position, target_label, ha="center", va="center", fontsize=12.5, color=color, weight="bold", bbox=vector_box)
+
+    ax.text(
+        6.5,
+        0.53,
+        r"$A\operatorname{adj}(A)=[\,A\mathbf{q}_1\ A\mathbf{q}_2\,]=[\,5\mathbf{e}_1\ 5\mathbf{e}_2\,]=5I$",
+        ha="center",
+        fontsize=14,
+        color=SLATE,
+        weight="bold",
+    )
+    fig.suptitle("The adjugate packages two special vectors into a matrix identity", fontsize=15.5, weight="bold")
+    return fig
+
+
+def figure_similarity_det_trace_invariants() -> Figure:
+    """Show similarity as a coordinate flow and compare invariant summaries."""
+    matrix_a = np.array([[1, 2], [3, 4]])
+    transition = np.array([[1, 1], [0, 1]])
+    inverse_transition = np.linalg.inv(transition)
+    matrix_b = inverse_transition @ matrix_a @ transition
+    assert np.allclose(inverse_transition, np.array([[1, -1], [0, 1]]))
+    assert np.allclose(matrix_b, np.array([[-2, -4], [3, 7]]))
+    assert np.isclose(np.linalg.det(matrix_a), -2.0)
+    assert np.isclose(np.linalg.det(matrix_b), -2.0)
+    assert np.isclose(np.trace(matrix_a), 5.0)
+    assert np.isclose(np.trace(matrix_b), 5.0)
+    assert np.allclose(transition @ matrix_b, matrix_a @ transition)
+
+    fig, ax = plt.subplots(figsize=(12.8, 6.9))
+    fig.subplots_adjust(left=0.025, right=0.985, bottom=0.08, top=0.87)
+    ax.set_xlim(0, 14)
+    ax.set_ylim(0, 8)
+    ax.axis("off")
+    flow_box = {"boxstyle": "round,pad=0.45", "facecolor": "white", "edgecolor": GRID, "linewidth": 1.6}
+    flow_nodes = (
+        (0.9, r"$\mathbf{x}_{\mathrm{new}}$", BLUE),
+        (5.0, r"$\mathbf{x}_{\mathrm{old}}$", SLATE),
+        (9.0, r"$\mathbf{y}_{\mathrm{old}}$", SLATE),
+        (13.1, r"$\mathbf{y}_{\mathrm{new}}$", GREEN),
+    )
+    for x_position, label, color in flow_nodes:
+        ax.text(x_position, 6.85, label, ha="center", va="center", fontsize=14, color=color, weight="bold", bbox=flow_box)
+
+    arrow_specs = (
+        (1.8, 4.1, 2.95, r"$P$", BLUE),
+        (5.9, 8.1, 7.0, r"$A$", ORANGE),
+        (9.9, 12.2, 11.05, r"$P^{-1}$", GREEN),
+    )
+    for start, end, center, label, color in arrow_specs:
+        ax.annotate("", xy=(end, 6.85), xytext=(start, 6.85), arrowprops={"arrowstyle": "-|>", "color": color, "lw": 2.4})
+        ax.text(center, 7.20, label, ha="center", fontsize=12.5, color=color, weight="bold")
+        ax.plot((center, center), (6.48, 5.75), color=color, linestyle="--", linewidth=1.2, alpha=0.45)
+
+    draw_matrix_card(ax, (2.95, 4.85), ((1, 1), (0, 1)), r"$P$: new $\to$ old", width=2.15, height=1.5, edgecolor=BLUE)
+    draw_matrix_card(ax, (7.0, 4.85), ((1, 2), (3, 4)), r"$A$: old $\to$ old", width=2.15, height=1.5, edgecolor=ORANGE)
+    draw_matrix_card(ax, (11.05, 4.85), ((1, -1), (0, 1)), r"$P^{-1}$: old $\to$ new", width=2.15, height=1.5, edgecolor=GREEN)
+
+    ax.plot((0.6, 13.4), (3.55, 3.55), color=GRID, linewidth=1.3)
+    ax.text(7.0, 3.78, r"$B=P^{-1}AP$", ha="center", fontsize=13.5, color=SLATE, weight="bold")
+    draw_matrix_card(ax, (3.25, 1.95), ((1, 2), (3, 4)), r"$A$ in old coordinates", width=2.45, height=1.5, edgecolor=ORANGE)
+    draw_matrix_card(ax, (10.75, 1.95), ((-2, -4), (3, 7)), r"$B$ in new coordinates", width=2.45, height=1.5, edgecolor=GREEN)
+    ax.text(3.25, 0.62, r"$\det(A)=-2,\quad \operatorname{tr}(A)=5$", ha="center", fontsize=12.2, color=ORANGE, weight="bold")
+    ax.text(10.75, 0.62, r"$\det(B)=-2,\quad \operatorname{tr}(B)=5$", ha="center", fontsize=12.2, color=GREEN, weight="bold")
+    ax.annotate("", xy=(9.1, 1.95), xytext=(4.9, 1.95), arrowprops={"arrowstyle": "<->", "color": SLATE, "lw": 1.8})
+    ax.text(7.0, 2.27, "same operator, different coordinates", ha="center", fontsize=10.5, color=SLATE, weight="bold")
+
+    fig.suptitle("Similarity preserves determinant and trace", fontsize=15.5, weight="bold")
+    return fig
+
+
+def figure_trace_first_order_area() -> Figure:
+    """Compare exact area scaling with its first-order trace approximation."""
+    matrix = np.array([[2.0, 1.0], [-1.0, 3.0]])
+    parameter = 0.05
+    transform = np.eye(2) + parameter * matrix
+    trace = float(np.trace(matrix))
+    determinant = float(np.linalg.det(matrix))
+    first_order = 1.0 + parameter * trace
+    quadratic = parameter**2 * determinant
+    exact_factor = float(np.linalg.det(transform))
+    assert np.isclose(trace, 5.0)
+    assert np.isclose(determinant, 7.0)
+    assert np.allclose(transform, np.array([[1.10, 0.05], [-0.05, 1.15]]))
+    assert np.isclose(first_order, 1.25)
+    assert np.isclose(quadratic, 0.0175)
+    assert np.isclose(exact_factor, 1.2675)
+    assert np.isclose(exact_factor, 1.0 + parameter * trace + parameter**2 * determinant)
+
+    square = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0]])
+    transformed_square = (transform @ square.T).T
+    fig = plt.figure(figsize=(12.2, 5.6))
+    fig.subplots_adjust(left=0.055, right=0.98, bottom=0.14, top=0.86, wspace=0.26)
+    grid_spec = fig.add_gridspec(1, 2, width_ratios=(1.0, 1.35))
+    geometry_ax = fig.add_subplot(grid_spec[0, 0])
+    formula_ax = fig.add_subplot(grid_spec[0, 1])
+
+    style_plane(geometry_ax, xlim=(-0.25, 1.45), ylim=(-0.25, 1.45), title=r"Area under $I+tA$ at $t=0.05$")
+    geometry_ax.set_xticks((0.0, 0.5, 1.0))
+    geometry_ax.set_yticks((0.0, 0.5, 1.0))
+    geometry_ax.fill(square[:, 0], square[:, 1], color=SLATE, alpha=0.06, zorder=2)
+    geometry_ax.plot(square[:, 0], square[:, 1], color=SLATE, linestyle="--", linewidth=2.0, label="unit square", zorder=3)
+    geometry_ax.fill(transformed_square[:, 0], transformed_square[:, 1], color=GREEN, alpha=0.20, zorder=2)
+    geometry_ax.plot(transformed_square[:, 0], transformed_square[:, 1], color=GREEN, linewidth=2.5, label=r"$(I+tA)$ square", zorder=4)
+    draw_vector_2d(geometry_ax, np.zeros(2), transform[:, 0], BLUE, None)
+    draw_vector_2d(geometry_ax, np.zeros(2), transform[:, 1], ORANGE, None)
+    geometry_ax.legend(loc="upper left", fontsize=9)
+    geometry_ax.text(
+        0.96,
+        0.92,
+        r"exact area factor $=1.2675$",
+        transform=geometry_ax.transAxes,
+        ha="right",
+        fontsize=10.8,
+        color=GREEN,
+        weight="bold",
+        bbox={"boxstyle": "round,pad=0.28", "facecolor": "white", "edgecolor": GREEN, "alpha": 0.94},
+    )
+
+    formula_ax.set_xlim(0, 8.2)
+    formula_ax.set_ylim(0, 6.2)
+    formula_ax.axis("off")
+    formula_ax.text(4.1, 5.55, r"$\det(I+tA)=1+5t+7t^2$", ha="center", fontsize=16, color=SLATE, weight="bold")
+    formula_ax.text(4.1, 4.96, r"$t=0.05$", ha="center", fontsize=12.2, color=SLATE)
+    formula_ax.text(0.55, 4.23, "exact factor split into contributions", fontsize=10.8, color=SLATE, weight="bold")
+
+    components = (1.0, 0.25, 0.0175)
+    component_colors = (BLUE, ORANGE, GREEN)
+    component_labels = (r"$1$", r"$5t=0.25$", r"$7t^2=0.0175$")
+    scale = 5.7 / exact_factor
+    left = 0.65
+    bar_bottom = 3.05
+    bar_height = 0.72
+    segment_centers: list[float] = []
+    for component, color in zip(components, component_colors):
+        width = component * scale
+        formula_ax.add_patch(
+            Rectangle((left, bar_bottom), width, bar_height, facecolor=color, edgecolor=color, alpha=0.24, linewidth=1.8)
+        )
+        segment_centers.append(left + width / 2)
+        left += width
+    formula_ax.text(segment_centers[0], 3.41, component_labels[0], ha="center", va="center", fontsize=11.5, color=BLUE, weight="bold")
+    formula_ax.text(segment_centers[1], 3.41, component_labels[1], ha="center", va="center", fontsize=10.4, color=ORANGE, weight="bold")
+    formula_ax.annotate(
+        component_labels[2],
+        xy=(segment_centers[2], bar_bottom + bar_height),
+        xytext=(6.55, 4.15),
+        ha="center",
+        fontsize=10.7,
+        color=GREEN,
+        weight="bold",
+        arrowprops={"arrowstyle": "->", "color": GREEN, "lw": 1.5},
+    )
+    formula_ax.text(6.95, 3.40, r"$=1.2675$", ha="left", va="center", fontsize=12.5, color=GREEN, weight="bold")
+
+    result_box = {"boxstyle": "round,pad=0.42", "facecolor": "white", "edgecolor": GRID, "linewidth": 1.6}
+    formula_ax.text(2.15, 1.55, "first-order approximation", ha="center", fontsize=10.8, color=ORANGE, weight="bold")
+    formula_ax.text(2.15, 0.85, r"$1+t\operatorname{tr}(A)=1.25$", ha="center", fontsize=13.2, color=ORANGE, weight="bold", bbox=result_box)
+    formula_ax.text(6.15, 1.55, "exact factor", ha="center", fontsize=10.8, color=GREEN, weight="bold")
+    formula_ax.text(6.15, 0.85, r"$\det(I+tA)=1.2675$", ha="center", fontsize=13.2, color=GREEN, weight="bold", bbox=result_box)
+    formula_ax.annotate("", xy=(4.75, 0.85), xytext=(3.55, 0.85), arrowprops={"arrowstyle": "->", "color": SLATE, "lw": 1.7})
+    formula_ax.text(4.15, 1.12, r"add $7t^2$", ha="center", fontsize=9.7, color=SLATE)
+
+    fig.suptitle("Trace gives the first-order change in area", fontsize=15.5, weight="bold")
+    return fig
+
+
 def normalize_svg(path: Path) -> None:
     """Remove generator-introduced trailing whitespace from an SVG file."""
     content = path.read_text(encoding="utf-8")
@@ -2379,6 +2787,11 @@ def main() -> None:
     save_figure(figure_change_of_basis_identity(), "change-of-basis-identity", formats)
     save_figure(figure_two_sided_basis_change(), "two-sided-basis-change", formats)
     save_figure(figure_similar_matrices_same_operator(), "similar-matrices-same-operator", formats)
+    save_figure(figure_determinant_composition_area(), "determinant-composition-area", formats)
+    save_figure(figure_laplace_cofactor_expansion(), "laplace-cofactor-expansion", formats)
+    save_figure(figure_adjugate_identity(), "adjugate-identity", formats)
+    save_figure(figure_similarity_det_trace_invariants(), "similarity-det-trace-invariants", formats)
+    save_figure(figure_trace_first_order_area(), "trace-first-order-area", formats)
 
 
 if __name__ == "__main__":
