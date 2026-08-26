@@ -55,6 +55,10 @@ title: "符号索引"
 | $\operatorname{tr}(\mathbf A)$ | 标量 | 方阵 $\mathbf A$ 的迹，即主对角元素之和 |
 | $\det(T)$ | 标量 | 有限维线性算子 $T$ 的行列式；等于其任意同基输入输出表示矩阵的行列式 |
 | $\operatorname{tr}(T)$ | 标量 | 有限维线性算子 $T$ 的迹；等于其任意同基输入输出表示矩阵的迹 |
+| $\mathbf A=\mathbf L\mathbf U$ | 矩阵分解 | 无换行 LU 分解；$\mathbf L$ 为单位下三角矩阵，$\mathbf U$ 为上三角矩阵 |
+| $\mathbf P\mathbf A=\mathbf L\mathbf U$ | 矩阵分解 | 带行排列的 PLU 分解；$\mathbf P$ 记录消元中的行交换 |
+| $m_{ik}$ | 标量 | Gaussian 消元中用第 $k$ 行消去第 $i$ 行对应元素的乘子，也是 $L_{ik}$ |
+| $\mathbf r=\mathbf b-\mathbf A\widehat{\mathbf x}$ | 向量 | 候选解 $\widehat{\mathbf x}$ 代回线性方程组后的残差 |
 | $\mathbf{A}^{-1}$ | 矩阵 | 方阵 $\mathbf{A}$ 的逆矩阵，满足 $\mathbf{A}\mathbf{A}^{-1}=\mathbf{A}^{-1}\mathbf{A}=\mathbf{I}_n$ |
 | $\mathbf{A}_j(\mathbf{b})$ | 矩阵 | 把方阵 $\mathbf{A}$ 的第 $j$ 列替换为 $\mathbf{b}$ 后得到的矩阵 |
 | $\mathbf{A}[I,J]$ | 矩阵 | 从 $\mathbf{A}$ 中选取行指标集 $I$ 与列指标集 $J$ 得到的子矩阵 |

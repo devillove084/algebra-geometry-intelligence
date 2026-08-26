@@ -1,0 +1,2171 @@
+---
+title: "Gaussian 消元的矩阵分解：LU、PLU 与三角求解"
+description: "把 Gaussian 消元保存为 LU 与 PLU 分解，证明三角求解、分解存在唯一性与部分选主元的基本性质，并区分精确可解、残差和浮点可靠性。"
+---
+
+# 为什么不应为每个右端重新消元
+
+设同一个方阵反复出现在多个方程组中：
+
+$$
+\mathbf A\mathbf x_1=\mathbf b_1,
+\qquad
+\mathbf A\mathbf x_2=\mathbf b_2,
+\qquad
+\ldots,
+\qquad
+\mathbf A\mathbf x_r=\mathbf b_r.
+$$
+
+如果每得到一个新右端 $\mathbf b_j$，就从头对增广矩阵
+
+$$
+[\mathbf A\mid\mathbf b_j]
+$$
+
+实施同一遍 Gaussian 消元，那么系数部分发生的工作被重复了很多次。消去第一列时使用哪个主元、减去多少倍主元行；消去第二列时又使用哪些乘子——这些都只由 $\mathbf A$ 决定，与右端无关。
+
+因此更自然的做法是：
+
+1. 只对 $\mathbf A$ 做一次消元；
+2. 保存这次消元使用的行交换和消元乘子；
+3. 每个新右端只通过已经保存的结构求解。
+
+这不是另发明一套算法，而是把已有消元过程拆成“预处理一次、使用多次”。
+
+取贯穿本章的矩阵
+
+$$
+\mathbf A
+=
+\begin{bmatrix}
+2&1&1\\
+4&-6&0\\
+-2&7&2
+\end{bmatrix}.
+$$ {#eq-running-lu-matrix}
+
+对第一列消元：
+
+$$
+m_{21}=\frac{4}{2}=2,
+\qquad
+m_{31}=\frac{-2}{2}=-1.
+$$
+
+实施
+
+$$
+R_2\leftarrow R_2-2R_1,
+\qquad
+R_3\leftarrow R_3-(-1)R_1=R_3+R_1,
+$$
+
+得到
+
+$$
+\begin{bmatrix}
+2&1&1\\
+0&-8&-2\\
+0&8&3
+\end{bmatrix}.
+$$
+
+再对第二列消元：
+
+$$
+m_{32}=\frac{8}{-8}=-1,
+$$
+
+所以
+
+$$
+R_3\leftarrow R_3-(-1)R_2=R_3+R_2.
+$$
+
+最终得到上三角矩阵
+
+$$
+\mathbf U
+=
+\begin{bmatrix}
+2&1&1\\
+0&-8&-2\\
+0&0&1
+\end{bmatrix}.
+$$ {#eq-running-u-matrix}
+
+如果只保留 $\mathbf U$，就丢掉了“怎样从 $\mathbf A$ 到达 $\mathbf U$”的信息。三个乘子
+
+$$
+m_{21}=2,
+\qquad
+m_{31}=-1,
+\qquad
+m_{32}=-1
+$$
+
+正好可以存入单位下三角矩阵：
+
+$$
+\mathbf L
+=
+\begin{bmatrix}
+1&0&0\\
+2&1&0\\
+-1&-1&1
+\end{bmatrix}.
+$$ {#eq-running-l-matrix}
+
+@fig-lu-multipliers-stored 展示了同一个信息流：矩阵上三角部分逐步变成 $\mathbf U$，被消去位置使用的乘子则落入 $\mathbf L$ 的对应位置。
+
+![Gaussian 消元把 A 变成上三角矩阵 U，同时把三个消元乘子存入单位下三角矩阵 L。](../../images/linear-algebra/lu-multipliers-stored.svg){#fig-lu-multipliers-stored fig-alt="左侧矩阵 A 经过两轮消元变成右侧上三角矩阵 U；三条带颜色的乘子二、负一、负一从消元步骤落入下方单位下三角矩阵 L 的二一、三一、三二位置。" width="100%"}
+
+直接相乘可以核对：
+
+$$
+\begin{aligned}
+\mathbf L\mathbf U
+&=
+\begin{bmatrix}
+1&0&0\\
+2&1&0\\
+-1&-1&1
+\end{bmatrix}
+\begin{bmatrix}
+2&1&1\\
+0&-8&-2\\
+0&0&1
+\end{bmatrix}\\
+&=
+\begin{bmatrix}
+2&1&1\\
+4&-6&0\\
+-2&7&2
+\end{bmatrix}\\
+&=\mathbf A.
+\end{aligned}
+$$
+
+于是这次消元留下了分解
+
+$$
+\boxed{\mathbf A=\mathbf L\mathbf U}.
+$$
+
+# 核心问题
+
+1. 为什么消元乘子会组成单位下三角矩阵；
+2. 怎样从初等矩阵严格推出 $\mathbf A=\mathbf L\mathbf U$；
+3. 为什么 $\mathbf A=\mathbf L\mathbf U$ 表示先应用 $\mathbf U$、再应用 $\mathbf L$；
+4. 求解 $\mathbf A\mathbf x=\mathbf b$ 时，为什么却先解 $\mathbf L\mathbf y=\mathbf b$，再解 $\mathbf U\mathbf x=\mathbf y$；
+5. 前代与回代公式为什么正确；
+6. 一次分解为什么能复用到多个右端；
+7. 哪些非奇异矩阵能在不换行的情况下唯一分解为 $\mathbf L\mathbf U$；
+8. 为什么有些可逆矩阵仍然必须在消元中交换行；
+9. 排列矩阵怎样把行交换收进 $\mathbf P\mathbf A=\mathbf L\mathbf U$；
+10. 部分选主元为什么使消元乘子的绝对值不超过 $1$；
+11. 这个界为什么仍不等于“所有浮点误差都得到保证”；
+12. 为什么小残差不一定意味着近似解接近精确解。
+
+::: {.callout-important title="假设与约定"}
+本章主要讨论实方阵。无换行的 LU 分解约定为
+
+$$
+\mathbf A=\mathbf L\mathbf U,
+$$
+
+其中 $\mathbf L$ 是主对角线全为 $1$ 的单位下三角矩阵，$\mathbf U$ 是上三角矩阵。
+
+需要交换行时，本章统一使用
+
+$$
+\boxed{\mathbf P\mathbf A=\mathbf L\mathbf U}.
+$$
+
+不同资料可能把排列矩阵的逆吸收到记号中，写成 $\mathbf A=\mathbf P\mathbf L\mathbf U$。公式看起来相近，含义却取决于约定；使用软件或阅读资料时必须先检查等式本身。
+:::
+
+# 从初等消元矩阵得到 LU
+
+每次把主元下方元素消成零，都可以写成一个初等矩阵左乘。
+
+对贯穿例子，第一步
+
+$$
+R_2\leftarrow R_2-2R_1
+$$
+
+对应
+
+$$
+\mathbf E_{21}
+=
+\begin{bmatrix}
+1&0&0\\
+-2&1&0\\
+0&0&1
+\end{bmatrix}.
+$$
+
+第二步
+
+$$
+R_3\leftarrow R_3-(-1)R_1
+$$
+
+对应
+
+$$
+\mathbf E_{31}
+=
+\begin{bmatrix}
+1&0&0\\
+0&1&0\\
+1&0&1
+\end{bmatrix}.
+$$
+
+第三步
+
+$$
+R_3\leftarrow R_3-(-1)R_2
+$$
+
+对应
+
+$$
+\mathbf E_{32}
+=
+\begin{bmatrix}
+1&0&0\\
+0&1&0\\
+0&1&1
+\end{bmatrix}.
+$$
+
+按照实际作用顺序，
+
+$$
+\mathbf E_{32}\mathbf E_{31}\mathbf E_{21}\mathbf A
+=\mathbf U.
+$$ {#eq-elimination-matrices-to-u}
+
+每个消元矩阵都可逆。撤销
+
+$$
+R_i\leftarrow R_i-m_{ik}R_k
+$$
+
+只需执行
+
+$$
+R_i\leftarrow R_i+m_{ik}R_k.
+$$
+
+因此
+
+$$
+\mathbf E_{ik}^{-1}
+$$
+
+与 $\mathbf E_{ik}$ 只有对应位置的符号相反。
+
+在 @eq-elimination-matrices-to-u 两侧从左依次乘逆矩阵：
+
+$$
+\begin{aligned}
+\mathbf A
+&=
+\mathbf E_{21}^{-1}
+\mathbf E_{31}^{-1}
+\mathbf E_{32}^{-1}
+\mathbf U.
+\end{aligned}
+$$
+
+定义
+
+$$
+\mathbf L
+\coloneqq
+\mathbf E_{21}^{-1}
+\mathbf E_{31}^{-1}
+\mathbf E_{32}^{-1},
+$$
+
+就得到
+
+$$
+\mathbf A=\mathbf L\mathbf U.
+$$
+
+在本例中，
+
+$$
+\mathbf E_{21}^{-1}
+=
+\begin{bmatrix}
+1&0&0\\
+2&1&0\\
+0&0&1
+\end{bmatrix},
+$$
+
+$$
+\mathbf E_{31}^{-1}
+=
+\begin{bmatrix}
+1&0&0\\
+0&1&0\\
+-1&0&1
+\end{bmatrix},
+$$
+
+以及
+
+$$
+\mathbf E_{32}^{-1}
+=
+\begin{bmatrix}
+1&0&0\\
+0&1&0\\
+0&-1&1
+\end{bmatrix}.
+$$
+
+相乘得到 @eq-running-l-matrix。
+
+## 为什么 $\mathbf L$ 一定是单位下三角矩阵
+
+每个逆消元矩阵都是单位下三角矩阵：
+
+- 主对角线全为 $1$；
+- 主对角线上方全为 $0$；
+- 只有主对角线下方某个位置可能多出一个乘子。
+
+两个单位下三角矩阵的乘积仍是单位下三角矩阵。设 $\mathbf L_1,\mathbf L_2$ 都是单位下三角矩阵。
+
+当 $i<j$ 时，
+
+$$
+(\mathbf L_1\mathbf L_2)_{ij}
+=
+\sum_{k=1}^{n}(L_1)_{ik}(L_2)_{kj}.
+$$
+
+若某项可能非零，第一因子要求 $k\le i$，第二因子要求 $j\le k$，合起来得到
+
+$$
+j\le k\le i,
+$$
+
+这与 $i<j$ 矛盾，所以主对角线上方仍全为零。
+
+当 $i=j$ 时，只有 $k=i$ 的项可能非零，因此
+
+$$
+(\mathbf L_1\mathbf L_2)_{ii}
+=(L_1)_{ii}(L_2)_{ii}=1.
+$$
+
+所以单位下三角矩阵对乘法封闭。由此，所有逆消元矩阵的乘积 $\mathbf L$ 仍是单位下三角矩阵。
+
+## 为什么 $\mathbf L$ 中保存的正是消元乘子
+
+标准 Gaussian 消元按列从左到右推进。记 $a_{ij}^{(k)}$ 为第 $k$ 步开始时工作矩阵第 $(i,j)$ 个元素。在第 $k$ 列，使用乘子
+
+$$
+m_{ik}
+=
+\frac{a_{ik}^{(k)}}{a_{kk}^{(k)}},
+\qquad i>k,
+$$ {#eq-elimination-multiplier}
+
+并做
+
+$$
+R_i\leftarrow R_i-m_{ik}R_k.
+$$
+
+把第 $k$ 列下方的全部乘子收集成向量
+
+$$
+\mathbf m^{(k)}
+=
+\begin{bmatrix}
+0&\cdots&0&m_{k+1,k}&\cdots&m_{n,k}
+\end{bmatrix}^{\mathsf T}.
+$$
+
+它的前 $k$ 个分量为零。整列消元可以写成
+
+$$
+\mathbf E_k
+=
+\mathbf I-
+\mathbf m^{(k)}\mathbf e_k^{\mathsf T}.
+$$
+
+因为
+
+$$
+\mathbf e_k^{\mathsf T}\mathbf m^{(k)}=0,
+$$
+
+直接相乘可得
+
+$$
+\mathbf E_k^{-1}
+=
+\mathbf I+
+\mathbf m^{(k)}\mathbf e_k^{\mathsf T}.
+$$
+
+所有列依次消元后，
+
+$$
+\mathbf U
+=
+\mathbf E_{n-1}\cdots\mathbf E_2\mathbf E_1\mathbf A,
+$$
+
+所以
+
+$$
+\mathbf L
+=
+\mathbf E_1^{-1}\mathbf E_2^{-1}\cdots\mathbf E_{n-1}^{-1}.
+$$
+
+还需检查这些逆矩阵相乘时不会产生额外交叉项。若 $p<q$，则 $\mathbf m^{(q)}$ 的前 $q$ 个分量为零，特别有
+
+$$
+\mathbf e_p^{\mathsf T}\mathbf m^{(q)}=0.
+$$
+
+因此
+
+$$
+\left(
+\mathbf m^{(p)}\mathbf e_p^{\mathsf T}
+\right)
+\left(
+\mathbf m^{(q)}\mathbf e_q^{\mathsf T}
+\right)
+=
+\mathbf 0.
+$$
+
+按 $1,2,\ldots,n-1$ 的顺序展开乘积，所有这样的交叉项都为零，于是
+
+$$
+\mathbf L
+=
+\mathbf I+
+\sum_{k=1}^{n-1}
+\mathbf m^{(k)}\mathbf e_k^{\mathsf T}.
+$$
+
+第 $k$ 个秩至多为一的外积项只把 $\mathbf m^{(k)}$ 放入 $\mathbf L$ 的第 $k$ 列，所以
+
+$$
+\boxed{
+L_{ik}=m_{ik},
+\qquad i>k
+}.
+$$
+
+因此实现 LU 时不必显式形成所有初等矩阵：可以在工作数组的上三角部分保存 $\mathbf U$，在严格下三角部分原地保存 $\mathbf L$ 的乘子，并把 $\mathbf L$ 的主对角线理解为隐含的 $1$。
+
+::: {.callout-warning title="消元矩阵与 L 中的符号相反"}
+执行消元的初等矩阵在 $(i,k)$ 位置放的是 $-m_{ik}$，因为它实施
+
+$$
+R_i\leftarrow R_i-m_{ik}R_k.
+$$
+
+而 $\mathbf L$ 来自这些消元矩阵的逆，所以 $L_{ik}=m_{ik}$。漏掉这次取逆，会把 $\mathbf L$ 的符号全部写反。
+:::
+
+# $A=LU$ 是怎样的变换复合
+
+矩阵乘法表示线性映射复合。若
+
+$$
+\mathbf A=\mathbf L\mathbf U,
+$$
+
+那么对任意输入 $\mathbf x$：
+
+$$
+\mathbf A\mathbf x
+=
+\mathbf L(\mathbf U\mathbf x).
+$$
+
+因此从正向变换看，作用顺序是：
+
+$$
+\mathbf x
+\xmapsto{\mathbf U}
+\mathbf y
+\xmapsto{\mathbf L}
+\mathbf b.
+$$
+
+其中
+
+$$
+\mathbf y=\mathbf U\mathbf x,
+\qquad
+\mathbf b=\mathbf L\mathbf y.
+$$
+
+但求解问题给定的是终点 $\mathbf b$，要反向找回 $\mathbf x$。所以先撤销最后作用的 $\mathbf L$，再撤销最先作用的 $\mathbf U$：
+
+$$
+\mathbf L\mathbf y=\mathbf b,
+\qquad
+\mathbf U\mathbf x=\mathbf y.
+$$
+
+@fig-lu-forward-and-solve-directions 把“正向作用顺序”和“求解顺序”放在同一张图中。二者方向相反，但没有矛盾：一个是在计算输出，另一个是在反求输入。
+
+![A 等于 LU 时，正向变换先作用 U 再作用 L；求解给定输出 b 时，则先解 L y 等于 b，再解 U x 等于 y。](../../images/linear-algebra/lu-forward-and-solve-directions.svg){#fig-lu-forward-and-solve-directions fig-alt="上方箭头从 x 经 U 到中间 y，再经 L 到 b，表示 A x 等于 L U x；下方从给定 b 反向求解，先做前代解 L y 等于 b，再做回代解 U x 等于 y。" width="100%"}
+
+::: {.callout-tip title="避免背错顺序的方法"}
+不要机械记忆“先 L 后 U”或“先 U 后 L”。写出
+
+$$
+\mathbf A\mathbf x
+=
+\mathbf L\mathbf U\mathbf x
+=
+\mathbf b.
+$$
+
+正向矩阵作用从右向左；求解未知量则从等式外层向内层撤销，所以先解 $\mathbf L\mathbf y=\mathbf b$。
+:::
+
+# 三角方程为什么容易求解
+
+一般稠密方程中，每一行可能同时含有全部未知量。三角结构则给出单向依赖：
+
+- 下三角系统从第一行开始，逐行向下；
+- 上三角系统从最后一行开始，逐行向上。
+
+这正是前代与回代。
+
+# 前代：从上到下解下三角系统
+
+设
+
+$$
+\mathbf L
+=
+\begin{bmatrix}
+\ell_{11}&0&\cdots&0\\
+\ell_{21}&\ell_{22}&\cdots&0\\
+\vdots&\vdots&\ddots&\vdots\\
+\ell_{n1}&\ell_{n2}&\cdots&\ell_{nn}
+\end{bmatrix},
+$$
+
+且所有对角元素都非零。求解
+
+$$
+\mathbf L\mathbf y=\mathbf b.
+$$
+
+第 $i$ 行是
+
+$$
+\ell_{i1}y_1+
+\cdots+
+\ell_{i,i-1}y_{i-1}
++
+\ell_{ii}y_i
+=b_i.
+$$
+
+在已经知道 $y_1,\ldots,y_{i-1}$ 后，可以解出
+
+$$
+\boxed{
+y_i
+=
+\frac{
+ b_i-
+ \sum_{j=1}^{i-1}\ell_{ij}y_j
+}{\ell_{ii}}
+}.
+$$ {#eq-forward-substitution}
+
+若 $\mathbf L$ 是 LU 中的单位下三角矩阵，则 $\ell_{ii}=1$，公式简化为
+
+$$
+y_i
+=
+b_i-
+\sum_{j=1}^{i-1}\ell_{ij}y_j.
+$$ {#eq-unit-lower-forward-substitution}
+
+## 前代为什么正确
+
+按 $i$ 归纳。
+
+- 当 $i=1$ 时，第一行只有
+  $$
+  \ell_{11}y_1=b_1,
+  $$
+  因为 $\ell_{11}\neq0$，@eq-forward-substitution 唯一确定 $y_1$。
+- 假设前 $i-1$ 个分量已经被唯一确定，并且前 $i-1$ 行成立。第 $i$ 行中只有 $y_i$ 尚未知，其系数 $\ell_{ii}\neq0$，所以 @eq-forward-substitution 唯一确定 $y_i$，并使第 $i$ 行成立。
+
+有限步后，所有行都成立，得到唯一解。$\square$
+
+对贯穿例子，取
+
+$$
+\mathbf x
+=
+\begin{bmatrix}1\\2\\-1\end{bmatrix}.
+$$
+
+由 @eq-running-lu-matrix，
+
+$$
+\mathbf b
+=\mathbf A\mathbf x
+=
+\begin{bmatrix}3\\-8\\10\end{bmatrix}.
+$$ {#eq-running-lu-rhs}
+
+先解
+
+$$
+\begin{bmatrix}
+1&0&0\\
+2&1&0\\
+-1&-1&1
+\end{bmatrix}
+\begin{bmatrix}y_1\\y_2\\y_3\end{bmatrix}
+=
+\begin{bmatrix}3\\-8\\10\end{bmatrix}.
+$$
+
+逐行得到
+
+$$
+y_1=3,
+$$
+
+$$
+2y_1+y_2=-8
+\quad\Longrightarrow\quad
+y_2=-14,
+$$
+
+以及
+
+$$
+-y_1-y_2+y_3=10
+\quad\Longrightarrow\quad
+y_3=-1.
+$$
+
+因此
+
+$$
+\mathbf y
+=
+\begin{bmatrix}3\\-14\\-1\end{bmatrix}.
+$$ {#eq-running-intermediate-y}
+
+# 回代：从下到上解上三角系统
+
+设
+
+$$
+\mathbf U
+=
+\begin{bmatrix}
+u_{11}&u_{12}&\cdots&u_{1n}\\
+0&u_{22}&\cdots&u_{2n}\\
+\vdots&\vdots&\ddots&\vdots\\
+0&0&\cdots&u_{nn}
+\end{bmatrix},
+$$
+
+且所有 $u_{ii}\neq0$。求解
+
+$$
+\mathbf U\mathbf x=\mathbf y.
+$$
+
+第 $i$ 行是
+
+$$
+u_{ii}x_i
++
+u_{i,i+1}x_{i+1}
++
+\cdots+
+u_{in}x_n
+=y_i.
+$$
+
+从最后一行向上，在 $x_{i+1},\ldots,x_n$ 已知时：
+
+$$
+\boxed{
+x_i
+=
+\frac{
+ y_i-
+ \sum_{j=i+1}^{n}u_{ij}x_j
+}{u_{ii}}
+}.
+$$ {#eq-back-substitution}
+
+## 回代为什么正确
+
+对 $i=n,n-1,\ldots,1$ 做反向归纳。
+
+- 最后一行只有
+  $$
+  u_{nn}x_n=y_n,
+  $$
+  因为 $u_{nn}\neq0$，唯一确定 $x_n$。
+- 假设 $x_{i+1},\ldots,x_n$ 已被唯一确定，并使第 $i+1$ 到第 $n$ 行成立。第 $i$ 行中只剩 $x_i$ 未知，且 $u_{ii}\neq0$，所以 @eq-back-substitution 唯一确定 $x_i$。
+
+最终得到唯一解。$\square$
+
+对贯穿例子，使用 @eq-running-u-matrix 与 @eq-running-intermediate-y：
+
+$$
+\begin{bmatrix}
+2&1&1\\
+0&-8&-2\\
+0&0&1
+\end{bmatrix}
+\begin{bmatrix}x_1\\x_2\\x_3\end{bmatrix}
+=
+\begin{bmatrix}3\\-14\\-1\end{bmatrix}.
+$$
+
+从最后一行开始：
+
+$$
+x_3=-1,
+$$
+
+$$
+-8x_2-2x_3=-14
+\quad\Longrightarrow\quad
+x_2=2,
+$$
+
+$$
+2x_1+x_2+x_3=3
+\quad\Longrightarrow\quad
+x_1=1.
+$$
+
+恢复原解
+
+$$
+\mathbf x
+=
+\begin{bmatrix}1\\2\\-1\end{bmatrix}.
+$$
+
+@fig-triangular-solve-dependencies 用箭头画出两种单向依赖。前代中 $y_i$ 只依赖更早的分量；回代中 $x_i$ 只依赖更后的分量。
+
+![下三角前代从第一行向下传播已知分量，上三角回代从最后一行向上传播已知分量。](../../images/linear-algebra/triangular-solve-dependencies.svg){#fig-triangular-solve-dependencies fig-alt="左侧下三角矩阵按行高亮，从 y1 到 y2 再到 y3 向下产生依赖；右侧上三角矩阵从 x3 到 x2 再到 x1 向上传播，箭头分别标明前代和回代的方向。" width="100%"}
+
+# 三角求解需要多少计算
+
+这里只计主要的标量乘法和加减法数量，不追求机器指令级精确常数。
+
+前代第 $i$ 行需要处理前面的 $i-1$ 个分量，总工作量与
+
+$$
+\sum_{i=1}^{n}(i-1)
+=
+\frac{n(n-1)}{2}
+$$
+
+同阶。
+
+回代同理，总工作量也是 $n^2$ 量级。因此对一个右端，前代加回代的主要算术量是
+
+$$
+O(n^2).
+$$
+
+相比之下，对稠密 $n\times n$ 矩阵完成 LU 分解要更新逐渐缩小的右下子矩阵，主要工作量是
+
+$$
+O(n^3),
+$$
+
+更精确的首项约为
+
+$$
+\frac{2}{3}n^3.
+$$
+
+大写 $O$ 只描述规模增长速度，不表示具体实现速度完全由这个首项决定。内存布局、缓存、并行、稀疏性和硬件都会影响实际耗时。
+
+# 一次分解怎样复用多个右端
+
+把多个右端并为列：
+
+$$
+\mathbf B
+=
+\begin{bmatrix}
+\vert&&\vert\\
+\mathbf b_1&\cdots&\mathbf b_r\\
+\vert&&\vert
+\end{bmatrix}
+\in\mathbb R^{n\times r},
+$$
+
+并把所有解也并为列：
+
+$$
+\mathbf X
+=
+\begin{bmatrix}
+\vert&&\vert\\
+\mathbf x_1&\cdots&\mathbf x_r\\
+\vert&&\vert
+\end{bmatrix}.
+$$
+
+方程组统一写成
+
+$$
+\mathbf A\mathbf X=\mathbf B.
+$$
+
+若已经计算
+
+$$
+\mathbf A=\mathbf L\mathbf U,
+$$
+
+则只需依次求解
+
+$$
+\mathbf L\mathbf Y=\mathbf B,
+$$
+
+和
+
+$$
+\mathbf U\mathbf X=\mathbf Y.
+$$
+
+每一列都是独立的三角求解，但可以在矩阵层面批量组织。一次昂贵分解服务所有右端。
+
+@fig-lu-reuse-multiple-rhs 中，左侧只有一个 $\mathbf L,\mathbf U$，右侧却连接多个 $\mathbf b_j$。这正是数值库通常把“分解”和“求解”设计为两个阶段的原因。
+
+![固定 A 时只做一次 LU 分解；多个右端分别经过同一组前代与回代得到各自的解。](../../images/linear-algebra/lu-reuse-multiple-rhs.svg){#fig-lu-reuse-multiple-rhs fig-alt="左侧系数矩阵 A 只分解一次为 L 和 U；右侧三个不同右端 b1、b2、b3 共享同一前代和回代管线，分别输出 x1、x2、x3。" width="100%"}
+
+若只有一个右端，一次分解加求解仍是 $O(n^3)$。若右端很多，分解的成本只支付一次，之后每个新右端主要增加 $O(n^2)$ 工作。
+
+::: {.callout-warning title="复用分解要求系数矩阵不变"}
+只有右端改变而 $\mathbf A$ 保持不变时，才能直接复用同一个 LU/PLU。若 $\mathbf A$ 的元素发生变化，原分解一般不再精确成立；除非另有专门的更新算法，否则必须重新分解。
+:::
+
+# LU 怎样重新连接行列式
+
+若
+
+$$
+\mathbf A=\mathbf L\mathbf U,
+$$
+
+则由行列式乘法性：
+
+$$
+\det(\mathbf A)
+=
+\det(\mathbf L)\det(\mathbf U).
+$$
+
+$\mathbf L$ 是单位下三角矩阵，所以
+
+$$
+\det(\mathbf L)=1.
+$$
+
+$\mathbf U$ 是上三角矩阵，所以
+
+$$
+\det(\mathbf U)
+=
+\prod_{i=1}^{n}u_{ii}.
+$$
+
+因此
+
+$$
+\boxed{
+\det(\mathbf A)
+=
+\prod_{i=1}^{n}u_{ii}
+}
+$$ {#eq-determinant-from-lu}
+
+前面通过消元规则得到过同样的主元乘积公式；现在它也成为行列式乘法性与 LU 分解的直接推论。
+
+对贯穿例子：
+
+$$
+\det(\mathbf A)
+=2\cdot(-8)\cdot1
+=-16.
+$$
+
+# 可逆为什么还不保证能无换行 LU
+
+考虑
+
+$$
+\mathbf A_0
+=
+\begin{bmatrix}
+0&1\\
+1&1
+\end{bmatrix}.
+$$ {#eq-zero-leading-pivot-example}
+
+它的行列式是
+
+$$
+\det(\mathbf A_0)=-1\neq0,
+$$
+
+所以矩阵可逆。但若直接从左上角开始消元，第一个候选主元是 $0$，无法计算
+
+$$
+m_{21}=\frac{1}{0}.
+$$
+
+交换两行后立刻得到上三角矩阵：
+
+$$
+\begin{bmatrix}
+1&1\\
+0&1
+\end{bmatrix}.
+$$
+
+这已经表明：
+
+> “矩阵可逆”与“当前行顺序下可以无换行完成 LU”不是同一件事。
+
+还可以直接证明 $\mathbf A_0$ 不存在单位下三角—上三角分解。假设
+
+$$
+\mathbf A_0
+=
+\begin{bmatrix}
+1&0\\
+\ell&1
+\end{bmatrix}
+\begin{bmatrix}
+u_{11}&u_{12}\\
+0&u_{22}
+\end{bmatrix}.
+$$
+
+相乘得到左上角
+
+$$
+u_{11}=0.
+$$
+
+而左下角必须满足
+
+$$
+\ell u_{11}=1.
+$$
+
+代入 $u_{11}=0$ 得到 $0=1$，矛盾。因此这种 LU 分解不存在。
+
+# 无换行 LU 什么时候存在且唯一
+
+对方阵 $\mathbf A\in\mathbb R^{n\times n}$，记左上角 $k\times k$ 方块为
+
+$$
+\mathbf A_{1:k,1:k}.
+$$
+
+它称为第 $k$ 阶**顺序主子矩阵**；其行列式称为第 $k$ 阶顺序主子式。
+
+## 存在唯一性定理
+
+::: {.callout-important title="无换行 LU 的判据"}
+设 $\mathbf A\in\mathbb R^{n\times n}$ 非奇异。则以下条件等价：
+
+1. $\mathbf A$ 存在分解
+   $$
+   \mathbf A=\mathbf L\mathbf U,
+   $$
+   其中 $\mathbf L$ 是单位下三角矩阵，$\mathbf U$ 是上三角矩阵；
+2. 前 $n-1$ 个顺序主子式都非零：
+   $$
+   \det(\mathbf A_{1:k,1:k})\neq0,
+   \qquad
+   k=1,\ldots,n-1.
+   $$
+
+第 $n$ 阶顺序主子式就是 $\det(\mathbf A)$，已由非奇异假设保证非零。满足这些条件时，分解唯一。
+:::
+
+## 从 LU 推出顺序主子式非零
+
+设
+
+$$
+\mathbf A=\mathbf L\mathbf U.
+$$
+
+由于 $\mathbf L$ 下三角、$\mathbf U$ 上三角，矩阵乘积左上角的 $k\times k$ 方块只由两者各自左上角方块相乘得到：
+
+$$
+\mathbf A_{1:k,1:k}
+=
+\mathbf L_{1:k,1:k}
+\mathbf U_{1:k,1:k}.
+$$
+
+因此
+
+$$
+\det(\mathbf A_{1:k,1:k})
+=
+\det(\mathbf L_{1:k,1:k})
+\det(\mathbf U_{1:k,1:k}).
+$$
+
+$\mathbf L_{1:k,1:k}$ 仍是单位下三角矩阵，所以行列式为 $1$；$\mathbf U_{1:k,1:k}$ 是上三角矩阵，所以
+
+$$
+\det(\mathbf A_{1:k,1:k})
+=
+\prod_{i=1}^{k}u_{ii}.
+$$ {#eq-leading-minor-pivot-product}
+
+因为 $\mathbf A$ 非奇异，$\mathbf U$ 也非奇异，所有 $u_{ii}\neq0$。所以每个顺序主子式都非零。
+
+## 从顺序主子式非零推出 LU 存在
+
+对矩阵阶数 $n$ 做归纳。
+
+当 $n=1$ 时，非奇异矩阵 $[a]$ 直接写成
+
+$$
+[a]=[1][a].
+$$
+
+现在设结论对 $(n-1)\times(n-1)$ 矩阵成立，并把 $\mathbf A$ 分块为
+
+$$
+\mathbf A
+=
+\begin{bmatrix}
+\alpha&\mathbf r^{\mathsf T}\\
+\mathbf c&\mathbf B
+\end{bmatrix}.
+$$
+
+第一阶顺序主子式非零，所以
+
+$$
+\alpha\neq0.
+$$
+
+定义
+
+$$
+\boldsymbol\ell
+=\frac{\mathbf c}{\alpha},
+\qquad
+\mathbf S
+=\mathbf B-
+\boldsymbol\ell\mathbf r^{\mathsf T}.
+$$
+
+直接块乘法给出
+
+$$
+\mathbf A
+=
+\begin{bmatrix}
+1&\mathbf 0^{\mathsf T}\\
+\boldsymbol\ell&\mathbf I
+\end{bmatrix}
+\begin{bmatrix}
+\alpha&\mathbf r^{\mathsf T}\\
+\mathbf 0&\mathbf S
+\end{bmatrix}.
+$$ {#eq-lu-schur-first-step}
+
+这里 $\mathbf S$ 是消去第一列后留下的右下子矩阵。对 $j=1,\ldots,n-1$，同样的第一列消元作用在 $\mathbf A$ 的前 $(j+1)$ 阶顺序主子矩阵上，行列式不变，因此
+
+$$
+\det(\mathbf A_{1:j+1,1:j+1})
+=
+\alpha
+\det(\mathbf S_{1:j,1:j}).
+$$ {#eq-leading-minor-schur-relation}
+
+当 $j\le n-2$ 时，左侧由顺序主子式假设非零；当 $j=n-1$ 时，左侧是 $\det(\mathbf A)\neq0$。再结合 $\alpha\neq0$，可知 $\mathbf S$ 非奇异且它的前 $n-2$ 个顺序主子式都非零。
+
+由归纳假设，存在单位下三角矩阵 $\mathbf L_2$ 和上三角矩阵 $\mathbf U_2$，使
+
+$$
+\mathbf S=\mathbf L_2\mathbf U_2.
+$$
+
+把它代入 @eq-lu-schur-first-step：
+
+$$
+\mathbf A
+=
+\underbrace{
+\begin{bmatrix}
+1&\mathbf 0^{\mathsf T}\\
+\boldsymbol\ell&\mathbf L_2
+\end{bmatrix}
+}_{\mathbf L}
+\underbrace{
+\begin{bmatrix}
+\alpha&\mathbf r^{\mathsf T}\\
+\mathbf 0&\mathbf U_2
+\end{bmatrix}
+}_{\mathbf U}.
+$$
+
+左因子是单位下三角矩阵，右因子是上三角矩阵，所以所需 LU 存在。$\square$
+
+LU 已经存在后，@eq-leading-minor-pivot-product 可以相邻相除，得到主元公式
+
+$$
+\boxed{
+u_{kk}
+=
+\frac{
+\det(\mathbf A_{1:k,1:k})
+}{
+\det(\mathbf A_{1:k-1,1:k-1})
+}
+},
+$$ {#eq-pivot-leading-minor-ratio}
+
+其中约定零阶行列式为 $1$。这个公式现在是存在性定理的推论，而不是证明存在性的前提。
+
+## 为什么分解唯一
+
+假设
+
+$$
+\mathbf A
+=
+\mathbf L_1\mathbf U_1
+=
+\mathbf L_2\mathbf U_2,
+$$
+
+其中 $\mathbf L_1,\mathbf L_2$ 都是单位下三角矩阵，$\mathbf U_1,\mathbf U_2$ 都是可逆上三角矩阵。
+
+两边整理为
+
+$$
+\mathbf L_2^{-1}\mathbf L_1
+=
+\mathbf U_2\mathbf U_1^{-1}.
+$$ {#eq-lu-uniqueness-bridge}
+
+左侧是单位下三角矩阵，右侧是上三角矩阵。同一个矩阵同时单位下三角和上三角，只能是单位矩阵：
+
+- 上三角要求主对角线下方为零；
+- 单位下三角要求主对角线上方为零且对角线为 $1$。
+
+因此
+
+$$
+\mathbf L_2^{-1}\mathbf L_1=\mathbf I,
+\qquad
+\mathbf U_2\mathbf U_1^{-1}=\mathbf I,
+$$
+
+从而
+
+$$
+\mathbf L_1=\mathbf L_2,
+\qquad
+\mathbf U_1=\mathbf U_2.
+$$
+
+唯一性得证。$\square$
+
+::: {.callout-warning title="L 的对角归一化决定唯一性"}
+若不要求 $\mathbf L$ 的对角线全为 $1$，则可以把任意非零对角缩放在 $\mathbf L$ 与 $\mathbf U$ 之间来回移动。例如对可逆对角矩阵 $\mathbf D$：
+
+$$
+\mathbf A
+=
+(\mathbf L\mathbf D)
+(\mathbf D^{-1}\mathbf U).
+$$
+
+所以单位对角线不是装饰，而是消除缩放歧义的规范化条件。
+:::
+
+# 排列矩阵：把换行写成矩阵乘法
+
+对单位矩阵重新排列各行，得到的矩阵称为**排列矩阵**。例如交换二阶矩阵的两行对应
+
+$$
+\mathbf P
+=
+\begin{bmatrix}
+0&1\\
+1&0
+\end{bmatrix}.
+$$
+
+左乘 $\mathbf P$ 会交换任意两行矩阵的第一、第二行：
+
+$$
+\mathbf P
+\begin{bmatrix}
+\text{row}_1\\
+\text{row}_2
+\end{bmatrix}
+=
+\begin{bmatrix}
+\text{row}_2\\
+\text{row}_1
+\end{bmatrix}.
+$$
+
+排列矩阵的每一行、每一列恰好有一个 $1$，其余元素为 $0$。行交换可以撤销，所以 $\mathbf P$ 可逆，而且
+
+$$
+\mathbf P^{-1}=\mathbf P^{\mathsf T}.
+$$ {#eq-permutation-inverse-transpose}
+
+若一个排列由 $s$ 次行交换得到，则
+
+$$
+\det(\mathbf P)=(-1)^s.
+$$
+
+对 @eq-zero-leading-pivot-example，
+
+$$
+\mathbf P\mathbf A_0
+=
+\begin{bmatrix}
+0&1\\
+1&0
+\end{bmatrix}
+\begin{bmatrix}
+0&1\\
+1&1
+\end{bmatrix}
+=
+\begin{bmatrix}
+1&1\\
+0&1
+\end{bmatrix}.
+$$
+
+此时可取
+
+$$
+\mathbf L=\mathbf I_2,
+\qquad
+\mathbf U=
+\begin{bmatrix}1&1\\0&1\end{bmatrix},
+$$
+
+于是
+
+$$
+\boxed{
+\mathbf P\mathbf A_0=\mathbf L\mathbf U
+}.
+$$
+
+@fig-plu-row-swap 把“可逆但首主元为零”与“换行后可以三角分解”并排展示。
+
+![一个可逆矩阵因左上角主元为零无法直接 LU；排列矩阵交换两行后得到 PA 等于 LU。](../../images/linear-algebra/plu-row-swap.svg){#fig-plu-row-swap fig-alt="左侧矩阵 A0 的左上角零主元被红色标出，并注明行列式负一所以矩阵可逆；中间排列矩阵 P 交换两行；右侧 PA 成为上三角矩阵并写成 L 等于单位矩阵乘 U。" width="100%"}
+
+# 为什么每个方阵都能做 PLU
+
+::: {.callout-important title="PLU 存在性"}
+对每个方阵 $\mathbf A\in\mathbb R^{n\times n}$，都存在排列矩阵 $\mathbf P$、单位下三角矩阵 $\mathbf L$ 和上三角矩阵 $\mathbf U$，使
+
+$$
+\boxed{
+\mathbf P\mathbf A=\mathbf L\mathbf U
+}.
+$$ {#eq-plu-factorization}
+:::
+
+**证明。** 对 $n$ 归纳。$n=1$ 时结论显然成立。
+
+设 $n>1$，先看 $\mathbf A$ 的第一列。
+
+## 情形一：第一列全为零
+
+把矩阵写成
+
+$$
+\mathbf A
+=
+\begin{bmatrix}
+0&\mathbf r^{\mathsf T}\\
+\mathbf 0&\mathbf B
+\end{bmatrix}.
+$$
+
+由归纳假设，存在
+
+$$
+\mathbf P_2\mathbf B
+=
+\mathbf L_2\mathbf U_2.
+$$
+
+令
+
+$$
+\mathbf P
+=
+\begin{bmatrix}1&\mathbf 0^{\mathsf T}\\\mathbf 0&\mathbf P_2\end{bmatrix},
+\qquad
+\mathbf L
+=
+\begin{bmatrix}1&\mathbf 0^{\mathsf T}\\\mathbf 0&\mathbf L_2\end{bmatrix},
+$$
+
+以及
+
+$$
+\mathbf U
+=
+\begin{bmatrix}
+0&\mathbf r^{\mathsf T}\\
+\mathbf 0&\mathbf U_2
+\end{bmatrix}.
+$$
+
+直接块乘法得到 $\mathbf P\mathbf A=\mathbf L\mathbf U$。
+
+## 情形二：第一列存在非零元素
+
+选择一个排列矩阵 $\mathbf P_1$，把某个非零元素换到左上角：
+
+$$
+\mathbf P_1\mathbf A
+=
+\begin{bmatrix}
+\alpha&\mathbf r^{\mathsf T}\\
+\mathbf c&\mathbf B
+\end{bmatrix},
+\qquad
+\alpha\neq0.
+$$
+
+令
+
+$$
+\boldsymbol\ell=\frac{\mathbf c}{\alpha},
+\qquad
+\mathbf S=\mathbf B-
+\boldsymbol\ell\mathbf r^{\mathsf T}.
+$$
+
+由归纳假设，存在
+
+$$
+\mathbf P_2\mathbf S
+=
+\mathbf L_2\mathbf U_2.
+$$
+
+把 $\mathbf P_2$ 扩展到整个矩阵：
+
+$$
+\widehat{\mathbf P}_2
+=
+\begin{bmatrix}
+1&\mathbf 0^{\mathsf T}\\
+\mathbf 0&\mathbf P_2
+\end{bmatrix}.
+$$
+
+定义
+
+$$
+\mathbf P
+=
+\widehat{\mathbf P}_2\mathbf P_1,
+$$
+
+$$
+\mathbf L
+=
+\begin{bmatrix}
+1&\mathbf 0^{\mathsf T}\\
+\mathbf P_2\boldsymbol\ell&\mathbf L_2
+\end{bmatrix},
+\qquad
+\mathbf U
+=
+\begin{bmatrix}
+\alpha&\mathbf r^{\mathsf T}\\
+\mathbf 0&\mathbf U_2
+\end{bmatrix}.
+$$
+
+则
+
+$$
+\begin{aligned}
+\mathbf L\mathbf U
+&=
+\begin{bmatrix}
+\alpha&\mathbf r^{\mathsf T}\\
+\mathbf P_2\boldsymbol\ell\alpha&
+\mathbf P_2\boldsymbol\ell\mathbf r^{\mathsf T}+
+\mathbf L_2\mathbf U_2
+\end{bmatrix}\\
+&=
+\begin{bmatrix}
+\alpha&\mathbf r^{\mathsf T}\\
+\mathbf P_2\mathbf c&\mathbf P_2\mathbf B
+\end{bmatrix}\\
+&=
+\widehat{\mathbf P}_2\mathbf P_1\mathbf A\\
+&=
+\mathbf P\mathbf A.
+\end{aligned}
+$$
+
+两个情形都成立，所以归纳完成。$\square$
+
+这个块证明也解释了实现中的一个细节：若后续步骤交换了剩余行，先前已经存入 $\mathbf L$ 的乘子也必须按同样方式交换。公式中的 $\mathbf P_2\boldsymbol\ell$ 正是在同步重排这些旧乘子。
+
+结论不要求 $\mathbf A$ 可逆。若 $\mathbf A$ 奇异，由行列式公式可知上三角 $\mathbf U$ 至少有一个对角元素为零。分解仍然记录消元过程，但普通的唯一解回代会在零主元处停止；此时必须回到相容性、自由变量和秩的分析。
+
+## PLU 下怎样求解
+
+由
+
+$$
+\mathbf A\mathbf x=\mathbf b,
+$$
+
+左乘 $\mathbf P$：
+
+$$
+\mathbf P\mathbf A\mathbf x
+=
+\mathbf P\mathbf b.
+$$
+
+使用 @eq-plu-factorization：
+
+$$
+\mathbf L\mathbf U\mathbf x
+=
+\mathbf P\mathbf b.
+$$
+
+所以求解顺序是
+
+$$
+\boxed{
+\mathbf L\mathbf y=\mathbf P\mathbf b,
+\qquad
+\mathbf U\mathbf x=\mathbf y
+}.
+$$ {#eq-plu-solve}
+
+右端必须应用同样的行排列。只排列系数矩阵而忘记排列 $\mathbf b$，相当于交换方程左边却不交换右边，会改变方程组。
+
+## PLU 下怎样读取行列式
+
+由
+
+$$
+\mathbf P\mathbf A=\mathbf L\mathbf U
+$$
+
+取行列式：
+
+$$
+\det(\mathbf P)\det(\mathbf A)
+=
+\det(\mathbf L)\det(\mathbf U)
+=
+\prod_{i=1}^{n}u_{ii}.
+$$
+
+因为
+
+$$
+\det(\mathbf P)^{-1}=\det(\mathbf P)
+$$
+
+都等于 $\pm1$，所以
+
+$$
+\boxed{
+\det(\mathbf A)
+=
+\det(\mathbf P)
+\prod_{i=1}^{n}u_{ii}
+}.
+$$ {#eq-determinant-from-plu}
+
+若一共交换了 $s$ 次行：
+
+$$
+\det(\mathbf A)
+=(-1)^s
+\prod_{i=1}^{n}u_{ii}.
+$$
+
+# 部分选主元怎样选择行
+
+在精确代数中，只要主元非零就可以继续消元。但浮点计算还要考虑主元大小。
+
+第 $k$ 步开始时，在当前第 $k$ 列的候选中选择绝对值最大者：
+
+$$
+p
+\in
+\operatorname*{arg\,max}_{i=k,\ldots,n}
+\left|a_{ik}^{(k)}\right|.
+$$ {#eq-partial-pivot-choice}
+
+若 $p\neq k$，交换第 $p$ 行与第 $k$ 行。然后使用新的主元
+
+$$
+a_{kk}^{(k)}
+$$
+
+消去下方元素。这称为**部分选主元**：只在当前列的候选行中选择，不搜索整个剩余子矩阵。
+
+## 为什么乘子绝对值不超过 $1$
+
+选主元后，对任意 $i>k$，
+
+$$
+\left|a_{ik}^{(k)}\right|
+\le
+\left|a_{kk}^{(k)}\right|.
+$$
+
+只要主元非零，消元乘子为
+
+$$
+\ell_{ik}
+=
+\frac{a_{ik}^{(k)}}{a_{kk}^{(k)}}.
+$$
+
+因此
+
+$$
+\boxed{
+|\ell_{ik}|\le1
+}.
+$$ {#eq-partial-pivot-multiplier-bound}
+
+这个界避免了因为选到同列中很小的主元而立即产生巨大乘子。
+
+::: {.callout-warning title="乘子有界不等于一切误差都有界"}
+部分选主元控制了 $\mathbf L$ 严格下三角元素的大小，但消元更新
+
+$$
+a_{ij}^{(k+1)}
+=
+a_{ij}^{(k)}
+-
+\ell_{ik}a_{kj}^{(k)}
+$$
+
+仍可能在 $\mathbf U$ 中产生比原矩阵大得多的中间元素。对绝大多数实际稠密问题，部分选主元表现可靠；但 $|\ell_{ik}|\le1$ 本身不是“对所有矩阵绝对稳定”的证明。
+:::
+
+# 微小主元为什么会制造数值灾难
+
+考虑
+
+$$
+\mathbf A_{\varepsilon}
+=
+\begin{bmatrix}
+\varepsilon&1\\
+1&1
+\end{bmatrix},
+\qquad
+0<\varepsilon\ll1.
+$$ {#eq-small-pivot-matrix}
+
+不换行时，第一个乘子是
+
+$$
+m_{21}=\frac{1}{\varepsilon},
+$$
+
+它非常大。消元第二行得到
+
+$$
+\begin{bmatrix}
+0&1-\dfrac{1}{\varepsilon}
+\end{bmatrix}.
+$$
+
+若右端也参与消元，就会反复出现数量级约为 $1/\varepsilon$ 的中间数以及大数相减。
+
+交换两行后：
+
+$$
+\begin{bmatrix}
+1&1\\
+\varepsilon&1
+\end{bmatrix},
+$$
+
+新的乘子只有
+
+$$
+m_{21}=\varepsilon.
+$$
+
+@fig-small-pivot-vs-partial-pivot 把两条等价消元路线并排展示。精确算术中二者都能得到正确结果；有限精度中，大乘子路线更容易丢失有效数字。
+
+![不换行使用微小主元会产生巨大乘子一除以 epsilon；部分选主元交换两行后，乘子变为 epsilon。](../../images/linear-algebra/small-pivot-vs-partial-pivot.svg){#fig-small-pivot-vs-partial-pivot fig-alt="左侧微小主元 epsilon 被红色标出，消元乘子一除以 epsilon 很大，并显示大数相减；右侧通过部分选主元把一换到主元位置，乘子变为 epsilon，更新数值保持温和。" width="100%"}
+
+## 一个三位有效数字的玩具计算
+
+取
+
+$$
+\varepsilon=10^{-4},
+\qquad
+\mathbf b=
+\begin{bmatrix}1\\2\end{bmatrix}.
+$$
+
+精确解满足
+
+$$
+10^{-4}x_1+x_2=1,
+\qquad
+x_1+x_2=2,
+$$
+
+所以
+
+$$
+x_1=\frac{1}{1-10^{-4}}
+\approx1.00010001,
+$$
+
+$$
+x_2=2-x_1
+\approx0.99989999.
+$$
+
+如果每一步只保留三位有效数字且不换行：
+
+1. 乘子近似为 $10^4$；
+2. 第二行产生约为 $-10^4$ 的系数和右端；
+3. 回代得到 $x_2\approx1$；
+4. 第一行再计算
+   $$
+   x_1=\frac{1-x_2}{10^{-4}},
+   $$
+   分子中的两个接近数在三位有效数字下都变成 $1.00$，相减得到 $0$；
+5. 最终可能得到错误结果
+   $$
+   \widehat{\mathbf x}=\begin{bmatrix}0\\1\end{bmatrix}.
+   $$
+
+交换两行后，乘子为 $10^{-4}$，同样的三位有效数字计算得到接近
+
+$$
+\widehat{\mathbf x}
+=\begin{bmatrix}1\\1\end{bmatrix},
+$$
+
+明显更接近精确解。
+
+这个例子不是说“换行可以增加数学精度”；两条路线在精确实数运算中完全等价。差异来自有限位数表示和舍入。
+
+# 残差小为什么不一定表示解误差小
+
+设 $\widehat{\mathbf x}$ 是计算得到的候选解。定义它的**残差向量**：
+
+$$
+\mathbf r
+\coloneqq
+\mathbf b-
+\mathbf A\widehat{\mathbf x}.
+$$ {#eq-residual-definition}
+
+残差回答：
+
+> 把候选解代回原方程后，等式还差多少？
+
+而解误差是
+
+$$
+\widehat{\mathbf x}-\mathbf x,
+$$
+
+它回答：
+
+> 候选解与真实解相差多少？
+
+两者不是同一个对象，因为
+
+$$
+\mathbf r
+=
+\mathbf b-
+\mathbf A\widehat{\mathbf x}
+=
+\mathbf A\mathbf x-
+\mathbf A\widehat{\mathbf x}
+=-\mathbf A(
+\widehat{\mathbf x}-\mathbf x
+).
+$$ {#eq-residual-error-relation}
+
+若 $\mathbf A$ 把某个非零方向压得非常小，那么沿这个方向出现明显解误差，也可能只产生很小残差。
+
+考虑
+
+$$
+\mathbf H_{\varepsilon}
+=
+\begin{bmatrix}
+1&1\\
+1&1+\varepsilon
+\end{bmatrix},
+\qquad
+0<\varepsilon\ll1.
+$$
+
+取真实解
+
+$$
+\mathbf x
+=
+\begin{bmatrix}1\\1\end{bmatrix},
+$$
+
+则
+
+$$
+\mathbf b
+=
+\mathbf H_{\varepsilon}\mathbf x
+=
+\begin{bmatrix}2\\2+\varepsilon\end{bmatrix}.
+$$
+
+现在取候选解
+
+$$
+\widehat{\mathbf x}
+=
+\begin{bmatrix}2\\0\end{bmatrix}.
+$$
+
+解误差为
+
+$$
+\widehat{\mathbf x}-\mathbf x
+=
+\begin{bmatrix}1\\-1\end{bmatrix},
+$$
+
+每个分量都是 $O(1)$。但残差是
+
+$$
+\begin{aligned}
+\mathbf r
+&=
+\begin{bmatrix}2\\2+\varepsilon\end{bmatrix}
+-
+\begin{bmatrix}2\\2\end{bmatrix}\\
+&=
+\begin{bmatrix}0\\\varepsilon\end{bmatrix},
+\end{aligned}
+$$
+
+其非零分量可以任意小。
+
+因此“小残差”是重要检查，却不能单独证明解误差小。要把残差大小转成解误差上界，必须先指定怎样衡量向量大小、怎样比较相对误差，以及矩阵对不同方向的放大与压缩程度。若没有这些大小度量，“误差很小”本身甚至会随单位和尺度改变。
+
+::: {.callout-important title="三个不能互相替代的判断"}
+以下陈述属于不同层次：
+
+- $\det(\mathbf A)\neq0$：精确代数中的唯一可解性；
+- 部分选主元使 $|\ell_{ik}|\le1$：对消元乘子的一项控制；
+- $\mathbf r=\mathbf b-\mathbf A\widehat{\mathbf x}$ 很小：候选解近似满足原方程。
+
+任何一条都不能单独推出另外两条，也不能单独给出与尺度无关的解误差上界。
+:::
+
+# 用 NumPy 与 SymPy 核对
+
+```{python}
+#| label: lst-lu-plu-triangular-solves
+#| echo: true
+
+import math
+
+import numpy as np
+import sympy as sp
+
+# 贯穿例子的精确 LU。
+A = sp.Matrix([[2, 1, 1], [4, -6, 0], [-2, 7, 2]])
+L = sp.Matrix([[1, 0, 0], [2, 1, 0], [-1, -1, 1]])
+U = sp.Matrix([[2, 1, 1], [0, -8, -2], [0, 0, 1]])
+assert L * U == A
+assert A.det() == -16
+assert math.prod(U[i, i] for i in range(3)) == A.det()
+
+x_exact = sp.Matrix([1, 2, -1])
+b = A * x_exact
+assert b == sp.Matrix([3, -8, 10])
+y = L.lower_triangular_solve(b)
+assert y == sp.Matrix([3, -14, -1])
+assert U.upper_triangular_solve(y) == x_exact
+
+
+def forward_substitution(lower: np.ndarray, rhs: np.ndarray, *, unit_diagonal: bool = False):
+    """Solve lower @ solution = rhs for one or several right-hand sides."""
+    lower = np.asarray(lower, dtype=float)
+    rhs = np.asarray(rhs, dtype=float)
+    vector_rhs = rhs.ndim == 1
+    rhs_matrix = rhs[:, None] if vector_rhs else rhs
+    row_count = lower.shape[0]
+    if lower.shape != (row_count, row_count) or rhs_matrix.shape[0] != row_count:
+        raise ValueError("lower 与 rhs 的形状不相容")
+
+    solution = np.zeros_like(rhs_matrix)
+    for i in range(row_count):
+        diagonal = 1.0 if unit_diagonal else lower[i, i]
+        if diagonal == 0.0:
+            raise np.linalg.LinAlgError("下三角矩阵出现零对角元素")
+        known_part = lower[i, :i] @ solution[:i]
+        solution[i] = (rhs_matrix[i] - known_part) / diagonal
+    return solution[:, 0] if vector_rhs else solution
+
+
+def back_substitution(upper: np.ndarray, rhs: np.ndarray):
+    """Solve upper @ solution = rhs for one or several right-hand sides."""
+    upper = np.asarray(upper, dtype=float)
+    rhs = np.asarray(rhs, dtype=float)
+    vector_rhs = rhs.ndim == 1
+    rhs_matrix = rhs[:, None] if vector_rhs else rhs
+    row_count = upper.shape[0]
+    if upper.shape != (row_count, row_count) or rhs_matrix.shape[0] != row_count:
+        raise ValueError("upper 与 rhs 的形状不相容")
+
+    solution = np.zeros_like(rhs_matrix)
+    for i in range(row_count - 1, -1, -1):
+        if upper[i, i] == 0.0:
+            raise np.linalg.LinAlgError("上三角矩阵出现零对角元素")
+        known_part = upper[i, i + 1 :] @ solution[i + 1 :]
+        solution[i] = (rhs_matrix[i] - known_part) / upper[i, i]
+    return solution[:, 0] if vector_rhs else solution
+
+
+def plu_partial_pivot(matrix: np.ndarray, tolerance: float = 1e-12):
+    """Teaching implementation of P @ A = L @ U with partial pivoting."""
+    U = np.asarray(matrix, dtype=float).copy()
+    if U.ndim != 2 or U.shape[0] != U.shape[1]:
+        raise ValueError("matrix 必须是方阵")
+    if tolerance <= 0 or not np.isfinite(tolerance):
+        raise ValueError("tolerance 必须是有限正数")
+
+    size = U.shape[0]
+    P = np.eye(size)
+    L = np.eye(size)
+    for k in range(size - 1):
+        pivot_row = k + int(np.argmax(np.abs(U[k:, k])))
+        if abs(U[pivot_row, k]) <= tolerance:
+            if np.all(U[k:, k] == 0.0):
+                continue
+            raise np.linalg.LinAlgError("当前列只有容差以下的非零候选；不能返回精确 PLU")
+        if pivot_row != k:
+            U[[k, pivot_row]] = U[[pivot_row, k]]
+            P[[k, pivot_row]] = P[[pivot_row, k]]
+            L[[k, pivot_row], :k] = L[[pivot_row, k], :k]
+        for i in range(k + 1, size):
+            L[i, k] = U[i, k] / U[k, k]
+            U[i, k:] -= L[i, k] * U[k, k:]
+            U[i, k] = 0.0
+    return P, L, U
+
+
+# 用三角求解核对，不显式形成逆矩阵。
+L_np = np.array(L.tolist(), dtype=float)
+U_np = np.array(U.tolist(), dtype=float)
+b_np = np.array(b, dtype=float).reshape(-1)
+y_np = forward_substitution(L_np, b_np, unit_diagonal=True)
+x_np = back_substitution(U_np, y_np)
+np.testing.assert_allclose(y_np, [3.0, -14.0, -1.0])
+np.testing.assert_allclose(x_np, [1.0, 2.0, -1.0])
+
+# 一次 PLU 分解复用多个右端。
+A_np = np.array(A.tolist(), dtype=float)
+P_np, L_pivoted, U_pivoted = plu_partial_pivot(A_np)
+np.testing.assert_allclose(P_np @ A_np, L_pivoted @ U_pivoted)
+assert np.all(np.abs(L_pivoted[np.tril_indices(3, -1)]) <= 1.0)
+
+# 覆盖 k > 0 时换行：已存入 L 的旧乘子列也必须同步交换。
+late_swap = np.array(
+    [
+        [4.0, 2.0, 1.0, 0.0],
+        [2.0, 1.0, 5.0, 1.0],
+        [1.0, 3.0, 1.0, 2.0],
+        [3.0, 2.0, 0.0, 1.0],
+    ]
+)
+P_late, L_late, U_late = plu_partial_pivot(late_swap)
+np.testing.assert_allclose(P_late @ late_swap, L_late @ U_late, atol=1e-12)
+np.testing.assert_allclose(P_late[0], [1.0, 0.0, 0.0, 0.0])
+assert not np.allclose(P_late, np.eye(4))  # 第一步不换行，后续步骤发生换行。
+
+# 近零但非零的候选不能被静默当成精确零列。
+try:
+    plu_partial_pivot(1e-13 * np.array([[1.0, 0.0], [2.0, 1.0]]))
+except np.linalg.LinAlgError:
+    pass
+else:
+    raise AssertionError("容差以下的非零主元应触发明确错误")
+
+X_expected = np.array([[1.0, 0.0, 2.0], [2.0, 1.0, -1.0], [-1.0, 3.0, 1.0]])
+B_np = A_np @ X_expected
+Y_computed = forward_substitution(L_pivoted, P_np @ B_np, unit_diagonal=True)
+X_computed = back_substitution(U_pivoted, Y_computed)
+np.testing.assert_allclose(X_computed, X_expected)
+
+# 可逆但无当前行序下的单位下三角 LU。
+A_zero_pivot = sp.Matrix([[0, 1], [1, 1]])
+assert A_zero_pivot.det() == -1
+P_zero_pivot = sp.Matrix([[0, 1], [1, 0]])
+assert P_zero_pivot * A_zero_pivot == sp.Matrix([[1, 1], [0, 1]])
+
+# 部分选主元的小主元例子。
+epsilon = 1e-4
+A_small = np.array([[epsilon, 1.0], [1.0, 1.0]])
+b_small = np.array([1.0, 2.0])
+x_small = np.linalg.solve(A_small, b_small)
+np.testing.assert_allclose(x_small, [1.0 / (1.0 - epsilon), 1.0 - epsilon / (1.0 - epsilon)])
+assert abs(1.0 / epsilon) == 10000.0
+assert abs(epsilon) <= 1.0
+
+# 小残差不保证小解误差。
+epsilon_residual = 1e-8
+H = np.array([[1.0, 1.0], [1.0, 1.0 + epsilon_residual]])
+x_true = np.array([1.0, 1.0])
+x_hat = np.array([2.0, 0.0])
+b_h = H @ x_true
+residual = b_h - H @ x_hat
+error = x_hat - x_true
+np.testing.assert_allclose(error, [1.0, -1.0])
+np.testing.assert_allclose(residual, [0.0, epsilon_residual])
+
+print("L =")
+sp.pprint(L)
+print("U =")
+sp.pprint(U)
+print("single RHS solution =", x_np)
+print("multiple RHS solutions =\n", X_computed)
+print("small-pivot exact solution =", x_small)
+print("residual =", residual, "; error =", error)
+```
+
+上面的三个函数逐行翻译了定义，便于核对 $\mathbf P\mathbf A=\mathbf L\mathbf U$、前代、回代和多个右端复用。它们不是高性能实现，也只用一个绝对容差解释浮点零。
+
+成熟数值库常把 $\mathbf L$ 的严格下三角乘子和 $\mathbf U$ 存在同一个数组中，另行编码主元交换；返回对象未必直接等于数学记号中的三张矩阵。使用任何库时都必须先检查它采用 $\mathbf P\mathbf A=\mathbf L\mathbf U$ 还是其他等价约定。
+
+对单次普通求解，直接调用
+
+```python
+np.linalg.solve(A_np, b_np)
+```
+
+通常比用户自己显式形成
+
+```python
+np.linalg.inv(A_np) @ b_np
+```
+
+更合适。前者把问题交给线性求解例程，后者先计算整张逆矩阵，做了不需要的工作并增加舍入机会。
+
+::: {.callout-warning title="不要把教学代码等同于库实现"}
+本章公式适合解释 LU/PLU 的数学结构。成熟数值库还需要处理：
+
+- 连续存储和批量矩阵运算；
+- 主元索引的编码；
+- 极端尺度、非有限输入和奇异检测；
+- 块算法、缓存和并行；
+- 稀疏矩阵的填充与排序。
+
+这些工程细节不改变 $\mathbf P\mathbf A=\mathbf L\mathbf U$，却决定大型问题能否高效可靠地运行。
+:::
+
+# 与模型计算的连接
+
+## 固定线性系统的重复求解
+
+训练和推断中的某些子问题会反复求解同一个系数矩阵、不同右端，例如：
+
+- 约束优化中固定线性约束对应的多个右端；
+- 隐式层或固定点方法中重复出现的线性化系统；
+- 局部二阶近似中同一矩阵对多个向量的求解；
+- 多个输出或批量任务共享同一系数结构。
+
+若矩阵规模允许直接分解，一次 PLU 加多次三角求解可以避免重复消元。
+
+但神经网络中的一般权重乘法
+
+$$
+\mathbf y=\mathbf W\mathbf x
+$$
+
+不是线性方程求解。前向传播已知输入并计算输出，不需要把每个线性层都做 LU。只有问题确实要求反求未知量，而且系数矩阵是适合直接求解的方阵时，PLU 才直接对应这里的算法。
+
+## 自动微分中的线性求解边界
+
+若某个计算图包含
+
+$$
+\mathbf x(\theta)
+=\mathbf A(\theta)^{-1}\mathbf b(\theta),
+$$
+
+实现时通常仍写成“求解线性系统”，而不是显式形成逆矩阵。求导规则可以利用原系统和转置系统的求解结构。
+
+这并不表示 LU 对所有自动微分场景都是最佳选择：矩阵可能稀疏、对称、长方形或过大，适合的算法取决于结构。LU/PLU 提供的是一般稠密方阵的基线。
+
+## 混合精度与残差检查
+
+低精度计算可以更快，但小主元和大范围中间数会使舍入更明显。实际流程可能在较低精度中分解和求解，再在较高精度中计算残差
+
+$$
+\mathbf r=\mathbf b-\mathbf A\widehat{\mathbf x}.
+$$
+
+残差能够发现候选解没有很好满足原方程，却不能单独保证解误差小。进一步利用残差修正解，需要对问题敏感性和误差传播作更完整分析。
+
+# 容易混淆、需要反复检查的地方
+
+1. **$\mathbf A=\mathbf L\mathbf U$ 的正向作用顺序是先 $\mathbf U$、后 $\mathbf L$。**
+2. **求解顺序却是先解 $\mathbf L\mathbf y=\mathbf b$，再解 $\mathbf U\mathbf x=\mathbf y$。** 这是从外层向内层撤销复合。
+3. **消元矩阵中是 $-m_{ik}$，$\mathbf L$ 中是 $m_{ik}$。** $\mathbf L$ 来自逆消元矩阵。
+4. **前代和回代都要求所除的对角元素非零。** LU 中的 $\mathbf L$ 对角线固定为 $1$；唯一解回代要求 $u_{ii}\neq0$。
+5. **矩阵可逆不保证当前行序下能无换行 LU。** 零的前导主元可能迫使交换行。
+6. **无换行 LU 判据使用顺序主子式，不是任意主子式。**
+7. **LU 唯一性依赖 $\mathbf L$ 的单位对角规范。**
+8. **本章采用 $\mathbf P\mathbf A=\mathbf L\mathbf U$。** 其他资料可能使用不同排列记号。
+9. **求解 PLU 时必须同时排列右端：$\mathbf P\mathbf b$。**
+10. **奇异矩阵也可以有 PLU。** 分解存在不表示唯一解存在。
+11. **部分选主元只在当前列中选择。** 它不是搜索整个剩余矩阵。
+12. **$|\ell_{ik}|\le1$ 不保证所有中间元素都不增长。**
+13. **精确非零主元与浮点可靠主元不是同一判断。** 数值实现还要考虑尺度和舍入。
+14. **小残差不自动推出小解误差。** 两者通过矩阵 $\mathbf A$ 联系。
+15. **一次分解只能直接复用于同一个系数矩阵。**
+16. **解方程不应先显式计算逆矩阵。** 分解和三角求解直接处理所需右端。
+
+# 自检
+
+1. 对 @eq-running-lu-matrix 手算三次消元，重新得到三个乘子、$\mathbf L$ 与 $\mathbf U$。
+2. 写出三次消元对应的初等矩阵，核对 @eq-elimination-matrices-to-u，并通过逆矩阵恢复 $\mathbf A=\mathbf L\mathbf U$。
+3. 证明两个单位下三角矩阵的乘积仍是单位下三角矩阵。
+4. 用 @eq-forward-substitution 解一个一般 $3\times3$ 下三角系统，并逐行代回核对。
+5. 用 @eq-back-substitution 解一个一般 $3\times3$ 上三角系统，并逐行代回核对。
+6. 解释为什么 $\mathbf A=\mathbf L\mathbf U$ 时正向先作用 $\mathbf U$，求解却先处理 $\mathbf L$。
+7. 对三个右端组成的矩阵 $\mathbf B$，说明怎样用两次三角矩阵方程得到全部解 $\mathbf X$。
+8. 从行列式乘法性证明 @eq-determinant-from-lu。
+9. 证明 @eq-zero-leading-pivot-example 中的矩阵可逆，但不存在单位下三角—上三角 LU。
+10. 对一个 $3\times3$ 矩阵计算全部顺序主子式，并判断能否无换行 LU。
+11. 完成 LU 唯一性证明：为什么 @eq-lu-uniqueness-bridge 两侧只能同时等于单位矩阵？
+12. 构造交换第一、第三行的 $3\times3$ 排列矩阵，并核对 $\mathbf P^{-1}=\mathbf P^{\mathsf T}$。
+13. 从 $\mathbf P\mathbf A=\mathbf L\mathbf U$ 推导正确的求解顺序和行列式公式。
+14. 证明部分选主元产生的非零消元乘子满足 @eq-partial-pivot-multiplier-bound。
+15. 解释为什么 $|\ell_{ik}|\le1$ 仍不能证明 $\mathbf U$ 中所有元素都不增长。
+16. 复现 $\varepsilon=10^{-4}$ 的三位有效数字例子，分别比较换行和不换行结果。
+17. 在残差例子中直接核对 @eq-residual-error-relation。
+18. 给出一个奇异矩阵的 PLU，并指出 $\mathbf U$ 中哪个零主元阻止唯一解回代。
+19. 解释为什么显式计算 $\mathbf A^{-1}\mathbf b$ 通常不如直接求解 $\mathbf A\mathbf x=\mathbf b$。
+20. 解释为什么只比较残差各分量，仍不足以给出与单位和尺度无关的相对解误差结论。
+
+# 小结
+
+Gaussian 消元不只是把矩阵临时化为阶梯形。若没有行交换，消元乘子组成单位下三角矩阵 $\mathbf L$，消元终点组成上三角矩阵 $\mathbf U$：
+
+$$
+\mathbf A=\mathbf L\mathbf U.
+$$
+
+正向变换满足
+
+$$
+\mathbf A\mathbf x
+=\mathbf L(\mathbf U\mathbf x),
+$$
+
+而求解通过两个三角系统完成：
+
+$$
+\mathbf L\mathbf y=\mathbf b,
+\qquad
+\mathbf U\mathbf x=\mathbf y.
+$$
+
+前代和回代各需要 $O(n^2)$ 工作；稠密 LU 分解需要 $O(n^3)$ 工作，因此固定 $\mathbf A$ 时，一次分解可以高效服务多个右端。
+
+可逆矩阵不一定能在当前行顺序下无换行 LU。无换行单位下三角—上三角分解存在且唯一，当且仅当非奇异矩阵的全部顺序主子式都非零。允许行交换后，消元被记录为
+
+$$
+\mathbf P\mathbf A=\mathbf L\mathbf U.
+$$
+
+部分选主元选择当前列绝对值最大的候选，使消元乘子满足
+
+$$
+|\ell_{ik}|\le1,
+$$
+
+避免由当前列中的微小主元立即产生巨大乘子。但代数可逆、乘子有界、小残差和解误差小仍是不同层次的陈述。一般敏感性与稳定性界还需要明确大小度量、相对误差和允许的输入扰动。
+
+# 参考资料
+
+Gaussian 消元、LU/PLU、三角求解与部分选主元可参见 Strang 和 Boyd 与 Vandenberghe [@strang2023linear; @boyd2018applied]；有限维线性映射与矩阵分解的代数背景可参见 Axler [@axler2015linear]。
+
+::: {#refs}
+:::

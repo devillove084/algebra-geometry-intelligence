@@ -2705,6 +2705,435 @@ def figure_trace_first_order_area() -> Figure:
     return fig
 
 
+def figure_lu_multipliers_stored() -> Figure:
+    """Track elimination multipliers from row operations into the lower factor."""
+    matrix = np.array([[2.0, 1.0, 1.0], [4.0, -6.0, 0.0], [-2.0, 7.0, 2.0]])
+    first_stage = np.array([[2.0, 1.0, 1.0], [0.0, -8.0, -2.0], [0.0, 8.0, 3.0]])
+    upper = np.array([[2.0, 1.0, 1.0], [0.0, -8.0, -2.0], [0.0, 0.0, 1.0]])
+    lower = np.array([[1.0, 0.0, 0.0], [2.0, 1.0, 0.0], [-1.0, -1.0, 1.0]])
+    m21 = matrix[1, 0] / matrix[0, 0]
+    m31 = matrix[2, 0] / matrix[0, 0]
+    m32 = first_stage[2, 1] / first_stage[1, 1]
+    assert np.allclose((m21, m31, m32), (2.0, -1.0, -1.0))
+    assert np.allclose(first_stage[1], matrix[1] - m21 * matrix[0])
+    assert np.allclose(first_stage[2], matrix[2] - m31 * matrix[0])
+    assert np.allclose(upper[2], first_stage[2] - m32 * first_stage[1])
+    assert np.allclose(lower @ upper, matrix)
+
+    fig, ax = plt.subplots(figsize=(13.6, 6.7))
+    fig.subplots_adjust(left=0.025, right=0.985, bottom=0.10, top=0.86)
+    ax.set_xlim(0, 16)
+    ax.set_ylim(0, 7.2)
+    ax.axis("off")
+
+    draw_matrix_card(ax, (1.55, 4.75), ((2, 1, 1), (4, -6, 0), (-2, 7, 2)), r"$A$", width=2.55, height=2.15)
+    draw_matrix_card(
+        ax,
+        (6.0, 4.75),
+        ((2, 1, 1), (0, -8, -2), (0, 8, 3)),
+        r"$U^{(1)}$",
+        width=2.55,
+        height=2.15,
+        edgecolor=BLUE,
+    )
+    draw_matrix_card(
+        ax,
+        (10.15, 4.75),
+        ((2, 1, 1), (0, -8, -2), (0, 0, 1)),
+        r"$U$",
+        width=2.55,
+        height=2.15,
+        edgecolor=ORANGE,
+    )
+    draw_matrix_card(
+        ax,
+        (14.25, 4.75),
+        ((1, 0, 0), (2, 1, 0), (-1, -1, 1)),
+        r"$L$: multiplier slots",
+        width=2.55,
+        height=2.15,
+        edgecolor=GREEN,
+    )
+
+    ax.annotate("", xy=(4.58, 4.75), xytext=(2.95, 4.75), arrowprops={"arrowstyle": "-|>", "color": BLUE, "lw": 2.4})
+    ax.annotate("", xy=(8.73, 4.75), xytext=(7.40, 4.75), arrowprops={"arrowstyle": "-|>", "color": ORANGE, "lw": 2.4})
+    operation_box = {"boxstyle": "round,pad=0.34", "facecolor": "white", "edgecolor": GRID, "linewidth": 1.4}
+    ax.text(
+        3.78,
+        2.55,
+        r"$m_{21}=2,\quad R_2\leftarrow R_2-2R_1$" + "\n" + r"$m_{31}=-1,\quad R_3\leftarrow R_3+R_1$",
+        ha="center",
+        va="center",
+        fontsize=10.8,
+        color=BLUE,
+        bbox=operation_box,
+    )
+    ax.text(
+        8.05,
+        2.55,
+        r"$m_{32}=-1$" + "\n" + r"$R_3\leftarrow R_3+R_2$",
+        ha="center",
+        va="center",
+        fontsize=10.8,
+        color=ORANGE,
+        bbox=operation_box,
+    )
+
+    lower_left = 14.25 - 2.55 / 2
+    lower_bottom = 4.75 - 2.15 / 2
+    lower_x = np.linspace(lower_left + 0.23 * 2.55, lower_left + 0.77 * 2.55, 3)
+    lower_y = np.linspace(lower_bottom + 0.80 * 2.15, lower_bottom + 0.20 * 2.15, 3)
+    slot_specs = ((1, 0, BLUE), (2, 0, BLUE), (2, 1, ORANGE))
+    for row, column, color in slot_specs:
+        ax.add_patch(
+            Rectangle(
+                (lower_x[column] - 0.27, lower_y[row] - 0.27),
+                0.54,
+                0.54,
+                facecolor=color,
+                edgecolor=color,
+                alpha=0.16,
+                linewidth=2.0,
+                zorder=3,
+            )
+        )
+    for label, destination, label_position, color in (
+        (r"$m_{21}$", (lower_x[0], lower_y[1]), (12.58, 5.18), BLUE),
+        (r"$m_{31}$", (lower_x[0], lower_y[2]), (12.58, 3.95), BLUE),
+        (r"$m_{32}$", (lower_x[1], lower_y[2]), (14.20, 3.35), ORANGE),
+    ):
+        ax.annotate(
+            label,
+            xy=destination,
+            xytext=label_position,
+            ha="center",
+            va="center",
+            fontsize=9.7,
+            color=color,
+            weight="bold",
+            arrowprops={"arrowstyle": "->", "color": color, "lw": 1.4},
+        )
+    ax.text(14.20, 2.78, "store below the diagonal", ha="center", fontsize=10.2, color=GREEN, weight="bold")
+    ax.text(8.0, 0.48, r"$A=LU$ because elimination records $(m_{21},m_{31},m_{32})$ in $L$", ha="center", fontsize=13.0, color=SLATE, weight="bold")
+
+    fig.suptitle("Gaussian elimination stores its multipliers in the lower factor", fontsize=15.5, weight="bold", y=0.97)
+    return fig
+
+
+def figure_lu_forward_and_solve_directions() -> Figure:
+    """Contrast applying LU with solving through the two triangular factors."""
+    lower = np.array([[1.0, 0.0, 0.0], [2.0, 1.0, 0.0], [-1.0, -1.0, 1.0]])
+    upper = np.array([[2.0, 1.0, 1.0], [0.0, -8.0, -2.0], [0.0, 0.0, 1.0]])
+    matrix = lower @ upper
+    x = np.array([1.0, 2.0, -1.0])
+    y = np.array([3.0, -14.0, -1.0])
+    b = np.array([3.0, -8.0, 10.0])
+    assert np.allclose(matrix, np.array([[2.0, 1.0, 1.0], [4.0, -6.0, 0.0], [-2.0, 7.0, 2.0]]))
+    assert np.allclose(upper @ x, y)
+    assert np.allclose(lower @ y, b)
+    assert np.allclose(matrix @ x, b)
+    assert np.allclose(np.linalg.solve(lower, b), y)
+    assert np.allclose(np.linalg.solve(upper, y), x)
+
+    fig, ax = plt.subplots(figsize=(12.8, 6.4))
+    fig.subplots_adjust(left=0.035, right=0.975, bottom=0.08, top=0.87)
+    ax.set_xlim(0, 14)
+    ax.set_ylim(0, 7)
+    ax.axis("off")
+    value_box = {"boxstyle": "round,pad=0.48", "facecolor": "white", "edgecolor": GRID, "linewidth": 1.6}
+
+    ax.text(0.35, 6.35, "Apply the factors", ha="left", fontsize=12.0, color=SLATE, weight="bold")
+    ax.text(7.0, 6.35, r"$A=LU$: the rightmost factor $U$ acts first", ha="center", fontsize=12.2, color=SLATE)
+    for x_position, label, color in (
+        (1.55, r"$\mathbf{x}=(1,2,-1)^T$", BLUE),
+        (7.0, r"$\mathbf{y}=(3,-14,-1)^T$", ORANGE),
+        (12.45, r"$\mathbf{b}=(3,-8,10)^T$", GREEN),
+    ):
+        ax.text(x_position, 5.05, label, ha="center", va="center", fontsize=12.5, color=color, weight="bold", bbox=value_box)
+    ax.annotate("", xy=(5.72, 5.05), xytext=(2.82, 5.05), arrowprops={"arrowstyle": "-|>", "color": BLUE, "lw": 2.6})
+    ax.annotate("", xy=(11.20, 5.05), xytext=(8.28, 5.05), arrowprops={"arrowstyle": "-|>", "color": ORANGE, "lw": 2.6})
+    ax.text(4.27, 5.48, r"$U$", ha="center", fontsize=14.5, color=BLUE, weight="bold")
+    ax.text(4.27, 4.56, r"$\mathbf{y}=U\mathbf{x}$", ha="center", fontsize=10.8, color=BLUE)
+    ax.text(9.74, 5.48, r"$L$", ha="center", fontsize=14.5, color=ORANGE, weight="bold")
+    ax.text(9.74, 4.56, r"$\mathbf{b}=L\mathbf{y}$", ha="center", fontsize=10.8, color=ORANGE)
+
+    ax.plot((0.35, 13.65), (3.55, 3.55), color=GRID, linewidth=1.3)
+    ax.text(0.35, 3.02, "Solve from a given right-hand side", ha="left", fontsize=12.0, color=SLATE, weight="bold")
+    ax.text(7.0, 3.02, "Use triangular solves; do not form matrix inverses", ha="center", fontsize=11.2, color=SLATE)
+    for x_position, label, color in (
+        (1.55, r"given $\mathbf{b}=(3,-8,10)^T$", GREEN),
+        (7.0, r"$\mathbf{y}=(3,-14,-1)^T$", ORANGE),
+        (12.45, r"$\mathbf{x}=(1,2,-1)^T$", BLUE),
+    ):
+        ax.text(x_position, 1.45, label, ha="center", va="center", fontsize=12.2, color=color, weight="bold", bbox=value_box)
+    ax.annotate("", xy=(5.72, 1.45), xytext=(2.82, 1.45), arrowprops={"arrowstyle": "-|>", "color": GREEN, "lw": 2.6})
+    ax.annotate("", xy=(11.20, 1.45), xytext=(8.28, 1.45), arrowprops={"arrowstyle": "-|>", "color": BLUE, "lw": 2.6})
+    ax.text(4.27, 2.08, "forward solve", ha="center", fontsize=10.5, color=GREEN, weight="bold")
+    ax.text(4.27, 1.75, r"$L\mathbf{y}=\mathbf{b}$", ha="center", fontsize=11.8, color=GREEN)
+    ax.text(9.74, 2.08, "back solve", ha="center", fontsize=10.5, color=BLUE, weight="bold")
+    ax.text(9.74, 1.75, r"$U\mathbf{x}=\mathbf{y}$", ha="center", fontsize=11.8, color=BLUE)
+
+    fig.suptitle("Applying a factorization and solving with it run in opposite directions", fontsize=15.5, weight="bold", y=0.97)
+    return fig
+
+
+def figure_triangular_solve_dependencies() -> Figure:
+    """Show the scalar dependency order in forward and back substitution."""
+    lower = np.array([[1.0, 0.0, 0.0], [2.0, 1.0, 0.0], [-1.0, -1.0, 1.0]])
+    upper = np.array([[2.0, 1.0, 1.0], [0.0, -8.0, -2.0], [0.0, 0.0, 1.0]])
+    b = np.array([3.0, -8.0, 10.0])
+    y = np.array([3.0, -14.0, -1.0])
+    x = np.array([1.0, 2.0, -1.0])
+    assert np.allclose(lower @ y, b)
+    assert np.allclose(upper @ x, y)
+    assert np.allclose(np.linalg.solve(lower, b), y)
+    assert np.allclose(np.linalg.solve(upper, y), x)
+
+    fig, axes = plt.subplots(1, 2, figsize=(12.6, 6.4))
+    fig.subplots_adjust(left=0.045, right=0.98, bottom=0.08, top=0.86, wspace=0.18)
+    panels = (
+        (
+            axes[0],
+            "Forward substitution",
+            ((1, 0, 0), (2, 1, 0), (-1, -1, 1)),
+            r"$L$ (unit lower triangular)",
+            BLUE,
+            (
+                r"$y_1=3\quad\Rightarrow\quad y_1=3$",
+                r"$2y_1+y_2=-8\quad\Rightarrow\quad y_2=-14$",
+                r"$-y_1-y_2+y_3=10\quad\Rightarrow\quad y_3=-1$",
+            ),
+            (r"$y_1$", r"$y_2$", r"$y_3$"),
+        ),
+        (
+            axes[1],
+            "Back substitution",
+            ((2, 1, 1), (0, -8, -2), (0, 0, 1)),
+            r"$U$ (upper triangular)",
+            ORANGE,
+            (
+                r"$x_3=-1\quad\Rightarrow\quad x_3=-1$",
+                r"$-8x_2-2x_3=-14\quad\Rightarrow\quad x_2=2$",
+                r"$2x_1+x_2+x_3=3\quad\Rightarrow\quad x_1=1$",
+            ),
+            (r"$x_3$", r"$x_2$", r"$x_1$"),
+        ),
+    )
+    for ax, title, entries, matrix_label, color, equations, dependency_labels in panels:
+        ax.set_xlim(0, 7)
+        ax.set_ylim(0, 7)
+        ax.axis("off")
+        ax.set_title(title, fontsize=13.5, weight="bold", pad=10)
+        draw_matrix_card(ax, (3.5, 5.45), entries, matrix_label, width=2.75, height=1.75, edgecolor=color, fontsize=11.2)
+        for y_position, equation in zip((3.75, 2.85, 1.95), equations):
+            ax.text(3.5, y_position, equation, ha="center", va="center", fontsize=11.2, color=SLATE)
+        node_positions = (1.45, 3.5, 5.55)
+        for x_position, label in zip(node_positions, dependency_labels):
+            ax.text(
+                x_position,
+                0.70,
+                label,
+                ha="center",
+                va="center",
+                fontsize=12.5,
+                color=color,
+                weight="bold",
+                bbox={"boxstyle": "circle,pad=0.38", "facecolor": "white", "edgecolor": color, "linewidth": 1.7},
+            )
+        ax.annotate("", xy=(3.05, 0.70), xytext=(1.90, 0.70), arrowprops={"arrowstyle": "-|>", "color": color, "lw": 2.1})
+        ax.annotate("", xy=(5.10, 0.70), xytext=(3.95, 0.70), arrowprops={"arrowstyle": "-|>", "color": color, "lw": 2.1})
+
+    axes[0].text(3.5, 4.32, r"given $\mathbf{b}$: top row $\to$ bottom row", ha="center", fontsize=10.3, color=BLUE, weight="bold")
+    axes[1].text(3.5, 4.32, r"given $\mathbf{y}$: bottom row $\to$ top row", ha="center", fontsize=10.3, color=ORANGE, weight="bold")
+    fig.suptitle("Triangular solves expose a one-way chain of dependencies", fontsize=15.5, weight="bold", y=0.97)
+    return fig
+
+
+def figure_lu_reuse_multiple_rhs() -> Figure:
+    """Factor once, then reuse both triangular factors for several right-hand sides."""
+    matrix = np.array([[2.0, 1.0, 1.0], [4.0, -6.0, 0.0], [-2.0, 7.0, 2.0]])
+    lower = np.array([[1.0, 0.0, 0.0], [2.0, 1.0, 0.0], [-1.0, -1.0, 1.0]])
+    upper = np.array([[2.0, 1.0, 1.0], [0.0, -8.0, -2.0], [0.0, 0.0, 1.0]])
+    solutions = np.array([[1.0, 0.0, 2.0], [2.0, -1.0, 1.0], [-1.0, 3.0, 0.0]])
+    intermediate = upper @ solutions
+    right_hand_sides = matrix @ solutions
+    assert np.allclose(lower @ upper, matrix)
+    assert np.allclose(intermediate, np.array([[3.0, 2.0, 5.0], [-14.0, 2.0, -8.0], [-1.0, 3.0, 0.0]]))
+    assert np.allclose(right_hand_sides, np.array([[3.0, 2.0, 5.0], [-8.0, 6.0, 2.0], [10.0, -1.0, 3.0]]))
+    assert np.allclose(np.linalg.solve(lower, right_hand_sides), intermediate)
+    assert np.allclose(np.linalg.solve(upper, intermediate), solutions)
+
+    fig, ax = plt.subplots(figsize=(14.0, 7.3))
+    fig.subplots_adjust(left=0.025, right=0.985, bottom=0.10, top=0.87)
+    ax.set_xlim(0, 16)
+    ax.set_ylim(0, 8.4)
+    ax.axis("off")
+
+    draw_matrix_card(ax, (1.35, 6.55), ((2, 1, 1), (4, -6, 0), (-2, 7, 2)), r"$A$", width=2.25, height=1.85)
+    factor_box = {"boxstyle": "round,pad=0.48", "facecolor": "#eff6ff", "edgecolor": BLUE, "linewidth": 1.9}
+    ax.text(3.75, 6.55, "factor once", ha="center", va="center", fontsize=12.0, color=BLUE, weight="bold", bbox=factor_box)
+    ax.text(3.75, 7.55, r"one $O(n^3)$ factorization", ha="center", fontsize=11.0, color=BLUE, weight="bold")
+    ax.annotate("", xy=(3.05, 6.55), xytext=(2.55, 6.55), arrowprops={"arrowstyle": "-|>", "color": BLUE, "lw": 2.3})
+    draw_matrix_card(ax, (6.75, 6.55), ((1, 0, 0), (2, 1, 0), (-1, -1, 1)), r"stored $L$", width=2.25, height=1.85, edgecolor=GREEN, fontsize=10.8)
+    draw_matrix_card(ax, (10.35, 6.55), ((2, 1, 1), (0, -8, -2), (0, 0, 1)), r"stored $U$", width=2.25, height=1.85, edgecolor=ORANGE, fontsize=10.8)
+    ax.annotate("", xy=(5.50, 6.55), xytext=(4.48, 6.55), arrowprops={"arrowstyle": "-|>", "color": GREEN, "lw": 2.1, "connectionstyle": "arc3,rad=0.12"})
+    ax.annotate("", xy=(9.10, 6.55), xytext=(4.48, 6.55), arrowprops={"arrowstyle": "-|>", "color": ORANGE, "lw": 2.1, "connectionstyle": "arc3,rad=-0.12"})
+    ax.text(13.45, 6.55, "same factors feed every solve", ha="center", va="center", fontsize=11.2, color=SLATE, weight="bold")
+
+    lane_y = (4.15, 2.65, 1.15)
+    rhs_labels = (
+        r"$\mathbf{b}_1=(3,-8,10)^T$",
+        r"$\mathbf{b}_2=(2,6,-1)^T$",
+        r"$\mathbf{b}_3=(5,2,3)^T$",
+    )
+    solution_labels = (
+        r"$\mathbf{x}_1=(1,2,-1)^T$",
+        r"$\mathbf{x}_2=(0,-1,3)^T$",
+        r"$\mathbf{x}_3=(2,1,0)^T$",
+    )
+    value_box = {"boxstyle": "round,pad=0.33", "facecolor": "white", "edgecolor": GRID, "linewidth": 1.4}
+    solve_box = {"boxstyle": "round,pad=0.36", "facecolor": BACKGROUND, "edgecolor": GRID, "linewidth": 1.5}
+    ax.plot((5.0, 5.0), (0.65, 5.25), color=GREEN, linewidth=1.5, linestyle="--", alpha=0.55, zorder=0)
+    ax.plot((11.0, 11.0), (0.65, 5.25), color=ORANGE, linewidth=1.5, linestyle="--", alpha=0.55, zorder=0)
+    ax.annotate("", xy=(5.0, 5.25), xytext=(6.35, 5.68), arrowprops={"arrowstyle": "->", "color": GREEN, "lw": 1.5, "linestyle": "--"})
+    ax.annotate("", xy=(11.0, 5.25), xytext=(10.75, 5.68), arrowprops={"arrowstyle": "->", "color": ORANGE, "lw": 1.5, "linestyle": "--"})
+    ax.text(5.0, 4.82, "reuse L", ha="center", fontsize=9.7, color=GREEN, weight="bold")
+    ax.text(11.0, 4.82, "reuse U", ha="center", fontsize=9.7, color=ORANGE, weight="bold")
+
+    for index, (y_position, rhs_label, solution_label) in enumerate(zip(lane_y, rhs_labels, solution_labels), start=1):
+        ax.text(1.55, y_position, rhs_label, ha="center", va="center", fontsize=10.7, color=SLATE, bbox=value_box)
+        ax.text(5.0, y_position, "forward solve", ha="center", va="center", fontsize=10.3, color=GREEN, weight="bold", bbox=solve_box)
+        ax.text(8.05, y_position, rf"$\mathbf{{y}}_{index}$", ha="center", va="center", fontsize=12.0, color=ORANGE, weight="bold", bbox=value_box)
+        ax.text(11.0, y_position, "back solve", ha="center", va="center", fontsize=10.3, color=ORANGE, weight="bold", bbox=solve_box)
+        ax.text(14.45, y_position, solution_label, ha="center", va="center", fontsize=10.7, color=BLUE, weight="bold", bbox=value_box)
+        for start, end, color in (
+            ((2.72, y_position), (4.05, y_position), GREEN),
+            ((5.92, y_position), (7.45, y_position), GREEN),
+            ((8.62, y_position), (10.10, y_position), ORANGE),
+            ((11.90, y_position), (13.15, y_position), BLUE),
+        ):
+            ax.annotate("", xy=end, xytext=start, arrowprops={"arrowstyle": "-|>", "color": color, "lw": 1.9})
+        ax.text(5.0, y_position - 0.48, r"$L\mathbf{y}_i=\mathbf{b}_i$", ha="center", fontsize=8.8, color=GREEN)
+        ax.text(11.0, y_position - 0.48, r"$U\mathbf{x}_i=\mathbf{y}_i$", ha="center", fontsize=8.8, color=ORANGE)
+
+    fig.text(0.5, 0.025, r"Each new right-hand side costs two $O(n^2)$ triangular solves — not another factorization", ha="center", fontsize=12.0, color=SLATE, weight="bold")
+    fig.suptitle("One LU factorization serves many right-hand sides", fontsize=15.5, weight="bold", y=0.97)
+    return fig
+
+
+def figure_plu_row_swap() -> Figure:
+    """Use a permutation to expose a valid pivot without implying singularity."""
+    matrix = np.array([[0.0, 1.0], [1.0, 1.0]])
+    permutation = np.array([[0.0, 1.0], [1.0, 0.0]])
+    permuted = permutation @ matrix
+    lower = np.eye(2)
+    upper = np.array([[1.0, 1.0], [0.0, 1.0]])
+    assert np.isclose(np.linalg.det(matrix), -1.0)
+    assert np.allclose(permutation @ matrix, np.array([[1.0, 1.0], [0.0, 1.0]]))
+    assert np.allclose(permuted, lower @ upper)
+    assert np.allclose(permutation @ permutation, np.eye(2))
+
+    fig, ax = plt.subplots(figsize=(13.4, 5.7))
+    fig.subplots_adjust(left=0.025, right=0.985, bottom=0.11, top=0.85)
+    ax.set_xlim(0, 15)
+    ax.set_ylim(0, 6)
+    ax.axis("off")
+
+    draw_matrix_card(ax, (1.55, 3.35), ((0, 1), (1, 1)), r"$A_0$", width=2.0, height=1.75, edgecolor=BLUE, fontsize=12.0)
+    ax.annotate("", xy=(6.02, 3.35), xytext=(2.72, 3.35), arrowprops={"arrowstyle": "-|>", "color": ORANGE, "lw": 2.5})
+    draw_matrix_card(ax, (4.35, 4.80), ((0, 1), (1, 0)), r"$P$: swap rows", width=1.85, height=1.35, edgecolor=ORANGE, fontsize=10.8)
+    ax.text(4.35, 2.80, r"$A_0\longmapsto PA_0$", ha="center", fontsize=11.2, color=ORANGE, weight="bold")
+    draw_matrix_card(ax, (7.15, 3.35), ((1, 1), (0, 1)), r"$PA_0$", width=2.0, height=1.75, edgecolor=GREEN, fontsize=12.0)
+    ax.text(8.72, 3.35, r"$=$", ha="center", va="center", fontsize=19, color=SLATE)
+    draw_matrix_card(ax, (10.15, 3.35), ((1, 0), (0, 1)), r"$L=I$", width=1.9, height=1.75, edgecolor=GREEN, fontsize=12.0)
+    ax.text(11.62, 3.35, r"$\cdot$", ha="center", va="center", fontsize=22, color=SLATE)
+    draw_matrix_card(ax, (13.20, 3.35), ((1, 1), (0, 1)), r"$U$", width=2.0, height=1.75, edgecolor=ORANGE, fontsize=12.0)
+
+    ax.text(1.55, 1.85, r"zero first pivot: $a_{11}=0$", ha="center", fontsize=10.8, color=BLUE, weight="bold")
+    ax.text(7.5, 1.05, r"$PA_0=LU$", ha="center", fontsize=14.0, color=GREEN, weight="bold")
+    ax.text(7.5, 0.42, r"$\det(A_0)=-1\ne0$: $A_0$ is invertible; the row swap only supplies a usable first pivot", ha="center", fontsize=11.7, color=SLATE, weight="bold")
+
+    fig.suptitle("A zero pivot can require a row swap even when the matrix is invertible", fontsize=15.5, weight="bold", y=0.97)
+    return fig
+
+
+def figure_small_pivot_vs_partial_pivot() -> Figure:
+    """Compare elimination through a tiny pivot with partial pivoting."""
+    epsilon = 1.0e-4
+    matrix = np.array([[epsilon, 1.0], [1.0, 1.0]])
+    no_swap_lower = np.array([[1.0, 0.0], [1.0 / epsilon, 1.0]])
+    no_swap_upper = np.array([[epsilon, 1.0], [0.0, 1.0 - 1.0 / epsilon]])
+    permutation = np.array([[0.0, 1.0], [1.0, 0.0]])
+    pivoted = permutation @ matrix
+    pivoted_lower = np.array([[1.0, 0.0], [epsilon, 1.0]])
+    pivoted_upper = np.array([[1.0, 1.0], [0.0, 1.0 - epsilon]])
+    assert np.isclose(1.0 / epsilon, 10000.0)
+    assert np.isclose(1.0 - 1.0 / epsilon, -9999.0)
+    assert np.isclose(1.0 - epsilon, 0.9999)
+    assert np.allclose(no_swap_lower @ no_swap_upper, matrix)
+    assert np.allclose(pivoted_lower @ pivoted_upper, pivoted)
+    assert np.allclose(permutation.T @ pivoted_lower @ pivoted_upper, matrix)
+    assert np.isclose(abs(np.linalg.det(no_swap_upper)), abs(np.linalg.det(pivoted_upper)))
+
+    fig, axes = plt.subplots(1, 2, figsize=(13.0, 6.3))
+    fig.subplots_adjust(left=0.035, right=0.98, bottom=0.16, top=0.84, wspace=0.18)
+    panel_specs = (
+        (
+            axes[0],
+            "No swap: tiny pivot",
+            ((r"$\varepsilon$", 1), (1, 1)),
+            r"$A_\varepsilon$",
+            ((r"$\varepsilon$", 1), (0, -9999)),
+            r"$U_{\mathrm{no\ swap}}$",
+            BLUE,
+            r"pivot $=\varepsilon=10^{-4}$",
+            r"$m_{21}=1/\varepsilon=10^4$",
+            r"$R_2\leftarrow R_2-10^4R_1$",
+            r"large update: $1-1/\varepsilon=-9999$",
+            r"$A_\varepsilon=L_{\mathrm{ns}}U_{\mathrm{ns}}$",
+        ),
+        (
+            axes[1],
+            "Partial pivoting: swap first",
+            ((1, 1), (r"$\varepsilon$", 1)),
+            r"$PA_\varepsilon$",
+            ((1, 1), (0, "0.9999")),
+            r"$U_{\mathrm{pivoted}}$",
+            GREEN,
+            r"pivot $=1$ after the row swap",
+            r"$m_{21}=\varepsilon=10^{-4}$",
+            r"$R_2\leftarrow R_2-10^{-4}R_1$",
+            r"gentle update: $1-\varepsilon=0.9999$",
+            r"$PA_\varepsilon=L_{\mathrm{pp}}U_{\mathrm{pp}}$",
+        ),
+    )
+    for ax, title, input_entries, input_label, upper_entries, upper_label, color, pivot_label, multiplier_label, operation_label, update_label, factor_label in panel_specs:
+        ax.set_xlim(0, 7)
+        ax.set_ylim(0, 7)
+        ax.axis("off")
+        ax.set_title(title, fontsize=13.2, weight="bold", pad=10)
+        draw_matrix_card(ax, (1.65, 5.15), input_entries, input_label, width=2.15, height=1.60, edgecolor=color, fontsize=11.2)
+        draw_matrix_card(ax, (5.35, 5.15), upper_entries, upper_label, width=2.15, height=1.60, edgecolor=color, fontsize=11.2)
+        ax.annotate("", xy=(4.15, 5.15), xytext=(2.85, 5.15), arrowprops={"arrowstyle": "-|>", "color": color, "lw": 2.4})
+        ax.text(3.5, 4.00, pivot_label, ha="center", fontsize=9.7, color=color, weight="bold")
+        ax.text(
+            3.5,
+            3.25,
+            multiplier_label + "\n" + operation_label,
+            ha="center",
+            va="center",
+            fontsize=11.0,
+            color=color,
+            bbox={"boxstyle": "round,pad=0.40", "facecolor": "white", "edgecolor": color, "linewidth": 1.5},
+        )
+        ax.text(3.5, 2.05, update_label, ha="center", fontsize=11.2, color=color, weight="bold")
+        ax.text(3.5, 0.92, factor_label, ha="center", fontsize=12.3, color=SLATE, weight="bold")
+
+    fig.text(0.5, 0.055, "Exact arithmetic: the routes are equivalent; floating-point behavior differs", ha="center", fontsize=12.3, color=SLATE, weight="bold")
+    fig.suptitle("Partial pivoting avoids growth caused by a tiny pivot", fontsize=15.5, weight="bold", y=0.97)
+    return fig
+
+
 def normalize_svg(path: Path) -> None:
     """Remove generator-introduced trailing whitespace from an SVG file."""
     content = path.read_text(encoding="utf-8")
@@ -2792,6 +3221,12 @@ def main() -> None:
     save_figure(figure_adjugate_identity(), "adjugate-identity", formats)
     save_figure(figure_similarity_det_trace_invariants(), "similarity-det-trace-invariants", formats)
     save_figure(figure_trace_first_order_area(), "trace-first-order-area", formats)
+    save_figure(figure_lu_multipliers_stored(), "lu-multipliers-stored", formats)
+    save_figure(figure_lu_forward_and_solve_directions(), "lu-forward-and-solve-directions", formats)
+    save_figure(figure_triangular_solve_dependencies(), "triangular-solve-dependencies", formats)
+    save_figure(figure_lu_reuse_multiple_rhs(), "lu-reuse-multiple-rhs", formats)
+    save_figure(figure_plu_row_swap(), "plu-row-swap", formats)
+    save_figure(figure_small_pivot_vs_partial_pivot(), "small-pivot-vs-partial-pivot", formats)
 
 
 if __name__ == "__main__":
