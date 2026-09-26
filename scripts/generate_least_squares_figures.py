@@ -175,7 +175,7 @@ def main() -> None:
         fig = build()
         path = OUTPUT / f"{stem}.svg"
         fig.savefig(path, metadata={
-            "Date": None, "Description": description,
+            "Creator": "Matplotlib", "Date": None, "Description": description,
         })
         svg = path.read_text(encoding="utf-8")
         start = svg.index("<svg")

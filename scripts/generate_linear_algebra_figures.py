@@ -677,7 +677,9 @@ def figure_parameter_system_outcomes() -> Figure:
         (0.0, 1.0, "no intersection", ORANGE),
     )
 
-    fig = plt.figure(figsize=(12.2, 4.8), constrained_layout=True)
+    # Keep 3D axes placement independent of renderer-driven layout iterations.
+    fig = plt.figure(figsize=(12.2, 4.8))
+    fig.subplots_adjust(left=0.02, right=0.94, bottom=0.08, top=0.78, wspace=0.25)
     for index, (lambda_value, mu_value, title, color) in enumerate(cases, start=1):
         ax = fig.add_subplot(1, 3, index, projection="3d")
         z_grid = (3.0 + mu_value - x_grid - 2.0 * y_grid) / (3.0 + lambda_value)
