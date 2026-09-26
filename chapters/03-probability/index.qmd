@@ -1,0 +1,345 @@
+---
+title: "概率论：两次抛币之后，我们知道什么？"
+description: "从四个有序结果出发，用概率权重理解事件、条件化与正面数的分布。"
+---
+
+# 至少一次正面，究竟有多大可能？ {#prob-start-question}
+
+把一枚硬币抛两次。实验结束前，问三个问题：至少出现一次正面的概率是多少？若已知至少出现一次正面，第二次为正面的概率是多少？如果只记录正面数，又该怎样分配概率？
+
+这三个问题不能只靠“硬币有两个面”回答。我们需要先说明记录哪些结果，再说明这些结果各有多大权重。
+
+记正面为 $H$，反面为 $T$，把**两次抛掷合在一起看作一次实验**。保留先后顺序，样本空间就是
+
+$$
+\Omega=\{HH,HT,TH,TT\}.
+$$
+
+$HT$ 表示第一次为正面、第二次为反面；$TH$ 则相反。两者的正面数相同，却不是同一个有序结果。样本点 $HH$ 与单点事件 $\{HH\}$ 也应区分：前者是一个结果，后者是只含这个结果的集合。
+
+若问“至少一次正面”，对应的事件是 $C=\{HH,HT,TH\}$。实际结果 $\omega$ 落在 $C$ 中，就说 $C$ 发生。有限模型中，我们允许讨论 $\Omega$ 的所有子集；空集是不含任何结果的事件，$\Omega$ 是必然发生的事件。
+
+## 四种结果不等于四种等可能结果 {#prob-start-weights}
+
+先指定下面这个模型。它不是由“抛两次”推导出来的，而是对完整实验结果的概率分配：
+
+| 有序结果 $\omega$ | $HH$ | $HT$ | $TH$ | $TT$ |
+|:--|--:|--:|--:|--:|
+| 权重 $w(\omega)$ | $1/5$ | $3/10$ | $1/10$ | $2/5$ |
+
+这些权重非负，总和为 $1$。对事件 $E\subseteq\Omega$，按其中样本点的权重求和：
+
+$$
+\mathbb P(E)=\sum_{\omega\in E}w(\omega),\qquad
+w(\omega)\geq0,\qquad \sum_{\omega\in\Omega}w(\omega)=1.
+$$
+
+于是 $\mathbb P(C)=1/5+3/10+1/10=3/5$。四个结果中有三个满足条件，却不能据此回答 $3/4$，因为它们并不等权。
+
+只有额外指定所有样本点等权，才有 $\mathbb P(E)=|E|/|\Omega|$。数格子是等权时求和的简写，不是概率的一般定义。关于样本空间、概率规律与公理，可以参见 MIT 6.041SC Lecture 1 “Probability Models and Axioms” [@mit6041models2013]。
+
+下面先建立精确权重；后面的图和断言共用这份数据。颜色始终按有序结果固定：$HH$ 蓝、$HT$ 青绿、$TH$ 金黄、$TT$ 珊瑚红，文字标签同时保留，避免仅靠颜色辨认。
+
+```{python}
+#| label: prob-start-model
+#| code-fold: true
+#| code-summary: "查看精确模型与绘图设置"
+from fractions import Fraction as F
+from itertools import combinations
+import matplotlib.pyplot as plt
+from matplotlib.patches import FancyArrowPatch
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+omega = ("HH", "HT", "TH", "TT")
+weights = dict(zip(omega, (F(1, 5), F(3, 10), F(1, 10), F(2, 5))))
+Omega = set(omega)
+A, B = {"HH", "HT"}, {"HH", "TH"}
+C = A | B
+
+def probability(event, model=weights):
+    assert set(event) <= Omega
+    return sum((model[s] for s in event), F(0))
+
+assert all(w >= 0 for w in weights.values())
+assert probability(Omega) == 1
+set_matplotlib_formats("svg")
+plt.rcParams.update({"font.family": "sans-serif", "font.size": 14,
+                     "font.sans-serif": ["Noto Sans CJK SC", "DejaVu Sans"],
+                     "axes.unicode_minus": False, "svg.fonttype": "path"})
+colors = dict(zip(omega, ("#4878A8", "#38A89D", "#E4B84E", "#E78368")))
+ink, paper = "#243447", "#FBFAF7"
+
+def mass_panel(ax, masses, title, upper=0.62):
+    ax.set_facecolor(paper)
+    ax.bar(omega, [float(masses[s]) for s in omega],
+           color=[colors[s] for s in omega], edgecolor=ink, width=0.6)
+    for i, s in enumerate(omega):
+        ax.text(i, float(masses[s]) + 0.025, str(masses[s]), ha="center", fontsize=14)
+    ax.set(title=title, ylim=(0, upper), ylabel="概率质量")
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.grid(axis="y", alpha=0.15)
+    ax.set_axisbelow(True)
+```
+
+```{python}
+#| label: fig-prob-start-outcomes-weights
+#| fig-format: svg
+#| fig-cap: "上：先后顺序产生四个不同样本点，连线只表示记录路径。下：同一组样本点被赋予不等权重，柱高而非结果数量决定概率。"
+#| fig-alt: "上下分镜：起点先分为 H 和 T，再形成 HH、HT、TH、TT；下方同色柱依次高为五分之一、十分之三、十分之一、五分之二。"
+#| code-fold: true
+#| code-summary: "查看有序结果与权重图代码"
+fig, axes = plt.subplots(2, 1, figsize=(9, 7.8), layout="constrained")
+fig.set_facecolor(paper)
+ax = axes[0]
+ax.set(xlim=(-0.6, 3.6), ylim=(-0.4, 2.6), title="① 列出有序结果：HT 与 TH 不同")
+ax.axis("off")
+for x, letter in [(0.5, "H"), (2.5, "T")]:
+    ax.plot([1.5, x], [2.1, 1.2], color=ink, linewidth=1.5)
+    ax.text(x, 1.2, letter, ha="center", va="center", fontsize=17,
+            bbox=dict(facecolor=paper, edgecolor="none"))
+for i, s in enumerate(omega):
+    parent = 0.5 if s[0] == "H" else 2.5
+    ax.plot([parent, i], [1.1, 0.15], color=colors[s], linewidth=2)
+    ax.text(i, 0, s, ha="center", va="center", fontsize=17,
+            bbox=dict(boxstyle="round,pad=0.4", facecolor=colors[s], edgecolor=ink))
+ax.text(1.5, 2.2, "开始", ha="center", fontsize=15)
+mass_panel(axes[1], weights, "② 赋予权重：总和为 1，但不必相等")
+plt.show()
+```
+
+# 事件运算为什么给出概率公式？ {#prob-start-events}
+
+令 $A=\{HH,HT\}$ 表示“第一次为正面”，$B=\{HH,TH\}$ 表示“第二次为正面”。集合运算把口头条件变成精确的结果筛选：
+
+| 运算 | 含义 | 本例中的集合 | 概率 |
+|:--|:--|:--|:--|
+| $A\cap B$ | 两次都是正面 | $\{HH\}$ | $1/5$ |
+| $A\cup B=C$ | 至少一次正面 | $\{HH,HT,TH\}$ | $3/5$ |
+| $A^c$ | 第一次不是正面 | $\{TH,TT\}$ | $1/2$ |
+| $A\setminus B$ | 第一次正面、第二次反面 | $\{HT\}$ | $3/10$ |
+
+“或”包含两件事同时发生的情况。若想表达“恰好一次正面”，应取 $\{HT,TH\}$，而不是 $A\cup B$。
+
+## 从权重求和得到基本规则 {#prob-start-rules}
+
+权重非负给出 $\mathbb P(E)\geq0$；总和为 $1$ 给出 $\mathbb P(\Omega)=1$。若 $E\cap F=\varnothing$，求和没有重复的样本点，因此
+
+$$
+\mathbb P(E\cup F)=\mathbb P(E)+\mathbb P(F).
+$$
+
+这是有限模型中的不相交可加性。空集没有权重可加，故 $\mathbb P(\varnothing)=0$。不相交的多个事件同样可以逐个相加；有重叠时则必须先处理重复计数。
+
+## 补集公式：完整的一份拆成两份 {#prob-start-complement}
+
+$E$ 与 $E^c=\Omega\setminus E$ 不相交，且并集为 $\Omega$。所以
+
+$$
+1=\mathbb P(\Omega)=\mathbb P(E)+\mathbb P(E^c),
+\qquad \boxed{\mathbb P(E^c)=1-\mathbb P(E)}.
+$$
+
+这也给出 $\mathbb P(E)\leq1$。本例中“至少一次正面”的补集是“全是反面”，因此可以直接算 $\mathbb P(C)=1-\mathbb P(\{TT\})=1-2/5=3/5$。
+
+## 加法公式：交集只算一次 {#prob-start-addition}
+
+用 $\dot\cup$ 表示不相交并。把 $E\cup F$ 分成三个互不重叠的部分：
+
+$$
+E\cup F=(E\setminus F)\mathbin{\dot\cup}(E\cap F)
+\mathbin{\dot\cup}(F\setminus E).
+$$
+
+同时，$E=(E\setminus F)\mathbin{\dot\cup}(E\cap F)$，$F=(E\cap F)\mathbin{\dot\cup}(F\setminus E)$。分别求概率，$\mathbb P(E)+\mathbb P(F)$ 中的交集出现两次，而并集里只应出现一次，于是
+
+$$
+\boxed{\mathbb P(E\cup F)=\mathbb P(E)+\mathbb P(F)-\mathbb P(E\cap F)}.
+$$
+
+代入当前模型：$\mathbb P(A)=1/2$，$\mathbb P(B)=3/10$，$\mathbb P(A\cap B)=1/5$，所以 $\mathbb P(C)=1/2+3/10-1/5=3/5$。这个证明依赖不相交分割，不依赖等可能或独立性。
+
+# 已知至少一次正面，怎样更新？ {#prob-start-conditioning}
+
+现在只得到一条信息：事件 $C$ 已发生。$TT$ 被排除；其余结果的原权重仍为 $1/5,3/10,1/10$，总质量为 $3/5$。要把剩余结果当作新的完整范围，必须把它们都除以 $3/5$。
+
+一般地，对 $\mathbb P(C)>0$ 的条件事件，定义
+
+$$
+\mathbb P(E\mid C)=\frac{\mathbb P(E\cap C)}{\mathbb P(C)}.
+$$
+
+分子先筛出“既满足 $E$ 又符合已知信息”的权重，分母把保留范围归一化。新权重之间的比例不变；条件化不是把剩余样本点改成等可能。
+
+本例的条件单点权重按 $HH,HT,TH,TT$ 排列为
+
+$$
+\left(\frac{1/5}{3/5},\frac{3/10}{3/5},\frac{1/10}{3/5},0\right)
+=\left(\frac13,\frac12,\frac16,0\right).
+$$
+
+因此，已知至少一次正面后，第二次为正面的概率是
+
+$$
+\mathbb P(B\mid C)=\frac{\mathbb P(\{HH,TH\})}{\mathbb P(C)}
+=\frac{3/10}{3/5}=\frac12.
+$$
+
+```{python}
+#| label: fig-prob-start-conditioning-frames
+#| fig-format: svg
+#| fig-cap: "条件化的三个步骤：原始概率；仅保留 C 内的质量（尚未归一化）；除以 3/5 后得到条件概率。三幅分镜共用纵轴刻度。"
+#| fig-alt: "三幅上下排列的柱状图：原权重为 1/5、3/10、1/10、2/5；筛选后 TT 为零，总质量 3/5；重归一后为 1/3、1/2、1/6、0，总和 1。"
+#| code-fold: true
+#| code-summary: "查看筛选与重归一图代码"
+retained = {s: weights[s] if s in C else F(0) for s in omega}
+conditional = {s: retained[s] / probability(C) for s in omega}
+fig, axes = plt.subplots(3, 1, figsize=(9, 10), sharex=True, sharey=True,
+                         layout="constrained")
+fig.set_facecolor(paper)
+for ax, masses, title in zip(axes, [weights, retained, conditional],
+        ["① 原始概率：总和 1", "② 只保留 C：总质量 3/5，尚未归一化",
+         "③ 每项除以 3/5：条件概率总和 1"]):
+    mass_panel(ax, masses, title)
+axes[1].set_ylabel("保留的原始质量")
+axes[2].set_ylabel("条件概率")
+axes[2].set_xlabel("有序结果")
+plt.show()
+```
+
+新权重仍非负且总和为 $1$，因此固定条件后仍可使用补集和加法公式。例如 $\mathbb P(C\mid C)=1$。将定义移项，还得到 $\mathbb P(E\cap C)=\mathbb P(E\mid C)\mathbb P(C)$。
+
+如果 $\mathbb P(C)=0$，上述除法没有意义；不能把 $0/0$ 规定成某个条件概率。另外，“至少一次为正面”与“第一次为正面”是不同的信息：本例 $\mathbb P(B\mid A)=(1/5)/(1/2)=2/5$，并不等于 $\mathbb P(B\mid C)=1/2$。
+
+# 公平能推出独立吗？ {#prob-start-independence}
+
+事件 $E,F$ **独立**的数学条件是
+
+$$
+\mathbb P(E\cap F)=\mathbb P(E)\mathbb P(F).
+$$
+
+当 $\mathbb P(F)>0$ 时，这等价于 $\mathbb P(E\mid F)=\mathbb P(E)$。独立性规定联合权重怎样分解，是需要明确声明或核查的模型条件，不是“先后做了两次”自动带来的结论。
+
+当前模型中，$\mathbb P(A\cap B)=1/5$，而 $\mathbb P(A)\mathbb P(B)=(1/2)(3/10)=3/20$，所以两次的正面事件不独立。
+
+即使每次都公平，也仍然不能推出独立。另取一个模型，令 $HH,TT$ 的权重各为 $1/2$，$HT,TH$ 的权重为 $0$。每次出现正面的概率都为 $1/2$，但两次结果完全相同；两次同时正面的概率为 $1/2$，不是 $1/4$。
+
+只有**同时假设每次公平且两次独立**，才得到四个有序结果各为 $1/4$。独立也不等于互斥：互斥事件的交集为空；若两者概率都为正，它们的交集概率为零，反而不满足独立性等式。
+
+## 概率不是一次数据中的频率 {#prob-start-frequency}
+
+概率是模型赋予事件的权重。把“两次抛币”这个完整实验重复 $n$ 轮，事件 $E$ 的相对频率则是
+
+$$
+\widehat p_n(E)=\frac{\text{这 }n\text{ 轮中事件 }E\text{ 发生的轮数}}{n}.
+$$
+
+概率固定后，不同批数据仍可能给出不同频率。在每轮遵循同一模型且各轮独立等条件下，大样本频率接近概率有数学保证；这不是说有限次实验必然精确符合概率比例。各轮之间的独立，与同一轮内两次抛掷的独立，也是不同的假设。
+
+一次观察不能“验证一个概率等式”；正反面次数接近也不能单独证明独立。反过来，模型给出 $1/2$ 的概率，并不承诺每两轮中恰有一轮满足条件。
+
+# 只记录正面数，权重去了哪里？ {#prob-start-random-variable}
+
+令 $X$ 记录一轮两次抛掷中的正面数。这是一个函数，称为随机变量：
+
+$$
+X:\Omega\to\{0,1,2\}\subset\mathbb R,\qquad
+X(HH)=2,\quad X(HT)=X(TH)=1,\quad X(TT)=0.
+$$
+
+函数规则是确定的，未知的是实验落在哪个 $\omega$ 上。简写 $\{X=x\}$ 表示事件 $\{\omega\in\Omega:X(\omega)=x\}$；它的概率把映射到 $x$ 的所有样本点权重相加：
+
+$$
+\mathbb P(X=0)=\frac25,\qquad
+\mathbb P(X=1)=\frac3{10}+\frac1{10}=\frac25,\qquad
+\mathbb P(X=2)=\frac15.
+$$
+
+这三个数构成 $X$ 的概率分布，总和仍为 $1$。三个取值并不意味着各为 $1/3$；聚合保留的是概率总质量，而不是等分取值集合。
+
+```{python}
+#| label: fig-prob-start-count-aggregation
+#| fig-format: svg
+#| fig-cap: "上：X 将 HH 映射到 2，将 HT、TH 同时映射到 1，将 TT 映射到 0。下：按来源颜色堆叠权重，X=1 的概率为 3/10+1/10=2/5。"
+#| fig-alt: "映射与分布两幅上下分镜；四条带来源颜色的箭头到达三个正面数，下方三根柱保留相同来源颜色，高度依次为 2/5、2/5、1/5。"
+#| code-fold: true
+#| code-summary: "查看随机变量聚合图代码"
+X = {s: s.count("H") for s in omega}
+distribution = {x: probability({s for s in omega if X[s] == x}) for x in range(3)}
+fig, axes = plt.subplots(2, 1, figsize=(9, 8), layout="constrained")
+fig.set_facecolor(paper)
+ax = axes[0]
+ax.set(xlim=(-0.5, 3.5), ylim=(-0.5, 2.1), title="① 固定的映射规则：X(ω) = 正面数")
+ax.axis("off")
+# 将目标按 2, 1, 0 排列，避免 HH 与 TT 的长箭头交叉。
+target_x = {2: 0.2, 1: 1.5, 0: 2.8}
+for i, s in enumerate(omega):
+    ax.text(i, 1.6, s, ha="center", fontsize=16,
+            bbox=dict(boxstyle="round,pad=0.35", facecolor=colors[s], edgecolor=ink))
+    ax.add_patch(FancyArrowPatch((i, 1.36), (target_x[X[s]], 0.2),
+                 arrowstyle="-|>", mutation_scale=18, linewidth=2,
+                 color=colors[s], connectionstyle="arc3,rad=0.06"))
+for x, position in target_x.items():
+    ax.text(position, 0, f"X = {x}", ha="center", fontsize=16)
+ax = axes[1]
+ax.set_facecolor(paper)
+bottom = {x: F(0) for x in range(3)}
+for s in omega:
+    x = X[s]
+    ax.bar(x, float(weights[s]), bottom=float(bottom[x]), width=0.6,
+           color=colors[s], edgecolor=ink, label=f"{s}：{weights[s]}")
+    bottom[x] += weights[s]
+for x, mass in distribution.items():
+    ax.text(x, float(mass) + 0.02, str(mass), ha="center", fontsize=15)
+ax.set(title="② 聚合原有权重：得到 X 的分布", xlabel="正面数 x",
+       ylabel="P(X = x)", xticks=[0, 1, 2], ylim=(0, 0.68))
+ax.spines[["top", "right"]].set_visible(False)
+ax.legend(ncol=2, fontsize=12, loc="upper center", frameon=False)
+plt.show()
+```
+
+通过 $X$ 可以重写原来的问题：$\{X\geq1\}=C$，所以 $\mathbb P(X\geq1)=2/5+1/5=3/5$。但仅凭 $X=1$ 无法恢复先后顺序：函数将 $HT$ 与 $TH$ 合并了。分布准确回答正面数的问题，却不再单独保留每个有序结果的身份。
+
+# 用精确分数核查 {#prob-start-checks}
+
+下面枚举全部 $16$ 个事件及全部 $256$ 对事件，核查补集和加法公式；也验证条件权重、正面数分布，以及“各自公平但不独立”的反例。绘图时转为浮点数，数学断言则始终使用 `Fraction`。
+
+```{python}
+#| label: prob-start-exact-assertions
+#| code-fold: true
+#| code-summary: "查看精确断言"
+events = [set(items) for size in range(5) for items in combinations(omega, size)]
+for E in events:
+    assert probability(Omega - E) == 1 - probability(E)
+    for G in events:
+        assert probability(E | G) == probability(E) + probability(G) - probability(E & G)
+assert (probability(A), probability(B), probability(C)) == (F(1, 2), F(3, 10), F(3, 5))
+assert conditional == dict(zip(omega, (F(1, 3), F(1, 2), F(1, 6), F(0))))
+assert sum(conditional.values(), F(0)) == 1
+assert probability(B & C) / probability(C) == F(1, 2)
+assert probability(B & A) / probability(A) == F(2, 5)
+assert probability(A & B) != probability(A) * probability(B)
+assert distribution == {0: F(2, 5), 1: F(2, 5), 2: F(1, 5)}
+assert sum(distribution.values(), F(0)) == 1
+fair_dependent = dict(zip(omega, (F(1, 2), F(0), F(0), F(1, 2))))
+assert probability(Omega, fair_dependent) == 1
+assert probability(A, fair_dependent) == probability(B, fair_dependent) == F(1, 2)
+assert probability(A & B, fair_dependent) != F(1, 2) * F(1, 2)
+print("全部精确断言通过：事件公式、条件化、分布与独立性反例。")
+```
+
+# 自检题与部分解答 {#prob-start-exercises}
+
+1. 在当前模型中，“恰好一次正面”的概率是多少？它为什么不是 $\mathbb P(A\cup B)$？
+2. 令 $D=\{HH,TT\}$。写出 $D^c$，并分别直接求和、使用补集公式计算其概率。
+3. 已知至少一次正面，第一次为正面的条件概率是多少？若改为已知恰好一次正面，答案怎样变化？
+4. 换成两次公平且独立的模型，求 $\mathbb P(B\mid C)$。为什么不能直接沿用当前模型的 $1/2$？
+5. 能否仅从正面数的分布恢复 $\mathbb P(\{HT\})$ 与 $\mathbb P(\{TH\})$？试着改变这两项而不改变 $X$ 的分布。
+
+**第 1 题。** 事件是 $\{HT,TH\}$，概率为 $2/5$；$A\cup B$ 还包含 $HH$，两者相差其权重 $1/5$。
+
+**第 3 题。** $A\subset C$，故 $\mathbb P(A\mid C)=(1/2)/(3/5)=5/6$。若已知恰好一次正面，只剩 $HT,TH$，其中第一次正面的结果只有 $HT$，故答案为 $(3/10)/(2/5)=3/4$。
+
+**第 4 题。** 新模型中四点各为 $1/4$，于是 $\mathbb P(B\mid C)=(2/4)/(3/4)=2/3$。样本空间和事件虽然没变，权重变了，条件概率也随之变化。
+
+从有序结果到事件，再到正面数，始终有同一条计算线索：先确定哪些样本点满足问题，再把它们的权重相加。已知信息改变归一化范围；随机变量改变结果的记录方式。下一步若要比较不同实验的数值结果，可以直接从这样的分布出发，而不必把不同结果误当成等可能。

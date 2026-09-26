@@ -1,0 +1,553 @@
+---
+title: "微积分：变化与累积"
+description: "从运动、局部线性和累积量进入微积分，再把导数与积分连接起来。"
+---
+
+# 变化和累积是同一个故事的两面 {#calc-start-question}
+
+一辆车沿直线行驶。我们可以记录它在每个时刻的位置，也可以问：
+
+- 从上午 $10$ 点到 $10$ 点半，平均速度是多少？
+- 恰好在 $10$ 点整，速度是多少？
+- 已知每一时刻的速度，半小时后走了多远？
+
+第一个问题只需要两个位置；第二个问题需要把一个有限时间段压缩到一个时刻；第三个问题则把无数个很小的路程贡献累积起来。微积分由此出现：
+
+$$
+\text{平均变化率}
+\longrightarrow
+\text{瞬时变化率},
+\qquad
+\text{局部贡献}
+\longrightarrow
+\text{整体累积}.
+$$
+
+导数回答“现在变化得多快”，积分回答“许多小贡献合起来是多少”。它们不是两套互不相关的计算规则；在适当条件下，积分累积出的量的变化率正好回到原来的函数。
+
+位置、速度和位移有不同的单位。以下运动例子中，$t$ 表示以秒计的时间数值，$s(t)$ 表示以米计的位置数值，$v(t)$ 表示以米每秒计的速度数值；例如 $s(t)=t^2$ 表示位置为 $(t^2)\,\mathrm m$，而不是把长度的量纲等同于时间的平方。
+
+# 从位置到平均速度
+
+设 $s(t)$ 表示时刻 $t$ 的位置。输入时间从 $t$ 变到 $t+h$，其中 $h\neq0$ 是一个真实的有限时间间隔，位置变化为
+
+$$
+\Delta s=s(t+h)-s(t).
+$$
+
+这段时间内的平均速度是
+
+$$
+\frac{\Delta s}{h}
+=
+\frac{s(t+h)-s(t)}{h}.
+$$ {#eq-calc-start-average-rate}
+
+它是位置—时间图像上两点连线的斜率。这里没有神秘的“瞬间时间”：$h$ 可以是 $1$ 秒、$0.1$ 秒或 $10^{-6}$ 秒，但只要它不为零，就连接着两个不同的时刻。
+
+取一个简单的位置函数：
+
+$$
+ s(t)=t^2,
+$$
+
+在 $t=1$ 附近，平均速度为
+
+$$
+\frac{(1+h)^2-1^2}{h}
+=
+\frac{2h+h^2}{h}
+=2+h.
+$$ {#eq-calc-start-square-difference}
+
+当 $h$ 取 $1,0.5,0.1,0.01$ 时，平均速度分别是 $3,2.5,2.1,2.01$ 米每秒。从左侧取 $h=-0.1,-0.01$，则得到 $1.9,1.99$ 米每秒。两侧都在靠近 $2$。
+
+这里不必只相信一张数值表：平均速度与 $2$ 的差恰好是 $h$。无论要求误差小于 $0.01$ 还是百万分之一，只要非零时间间隔的绝对值比要求的误差数值更小，就能保证满足要求。对这个函数，代数恒等式已经控制了所有足够小的间隔，而不只是列出的几个样本。
+
+```{python}
+#| label: fig-calc-start-secant-frames
+#| fig-format: svg
+#| fig-cap: "在位置函数 s(t)=t² 上，第二个时刻逐渐靠近 t=1；割线斜率逐渐接近切线斜率。"
+#| fig-alt: "三幅分镜显示二次曲线上的割线，时间间隔从较大变小，最后靠近 t 等于 1 的切线。"
+#| code-fold: true
+#| code-summary: "查看割线逼近图代码"
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+plt.rcParams.update({
+    "font.family": "sans-serif",
+    "font.sans-serif": ["Noto Sans CJK SC", "DejaVu Sans"],
+    "axes.unicode_minus": False,
+})
+
+INK = "#243447"
+BLUE = "#274C77"
+CORAL = "#E76F51"
+TEAL = "#2A9D8F"
+PAPER = "#FBFAF7"
+t0 = 1.0
+intervals = [1.0, 0.35, 0.08]
+x = np.linspace(0.0, 2.15, 500)
+fig, axes = plt.subplots(1, 3, figsize=(11.2, 3.7), sharex=True, sharey=True,
+                         layout="constrained")
+fig.set_facecolor(PAPER)
+for ax, h in zip(axes, intervals):
+    y = x**2
+    ax.set_facecolor(PAPER)
+    ax.plot(x, y, color=BLUE, lw=2.7)
+    ax.scatter([t0, t0 + h], [t0**2, (t0 + h)**2], color=[TEAL, CORAL], s=45, zorder=4)
+    ax.plot([t0, t0 + h], [t0**2, (t0 + h)**2], color=CORAL, lw=2.2)
+    slope = 2 + h
+    tangent_x = np.array([0.55, 1.55])
+    ax.plot(tangent_x, 1 + 2 * (tangent_x - 1), color=TEAL, lw=1.8, ls="--")
+    ax.set_title(f"h = {h:g}，割线斜率 = {slope:g}", color=INK, fontsize=11)
+    ax.set_xlim(0.35, 2.15)
+    ax.set_ylim(0.0, 4.65)
+    ax.set_xlabel("时间 t（秒）", color=INK)
+    ax.grid(alpha=0.14)
+    ax.spines[["top", "right"]].set_visible(False)
+axes[0].set_ylabel("位置 s(t)（米）", color=INK)
+fig.suptitle("有限差分先给出平均速度，h 变小时割线靠近切线", color=INK, fontsize=13)
+plt.show()
+```
+
+图中的绿色虚线是 $t=1$ 处的候选切线。它不是因为“把两个点变成一个点”得到的，而是因为割线斜率在 $h$ 趋近于零时趋向一个稳定数。
+
+# 导数：局部变化率和局部直线
+
+## 定义
+
+设 $s$ 在 $t$ 的一个开区间邻域内有定义。如果下面的极限存在且为有限实数，就称 $s$ 在 $t$ 处可导，并定义导数为
+
+$$
+ s'(t)
+\coloneqq
+\lim_{h\to0}
+\frac{s(t+h)-s(t)}{h}.
+$$ {#eq-calc-start-derivative}
+
+对 $s(t)=t^2$，由 @eq-calc-start-square-difference：
+
+$$
+ s'(1)=\lim_{h\to0}(2+h)=2.
+$$
+
+这个计算同时说明了三件事：
+
+1. $h$ 在分式中不能一开始就取 $0$，因为那会产生 $0/0$；
+2. 我们先对每个 $h\neq0$ 计算平均变化率；
+3. 最后研究这些有限计算在 $h$ 变小时是否趋向稳定值。
+
+一般来说，$f'(a)$ 是图像在 $(a,f(a))$ 处切线的斜率，也是输入在 $a$ 附近发生很小变化时，输出的一阶变化系数。
+
+## 导数给出局部线性近似
+
+令输入变为 $a+h$。如果 $f$ 在 $a$ 处可导，那么导数定义可以改写为
+
+$$
+\frac{f(a+h)-f(a)}{h}\to f'(a).
+$$
+
+因此
+
+$$
+ f(a+h)-f(a)=f'(a)h+r(h),
+$$
+
+其中余项满足
+
+$$
+\frac{r(h)}{h}\to0\qquad(h\to0).
+$$ {#eq-calc-start-local-linear}
+
+于是，$f'(a)h$ 给出输出变化的一阶近似：
+
+$$
+ f(a+h)\approx f(a)+f'(a)h.
+$$ {#eq-calc-start-tangent-approx}
+
+这就是切线近似。导数并不只是一个“求出来的数字”，它告诉我们函数在一个点附近最像哪条直线。
+
+若 $f'(a)=0$，线性项为零，但真实变化不一定为零。例如 $f(x)=x^2$ 在 $a=0$ 处的变化是 $h^2$；它比 $h$ 小一个阶，却是该处全部的变化。局部近似的误差是相对于输入增量 $h$ 衡量的，不能不加条件地改成相对于输出增量。
+
+### 例：平方函数的误差有多大
+
+对 $f(x)=x^2$，在 $a=3$ 处：
+
+$$
+(3+h)^2=9+6h+h^2.
+$$
+
+切线近似丢掉 $h^2$，因此
+
+$$
+(3+h)^2\approx9+6h.
+$$
+
+真正误差是 $h^2$。当 $h=0.01$ 时，线性近似的误差是 $0.0001$，而主要变化 $6h=0.06$。误差相对于 $h$ 更快地消失，这正是 @eq-calc-start-local-linear 中 $r(h)/h\to0$ 的具体样子。
+
+## 导数规则不是凭空记忆
+
+导数的规则都可以回到差商定义。以和法则为例，若 $f,g$ 在 $a$ 处可导，则
+
+$$
+\begin{aligned}
+\frac{(f+g)(a+h)-(f+g)(a)}{h}
+&=\frac{f(a+h)-f(a)}{h}
+ +\frac{g(a+h)-g(a)}{h}.
+\end{aligned}
+$$
+
+两边取 $h\to0$，得到
+
+$$
+(f+g)'(a)=f'(a)+g'(a).
+$$
+
+对乘积，加入并减去 $f(a+h)g(a)$：
+
+$$
+\begin{aligned}
+&\frac{f(a+h)g(a+h)-f(a)g(a)}{h}\\
+&=f(a+h)\frac{g(a+h)-g(a)}{h}
+ +g(a)\frac{f(a+h)-f(a)}{h}.
+\end{aligned}
+$$
+
+由前面的局部线性表达，$f(a+h)-f(a)=h[f'(a)+r(h)/h]\to0$，所以可导确实蕴含连续：$f(a+h)\to f(a)$。再利用有限极限的乘法与加法规则，得到
+
+$$
+(fg)'(a)=f'(a)g(a)+f(a)g'(a).
+$$ {#eq-calc-start-product-rule}
+
+这段证明揭示了一个重要习惯：当一个差商的分子看起来无法拆开时，添加并减去同一个中间项，通常可以把它变成已知差商的组合。
+
+# 从速度回到位移：累积量
+
+现在换一个方向。若已知速度 $v(t)$，从 $t=a$ 到 $t=b$ 的位移应该怎样计算？当速度恒定时很简单：
+
+$$
+\text{位移}=v\times\text{时间}=v(b-a).
+$$
+
+速度变化时，用分割 $P$ 把时间区间切成许多小段：
+
+$$
+a=t_0<t_1<\cdots<t_n=b,
+\qquad \Delta t_i=t_i-t_{i-1}.
+$$
+
+在第 $i$ 段中任选一个时刻 $t_i^*\in[t_{i-1},t_i]$，所有取点合记为 $\mathbf t^*=(t_1^*,\ldots,t_n^*)$。用速度 $v(t_i^*)$ 近似这一小段的速度，这一段的位移近似为
+
+$$
+ v(t_i^*)\Delta t_i.
+$$
+
+把所有小段相加，得到有限累积：
+
+$$
+ S(v;P,\mathbf t^*)
+=\sum_{i=1}^{n}v(t_i^*)\Delta t_i.
+$$ {#eq-calc-start-riemann-sum}
+
+每一项都是“当前速率 × 一小段时间”。这不是把曲线下面积当作比喻，而是把位移拆成许多可解释的小贡献。
+
+```{python}
+#| label: fig-calc-start-accumulation-frames
+#| fig-format: svg
+#| fig-cap: "速度曲线下的矩形和近似位移；分段更细后，矩形高度更能跟随变化的速度。"
+#| fig-alt: "两幅分镜比较六个和二十四个矩形对速度曲线下累积量的近似，矩形总和随分割变细而稳定。"
+#| code-fold: true
+#| code-summary: "查看累积量图代码"
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+set_matplotlib_formats("svg")
+plt.rcParams.update({
+    "font.family": "sans-serif",
+    "font.sans-serif": ["Noto Sans CJK SC", "DejaVu Sans"],
+    "axes.unicode_minus": False,
+})
+INK = "#243447"
+BLUE = "#274C77"
+GOLD = "#E9C46A"
+TEAL = "#2A9D8F"
+PAPER = "#FBFAF7"
+t = np.linspace(0, 4, 600)
+v = 1.1 + 0.25 * t + 0.35 * np.sin(1.3 * t)
+fig, axes = plt.subplots(1, 2, figsize=(10.6, 4.1), sharex=True, sharey=True,
+                         layout="constrained")
+fig.set_facecolor(PAPER)
+for ax, n in zip(axes, [6, 24]):
+    dt = 4 / n
+    left = np.arange(n) * dt
+    sample = left + dt / 2
+    heights = 1.1 + 0.25 * sample + 0.35 * np.sin(1.3 * sample)
+    total = float(np.sum(heights * dt))
+    ax.set_facecolor(PAPER)
+    ax.bar(left, heights, width=dt, align="edge", color=GOLD,
+           edgecolor=TEAL, alpha=0.66, linewidth=0.8)
+    ax.plot(t, v, color=BLUE, lw=2.7)
+    ax.set_title(f"n = {n}，矩形和 ≈ {total:.3f}", color=INK, fontsize=11)
+    ax.set_xlabel("时间 t（秒）", color=INK)
+    ax.grid(axis="y", alpha=0.14)
+    ax.spines[["top", "right"]].set_visible(False)
+axes[0].set_ylabel("速度 v(t)（米/秒）", color=INK)
+fig.suptitle("把每一小段的速度贡献相加，得到总位移的近似", color=INK, fontsize=13)
+plt.show()
+```
+
+“分割越来越细”指最长的小区间 $\max_i\Delta t_i$ 趋于零，而不只是小区间数量增加。如果无论怎样分割、怎样选取 $t_i^*$，所有足够细的分割和都趋向同一个数 $I$，就把这个数记作
+
+$$
+\int_a^b v(t)\,dt=I.
+$$ {#eq-calc-start-integral}
+
+积分中的 $dt$ 提醒我们每一项来自“速度 × 时间宽度”。对非负函数，积分可以画成曲线下方的面积；对速度，积分是带方向的位移：反方向运动贡献负值。路程则累积速度的绝对值：
+
+$$
+\text{位移}=\int_a^b v(t)\,dt,
+\qquad
+\text{路程}=\int_a^b |v(t)|\,dt.
+$$
+
+例如先以 $1$ 米每秒向前行驶一秒，再以 $-1$ 米每秒倒退一秒，位移为零，路程却为 $2$ 米。
+
+# 微积分基本定理：局部和整体接上了
+
+设 $f$ 在闭区间 $[a,b]$ 上连续；连续函数在闭区间上可积。定义从 $a$ 开始的累积函数
+
+$$
+ A(x)=\int_a^x f(t)\,dt.
+$$ {#eq-calc-start-accumulation-function}
+
+取内部点 $x\in(a,b)$。把上限从 $x$ 移到仍在区间内的 $x+h$；当 $h>0$ 时新增一小条，当 $h<0$ 时减去左侧一小条。约定 $\int_u^v f=-\int_v^u f$，两种情况统一为
+
+$$
+ A(x+h)-A(x)=\int_x^{x+h}f(t)\,dt.
+$$
+
+```{python}
+#| label: fig-calc-start-moving-boundary
+#| fig-format: svg
+#| fig-cap: "上限从 x=2 移到 x+h 时，旧面积不变，只增加橙色窄条。条带面积除以宽度 h，就是该区间的平均高度。"
+#| fig-alt: "两幅分镜在相同坐标下比较 h 为 0.8 与 0.15 时的新增条带；绿色旧面积保持不变，橙色条带缩窄，平均高度趋向边界高度 5。"
+#| code-fold: true
+#| code-summary: "查看移动边界图代码"
+x0 = 2.0
+curve_t = np.linspace(0, 3.1, 300)
+fig, axes = plt.subplots(1, 2, figsize=(10.6, 4.4), sharex=True, sharey=True,
+                         layout="constrained")
+fig.set_facecolor(PAPER)
+for ax, h in zip(axes, [0.8, 0.15]):
+    old_t = np.linspace(0, x0, 100)
+    strip_t = np.linspace(x0, x0 + h, 100)
+    ax.set_facecolor(PAPER)
+    ax.plot(curve_t, 2 * curve_t + 1, color=BLUE, lw=2.5)
+    ax.fill_between(old_t, 0, 2 * old_t + 1, color=TEAL, alpha=0.22,
+                    label="旧累积量 A(x)")
+    ax.fill_between(strip_t, 0, 2 * strip_t + 1, color=CORAL, alpha=0.65,
+                    label="新增量 A(x+h)−A(x)")
+    ax.hlines(5, 0, 3.1, color=TEAL, ls="--", lw=1.5, label="边界高度 f(x)=5")
+    ax.vlines([x0, x0 + h], 0, [5, 5 + 2*h], color=CORAL, lw=1.3)
+    ax.annotate("", xy=(x0, 0.45), xytext=(x0+h, 0.45),
+                arrowprops=dict(arrowstyle="<->", color=INK))
+    ax.text(x0+h/2, 0.8, "h", ha="center", fontsize=13)
+    ax.set(title=f"h = {h:g}，平均高度 = {5+h:g}", xlabel="输入 t",
+           xlim=(0, 3.1), ylim=(0, 8))
+    ax.spines[["top", "right"]].set_visible(False)
+axes[0].set_ylabel("f(t) = 2t+1")
+axes[0].legend(loc="upper left", fontsize=10, frameon=False)
+plt.show()
+```
+
+因此平均变化率是
+
+$$
+\frac{A(x+h)-A(x)}{h}
+=\frac1h\int_x^{x+h}f(t)\,dt.
+$$ {#eq-calc-start-accumulation-difference}
+
+当 $h>0$ 时，右边是 $f$ 在 $[x,x+h]$ 上的平均高度。$h<0$ 时，积分方向和分母同时变号，得到的仍是两端之间的平均高度。
+
+为什么平均高度一定趋向 $f(x)$？连续性说：给定任意高度误差 $\varepsilon>0$，只要 $t$ 足够靠近 $x$，就有 $|f(t)-f(x)|<\varepsilon$。令非零的 $h$ 足够小，使整个小区间都处于这个范围内。由积分的三角不等式，
+
+$$
+\left|\frac{A(x+h)-A(x)}h-f(x)\right|
+\leq\frac1{|h|}
+\int_{\min(x,x+h)}^{\max(x,x+h)}|f(t)-f(x)|\,dt
+\leq\varepsilon.
+$$
+
+这对左右两侧的 $h$ 都成立。由于误差可以任意小，因此
+
+$$
+ A'(x)=f(x).
+$$ {#eq-calc-start-ftc-one}
+
+这给出第一部分：**累积函数的导数是当前的被累积函数**。
+
+反过来，在同一连续性条件下，若 $F$ 在 $[a,b]$ 上连续且在内部满足 $F'(x)=f(x)$，则
+
+$$
+\int_a^b f(x)\,dx=F(b)-F(a).
+$$ {#eq-calc-start-ftc-two}
+
+这一步为什么成立？令 $H=F-A$，则 $H'=0$。用中值定理的结论：若 $H$ 在 $[u,v]$ 上连续且在内部可导，就存在 $c\in(u,v)$ 满足 $H(v)-H(u)=H'(c)(v-u)$。这里右边为零，所以 $H$ 是常数。比较端点，并用 $A(a)=0$，得到 $F(b)-F(a)=A(b)$，即上式。
+
+这里明确使用了中值定理；它将“每一点的变化率为零”转成“整个区间没有变化”，不是仅凭图像作出的判断。两条结论合称微积分基本定理：
+
+| 局部视角 | 整体视角 |
+|---|---|
+| 导数 $F'(x)$ | 函数在每一点的变化率 |
+| 积分 $\int_a^b f(x)\,dx$ | 许多局部贡献的总和 |
+| $A'(x)=f(x)$ | 累积的瞬时增量回到原函数 |
+| $F(b)-F(a)$ | 所有小变化的总效果 |
+
+## 一个完整例子：速度变化但位移可精确计算
+
+设速度为
+
+$$
+ v(t)=2t+1,
+\qquad 0\leq t\leq3.
+$$
+
+一个原函数是 $V(t)=t^2+t$，因为 $V'(t)=2t+1$。由 @eq-calc-start-ftc-two：
+
+$$
+\begin{aligned}
+\text{位移}
+&=\int_0^3(2t+1)\,dt\\
+&=V(3)-V(0)\\
+&=(9+3)-0=12\quad\text{（米）}.
+\end{aligned}
+$$
+
+如果只用平均速度，也能得到同一个结果：速度从 $1$ 线性增加到 $7$，平均速度是 $4$，乘以时间 $3$ 得 $12$。积分把这个“平均高度 × 区间长度”的想法推广到了任意连续变化的速度。
+
+# 链式法则：变化经过多层映射如何传递
+
+若一个量先由 $x$ 变成 $u=g(x)$，再由 $u$ 变成 $y=f(u)$，则
+
+$$
+ y=f(g(x)).
+$$
+
+在可导条件下，局部变化率逐层相乘：
+
+$$
+\frac{dy}{dx}
+=\frac{dy}{du}\frac{du}{dx}.
+$$ {#eq-calc-start-chain-rule}
+
+直觉是：$x$ 的一小步先被第一层放大或缩小，再被第二层放大或缩小。令 $u=g(x)$，$\Delta u=g(x+h)-g(x)$。由于 $g$ 在 $x$ 处可导，$\Delta u/h\to g'(x)$，且 $\Delta u\to0$。
+
+由 $f$ 在 $u$ 处的局部线性表达，可以写成
+
+$$
+f(u+k)-f(u)=[f'(u)+\eta(k)]k,
+\qquad \eta(k)\to0.
+$$
+
+当 $k\neq0$ 时，$\eta(k)$ 就是差商减去 $f'(u)$；定义 $\eta(0)=0$，则等式在 $k=0$ 时也成立。取 $k=\Delta u$，对每个 $h\neq0$ 都有
+
+$$
+\frac{f(g(x+h))-f(g(x))}{h}
+=[f'(u)+\eta(\Delta u)]\frac{\Delta u}{h}.
+$$
+
+现在取极限，两个因子分别趋向 $f'(u)$ 与 $g'(x)$，所以
+
+$$
+(f\circ g)'(x)=f'(g(x))g'(x).
+$$
+
+证明没有除以 $\Delta u$，即使某些输入变化没有引起中间量变化，也不会出现除以零的漏洞。
+
+# 现在应该能看见什么
+
+微积分的基本对象可以用一条线索串起来：
+
+$$
+\text{有限差分}
+\longrightarrow
+\text{极限}
+\longrightarrow
+\text{导数}
+\longrightarrow
+\text{局部线性}
+$$
+
+以及
+
+$$
+\text{有限和}
+\longrightarrow
+\text{极限}
+\longrightarrow
+\text{积分}
+\longrightarrow
+\text{总累积}.
+$$
+
+二者由微积分基本定理连接。局部线性近似把一般函数与线性变化联系起来；积分则把不断变化的贡献相加。这些联系依赖函数的可导性、连续性或可积性，不能把任意曲线都当作拥有同样的性质。
+
+::: {.callout-warning title="三个需要保持的区分"}
+1. 平均变化率不是瞬时变化率；
+2. 有限矩形和不是积分本身，而是逼近积分的近似；
+3. 图像和数值实验可以建立直觉，但不能代替极限定义和证明。
+:::
+
+# 用精确计算核对
+
+下面的符号计算核对差商、局部误差、位移和复合函数导数；这些具体核查不替代上面的一般证明。
+
+```{python}
+#| label: calc-start-exact-checks
+#| code-fold: true
+#| code-summary: "查看符号与精确数值核对"
+import sympy as sp
+
+t, h, x = sp.symbols("t h x", real=True)
+assert sp.simplify(((t+h)**2-t**2)/h - (2*t+h)) == 0
+assert sp.limit(2*t+h, h, 0) == 2*t
+assert sp.expand((3+h)**2 - (9+6*h)) == h**2
+assert sp.integrate(2*t+1, (t, 0, 3)) == 12
+assert sp.integrate(3*t**2, (t, 0, 2)) == 8
+assert sp.diff((2*x+1)**3, x) == 6*(2*x+1)**2
+assert (sp.Rational(302, 100)**2 - sp.Rational(912, 100)) == sp.Rational(4, 10000)
+print("差商、线性近似误差、位移与链式法则核对通过。")
+```
+
+# 自检题与部分解答 {#calc-start-exercises}
+
+1. 对 $s(t)=t^2+3t$，计算从 $t=2$ 到 $t=2+h$ 的平均变化率，再求 $s'(2)$。
+2. 为什么导数定义中的 $h$ 不能直接设成 $0$？“先计算再取极限”解决了什么问题？
+3. 对 $v(t)=3t^2$，计算 $0$ 到 $2$ 秒的位移与时间平均速度，再比较时间平均速度和端点速度的算术平均。
+4. 设 $f(x)=x^2$，在 $a=3$ 处用切线近似估计 $3.02^2$，并计算精确误差。
+5. 证明常数函数 $c$ 的导数为 $0$，并说明这与“常数没有变化”如何对应。
+6. 若 $u=2x+1$、$y=u^3$，使用链式法则计算 $dy/dx$。
+
+**第 1 题。**
+
+$$
+\frac{(2+h)^2+3(2+h)-(2^2+3\cdot2)}h
+=\frac{7h+h^2}{h}=7+h,
+$$
+
+所以 $s'(2)=7$。
+
+**第 3 题。** $v$ 的一个原函数是 $V(t)=t^3$，故位移为 $V(2)-V(0)=8$ 米，时间平均速度为 $8/2=4$ 米每秒。端点速度分别是 $0$ 与 $12$ 米每秒，算术平均为 $6$ 米每秒；用它乘以两秒会得到错误的位移 $12$ 米。端点平均不总是区间平均。
+
+**第 4 题。** $f(3)=9$、$f'(3)=6$，线性近似为 $9+6(0.02)=9.12$；精确值为 $9.1204$，误差为 $0.0004=(0.02)^2$。
+
+# 参考资料
+
+MIT 18.01SC 单变量微积分从割线与切线的几何问题引入导数，再进入积分和微积分基本定理；Strang 的公开微积分教材同时强调变化率、累积量和应用 [@mit1801sc2010; @strang2023calculus]。
+
+::: {#refs}
+:::

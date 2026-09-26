@@ -47,6 +47,12 @@ book:
         - chapters/01-linear-algebra/lu-existence-and-pivoting-proofs.qmd
         - chapters/01-linear-algebra/coordinate-matrices-change-of-basis-and-similarity.qmd
         - chapters/01-linear-algebra/similarity-determinant-and-trace.qmd
+    - part: "第三部分：微积分"
+      chapters:
+        - chapters/02-calculus/index.qmd
+    - part: "第四部分：概率论"
+      chapters:
+        - chapters/03-probability/index.qmd
     - part: "附录"
       chapters:
         - appendices/symbol-index.qmd
