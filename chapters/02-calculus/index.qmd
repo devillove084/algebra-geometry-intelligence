@@ -67,7 +67,7 @@ $$ {#eq-calc-start-square-difference}
 ```{python}
 #| label: fig-calc-start-secant-frames
 #| fig-format: svg
-#| fig-cap: "在位置函数 s(t)=t² 上，第二个时刻逐渐靠近 t=1；割线斜率逐渐接近切线斜率。"
+#| fig-cap: "在位置函数 $s(t)=t^2$ 上，第二个时刻逐渐靠近 $t=1$；割线斜率逐渐接近切线斜率。"
 #| fig-alt: "三幅分镜显示二次曲线上的割线，时间间隔从较大变小，最后靠近 t 等于 1 的切线。"
 #| code-fold: true
 #| code-summary: "查看割线逼近图代码"
