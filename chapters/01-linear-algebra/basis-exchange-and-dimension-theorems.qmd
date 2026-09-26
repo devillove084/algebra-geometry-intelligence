@@ -1,6 +1,6 @@
 ---
 title: "基的交换、扩充与维数定理"
-description: "交换引理、基提取与扩充、有限维空间的维数公式、秩—零度定理以及行秩与列秩的等价性。"
+description: "交换引理、基提取与扩充、有限维空间的维数公式、秩—零度定理、行秩与列秩的等价性及四个基本子空间的环境与维数。"
 ---
 
 # 同一个平面为什么总是需要两个基向量
@@ -41,10 +41,13 @@ $$
 7. 子空间的和、交与直和怎样满足维数公式；
 8. 怎样严格证明秩—零度定理；
 9. 为什么原矩阵的主元列构成列空间的一组基；
-10. 为什么行秩、列秩、主元个数与最大非零子式阶数其实是同一个秩。
+10. 为什么行秩、列秩与主元个数相等；
+11. 四个基本子空间分别属于哪个环境空间，维数如何由秩确定。
 
 ::: {.callout-important title="假设范围"}
 以下向量空间都以 $\mathbb{R}$ 为标量域，并且存在有限生成组。在证明任意两组有限基等长之前，“有限”只表示空间可由有限个向量生成；证明完成后，这个共同的基长度才正式记为 $\dim(V)$。
+
+矩阵的秩定义为列空间的维数。对 $\mathbf{A}\in\mathbb{R}^{m\times n}$，列空间属于 $\mathbb{R}^m$，行空间与零空间属于 $\mathbb{R}^n$；这些环境空间的区别在维数计数中必须保留。
 :::
 
 # 先区分三个任务：加入、删除与替换
@@ -1034,21 +1037,95 @@ $$
 =r.
 $$ {#eq-row-rank-column-rank}
 
-此前已经由子式与消元证明最大非零子式阶数等于主元个数（见 @eq-rank-pivot-count；零矩阵的秩约定为 $0$）。再结合 @eq-rank-nullity-linear-map 与 @eq-row-rank-column-rank，同一个整数 $r$ 有五种完全一致的解释：
+以列空间维数定义秩，再结合主元列证明、@eq-rank-nullity-linear-map 与 @eq-row-rank-column-rank，同一个整数 $r$ 有四种已经证明的解释：
 
 $$
 \boxed{
 \begin{aligned}
 r
-&=\text{最大非零子式阶数}\\
+&=\operatorname{rank}(\mathbf{A})
+=\dim\mathcal{C}(\mathbf{A})\\
 &=\text{行阶梯形中的主元个数}\\
-&=\dim\mathcal{C}(\mathbf{A})\\
 &=\dim\mathcal{R}(\mathbf{A})\\
 &=n-\dim\mathcal{N}(\mathbf{A}).
 \end{aligned}}
 $$ {#eq-equivalent-rank-definitions}
 
-这才完整解释了为什么“秩”可以在行、列、方程、映射与子式之间切换，而不会变成五个碰巧相等的数字。
+这解释了为什么“秩”可以在行、列、方程与映射之间切换。零矩阵的列空间维数、行空间维数和主元数都为 $0$，所以同样包含在上述结论中。
+
+## 四个基本子空间的环境与维数 {#sec-basis-four-subspaces-dimensions}
+
+设 $\mathbf{A}\in\mathbb{R}^{m\times n}$，$r=\operatorname{rank}(\mathbf{A})$。矩阵与其转置分别定义线性映射
+
+$$
+\mathbf{A}:\mathbb{R}^n\to\mathbb{R}^m,
+\qquad
+\mathbf{A}^{\mathsf T}:\mathbb{R}^m\to\mathbb{R}^n.
+$$
+
+它们的像与核组成四个基本子空间：
+
+$$
+\begin{aligned}
+\mathcal{C}(\mathbf{A})
+&=\{\mathbf{A}\mathbf{x}:\mathbf{x}\in\mathbb{R}^n\}
+\subseteq\mathbb{R}^m,\\
+\mathcal{N}(\mathbf{A})
+&=\{\mathbf{x}\in\mathbb{R}^n:\mathbf{A}\mathbf{x}=\mathbf{0}\}
+\subseteq\mathbb{R}^n,\\
+\mathcal{R}(\mathbf{A})=\mathcal{C}(\mathbf{A}^{\mathsf T})
+&=\{\mathbf{A}^{\mathsf T}\mathbf{y}:\mathbf{y}\in\mathbb{R}^m\}
+\subseteq\mathbb{R}^n.
+\end{aligned}
+$$
+
+第四个空间是 **左零空间**，定义为
+
+$$
+\mathcal{N}(\mathbf{A}^{\mathsf T})
+\coloneqq
+\{\mathbf{y}\in\mathbb{R}^m:\mathbf{A}^{\mathsf T}\mathbf{y}=\mathbf{0}\}
+\subseteq\mathbb{R}^m.
+$$ {#eq-basis-left-null-space-definition}
+
+“左”来自等价条件 $\mathbf{y}^{\mathsf T}\mathbf{A}=\mathbf{0}^{\mathsf T}$：它记录使矩阵各行的线性组合为零的系数。左零空间中的向量有 $m$ 个坐标，而 $\mathcal{N}(\mathbf{A})$ 中的向量有 $n$ 个坐标。
+
+这四个集合确实都是子空间。对 $\mathbf{B}=\mathbf{A}$ 或 $\mathbf{A}^{\mathsf T}$，像与核都含零向量；像中任意两个向量的线性组合满足
+
+$$
+a\mathbf{B}\mathbf{u}+b\mathbf{B}\mathbf{v}
+=\mathbf{B}(a\mathbf{u}+b\mathbf{v}),
+$$
+
+仍在像中。若 $\mathbf{B}\mathbf{u}=\mathbf{B}\mathbf{v}=\mathbf{0}$，则 $\mathbf{B}(a\mathbf{u}+b\mathbf{v})=\mathbf{0}$，所以核也对线性组合封闭。
+
+由秩的定义和 @eq-row-rank-column-rank，
+
+$$
+\operatorname{rank}(\mathbf{A}^{\mathsf T})
+=\dim\mathcal{C}(\mathbf{A}^{\mathsf T})
+=\dim\mathcal{R}(\mathbf{A})
+=\dim\mathcal{C}(\mathbf{A})
+=\operatorname{rank}(\mathbf{A})=r.
+$$ {#eq-basis-transpose-rank}
+
+对 $\mathbf{A}:\mathbb{R}^n\to\mathbb{R}^m$ 应用秩—零度定理，得到 $\dim\mathcal{N}(\mathbf{A})=n-r$。对 $\mathbf{A}^{\mathsf T}:\mathbb{R}^m\to\mathbb{R}^n$ 应用同一定理，定义域维数为 $m$，所以
+
+$$
+\dim\mathcal{N}(\mathbf{A}^{\mathsf T})
+=m-\operatorname{rank}(\mathbf{A}^{\mathsf T})=m-r.
+$$
+
+因此四个空间的环境与维数为：
+
+| 子空间 | 环境空间 | 维数 |
+|---|---|---|
+| 列空间 $\mathcal{C}(\mathbf{A})$ | $\mathbb{R}^m$ | $r$ |
+| 零空间 $\mathcal{N}(\mathbf{A})$ | $\mathbb{R}^n$ | $n-r$ |
+| 行空间 $\mathcal{R}(\mathbf{A})=\mathcal{C}(\mathbf{A}^{\mathsf T})$ | $\mathbb{R}^n$ | $r$ |
+| 左零空间 $\mathcal{N}(\mathbf{A}^{\mathsf T})$ | $\mathbb{R}^m$ | $m-r$ |
+
+当 $r=0$ 时，$\mathbf{A}=\mathbf{0}$，列空间和行空间都是零子空间，两个零空间分别是整个 $\mathbb{R}^n$ 与 $\mathbb{R}^m$；当 $r=n$ 或 $r=m$ 时，相应零空间以空组为基。行空间与列空间维数相同，但环境空间不同；同一环境中两个子空间的维数之和等于环境维数，也不能单凭这一计数就断言它们构成直和。
 
 # 一个贯穿结论的矩阵例子
 
@@ -1145,7 +1222,14 @@ $$
 \mathbf{a}_4=-\mathbf{a}_1+\mathbf{a}_2.
 $$
 
-这同时验证主元列张成全部列。
+这同时验证主元列张成全部列。由第三行等于前两行之和，$(-1,-1,1)^{\mathsf T}$ 是左零空间中的非零向量；左零空间维数为 $m-r=3-2=1$，所以
+
+$$
+\mathcal{N}(\mathbf{A}^{\mathsf T})
+=\operatorname{span}\left(\begin{bmatrix}-1\\-1\\1\end{bmatrix}\right).
+$$
+
+本例的列空间、零空间、行空间与左零空间维数依次为 $2,2,2,1$。
 
 # 用 NumPy 与 SymPy 核对结构
 
@@ -1172,6 +1256,11 @@ assert A_exact.rank() == 2
 assert len(A_exact.columnspace()) == 2
 assert len(A_exact.rowspace()) == 2
 assert len(A_exact.nullspace()) == 2
+assert A_exact.T.rank() == A_exact.rank()
+assert len(A_exact.T.nullspace()) == A_exact.rows - A_exact.rank() == 1
+for left_null_vector in A_exact.T.nullspace():
+    assert left_null_vector.shape == (A_exact.rows, 1)
+    assert A_exact.T * left_null_vector == sp.zeros(A_exact.cols, 1)
 
 # SymPy 返回的列空间基来自原矩阵的主元列。
 column_basis = A_exact.columnspace()
@@ -1190,6 +1279,7 @@ sp.pprint(R_exact)
 print("主元列（数学索引）=", tuple(j + 1 for j in pivot_columns))
 print("column rank = row rank =", A_exact.rank())
 print("nullity =", len(A_exact.nullspace()))
+print("left nullity =", len(A_exact.T.nullspace()))
 ```
 
 代码核对的是这个具体矩阵，不替代前面的普遍证明。NumPy 的 `matrix_rank` 根据奇异值阈值判断数值秩；SymPy 在本例中使用精确整数运算，更接近正文中的代数秩。真实浮点数据的秩可能随尺度和容差改变，因此报告数值秩时必须同时说明数据精度与判定阈值。
@@ -1271,7 +1361,7 @@ $$
    求 $\dim(U\cap W)$ 与 $\dim(U+W)$，并核对 @eq-dimension-sum-formula。
 5. 设 $T:\mathbb{R}^4\to\mathbb{R}^2$ 满射。利用秩—零度定理求 $\dim\ker(T)$。
 6. 对上面的矩阵 $\mathbf{A}$，分别从原矩阵主元列、阶梯形非零行和齐次方程参数化中读出列秩、行秩与零度。
-7. 构造一个 $3\times5$、秩为 $2$ 的矩阵。说明它的行空间、列空间和零空间分别位于哪个坐标空间，并写出三者维数。
+7. 构造一个 $3\times5$、秩为 $2$ 的矩阵。说明它的列空间、零空间、行空间和左零空间分别位于哪个坐标空间，并写出四者维数。
 8. 解释为什么 `np.linalg.matrix_rank` 对近似相关列可能返回不同秩，而交换引理讨论的仍是精确结论。
 
 # 小结
@@ -1285,7 +1375,9 @@ $$
 - 核的一组基扩充到定义域后，新增基向量的像恰好构成像空间的基；
 - 对矩阵而言，主元列给出列空间基，非零阶梯行给出行空间基，二者数量都等于主元个数。
 
-于是“独立方向的数量”可以在基、子空间、线性映射、方程组、矩阵行列与子式之间稳定传递。
+于是“独立方向的数量”可以在基、子空间、线性映射、方程组与矩阵行列之间稳定传递。行秩等于列秩给出转置不改变秩；分别对矩阵及其转置应用秩—零度，便得到四个基本子空间的维数 $r,n-r,r,m-r$。
+
+[内积](inner-products-angles-and-line-projections.qmd)赋予向量长度与夹角；在标准内积下，行空间与零空间、列空间与左零空间分别互为[正交补](orthogonal-complements-and-four-fundamental-subspaces.qmd)。这些正交关系描述的是同一环境空间中子空间之间的位置关系。
 
 维数理论还带来一个更细的问题：同一个向量换一组基后，为什么会出现不同的坐标列；同一个线性映射在两端选择不同基后，又该由哪个矩阵记录？回答它们需要把基提供的唯一展开提升为坐标同构，并追踪输入与输出两端的坐标变化。
 

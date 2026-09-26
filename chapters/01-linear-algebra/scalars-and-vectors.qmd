@@ -1,5 +1,6 @@
 ---
 title: "标量与向量"
+description: "理解坐标向量的分量与形状，逐分量计算加法、数乘和线性组合，用标准坐标向量展开坐标，并计算点积与 Euclidean 范数。"
 ---
 
 # 本页要回答的问题
@@ -11,7 +12,7 @@ title: "标量与向量"
 3. 逐分量计算向量加法与标量乘法；
 4. 展开线性组合；
 5. 使用标准坐标向量表示任意向量；
-6. 初步计算内积与 Euclidean 范数；
+6. 计算点积（标准内积）与 Euclidean 范数，并区分它们的输入和输出；
 7. 对照数学向量与 NumPy 一维数组的差异。
 
 # 直观导入
@@ -24,14 +25,14 @@ title: "标量与向量"
 - 一张图通常表示为矩阵或张量，按固定顺序展平后也可以写成向量；
 - 一个 token 的隐藏状态还是向量。
 
-本页讨论的是 $\mathbb{R}^n$ 中的坐标向量，可以把它理解为“一组有序的实数”。数字的个数称为维数，第 $i$ 个数字称为第 $i$ 个分量。更一般的向量还可以是多项式、函数或矩阵，后面讨论抽象向量空间时再扩展。
+本页讨论的是 $\mathbb{R}^n$ 中的坐标向量，可以把它理解为“一组有序的实数”。数字的个数称为维数，第 $i$ 个数字称为第 $i$ 个分量。更一般的向量还可以是多项式、函数或矩阵。
 
 构成向量空间结构的两种基本运算是：
 
 1. **加法**：两个同维向量，逐分量相加；
 2. **标量乘法**：用一个数去缩放向量的每个分量。
 
-这两种运算会产生线性组合，并进一步连接到基、矩阵乘法和线性映射。内积与范数则是在此基础上增加的额外结构。
+把缩放后的向量相加，就得到线性组合。点积与范数则分别给出两个向量的一个标量结果和单个向量的长度。
 
 # 标量
 
@@ -234,7 +235,7 @@ $$
 \end{bmatrix}.
 $$
 
-几何上，$|\alpha|$ 改变长度；$\alpha<0$ 时还会反转方向。等笔记整理到范数时，我会把这个直觉写成精确定义。
+几何上，非零向量乘以非零标量后，长度变为原来的 $|\alpha|$ 倍；$\alpha<0$ 时还会反转方向。乘以 $0$ 则得到零向量。
 
 # 零向量与负向量
 
@@ -277,28 +278,17 @@ $$
 \mathbf{x}+(-\mathbf{y}).
 $$
 
-## 推导备忘：向量空间的八条公理
+## 从分量计算看运算律
 
-上面定义的向量加法和标量乘法使 $\mathbb{R}^{n}$ 成为一个**向量空间**。具体来说，对任意 $\mathbf{x},\mathbf{y},\mathbf{z}\in\mathbb{R}^{n}$ 和 $\alpha,\beta\in\mathbb{R}$，以下八条性质成立：
+对任意 $\mathbf{x},\mathbf{y},\mathbf{z}\in\mathbb{R}^{n}$ 和 $\alpha,\beta\in\mathbb{R}$，向量运算继承了实数算术的规则：
 
-**加法公理**：
+| 运算律 | 向量形式 |
+|---|---|
+| 加法交换与结合 | $\mathbf{x}+\mathbf{y}=\mathbf{y}+\mathbf{x}$，$(\mathbf{x}+\mathbf{y})+\mathbf{z}=\mathbf{x}+(\mathbf{y}+\mathbf{z})$ |
+| 数乘的单位元与结合 | $1\mathbf{x}=\mathbf{x}$，$\alpha(\beta\mathbf{x})=(\alpha\beta)\mathbf{x}$ |
+| 两种分配律 | $\alpha(\mathbf{x}+\mathbf{y})=\alpha\mathbf{x}+\alpha\mathbf{y}$，$(\alpha+\beta)\mathbf{x}=\alpha\mathbf{x}+\beta\mathbf{x}$ |
 
-1. **交换律**：$\mathbf{x}+\mathbf{y}=\mathbf{y}+\mathbf{x}$
-2. **结合律**：$(\mathbf{x}+\mathbf{y})+\mathbf{z}=\mathbf{x}+(\mathbf{y}+\mathbf{z})$
-3. **零向量**：$\mathbf{x}+\mathbf{0}=\mathbf{x}$
-4. **负向量**：$\mathbf{x}+(-\mathbf{x})=\mathbf{0}$
-
-**标量乘法公理**：
-
-5. **单位元**：$1\cdot\mathbf{x}=\mathbf{x}$
-6. **结合律**：$\alpha(\beta\mathbf{x})=(\alpha\beta)\mathbf{x}$
-
-**分配律**：
-
-7. $\alpha(\mathbf{x}+\mathbf{y})=\alpha\mathbf{x}+\alpha\mathbf{y}$
-8. $(\alpha+\beta)\mathbf{x}=\alpha\mathbf{x}+\beta\mathbf{x}$
-
-所有这些性质都可以从分量定义直接验证。以交换律为例：
+验证这些等式，只需检查每个分量。以加法交换律为例：
 
 $$
 (\mathbf{x}+\mathbf{y})_i
@@ -310,7 +300,20 @@ $$
 
 由于每个分量都相等，向量也相等。$\square$
 
-其他公理的验证完全类似：这些向量运算律都能逐分量归结为实数加法和乘法的相应运算律。
+两种分配律也直接来自实数的分配律：
+
+$$
+\begin{aligned}
+[\alpha(\mathbf{x}+\mathbf{y})]_i
+&=\alpha(x_i+y_i)=\alpha x_i+\alpha y_i
+=(\alpha\mathbf{x}+\alpha\mathbf{y})_i,\\
+[(\alpha+\beta)\mathbf{x}]_i
+&=(\alpha+\beta)x_i=\alpha x_i+\beta x_i
+=(\alpha\mathbf{x}+\beta\mathbf{x})_i.
+\end{aligned}
+$$
+
+结合律和数乘单位元同样可逐分量验证。连同零向量和负向量的性质，这些规则使 $\mathbb{R}^n$ 成为向量空间；完整的公理表述见[向量空间、子空间、基与维数](vector-spaces-bases-and-dimension.qmd)。
 
 ::: {.callout-tip title="零向量的唯一性"}
 零向量是唯一的。假设 $\mathbf{0}'$ 也满足 $\mathbf{x}+\mathbf{0}'=\mathbf{x}$ 对所有 $\mathbf{x}$ 成立，那么：
@@ -384,7 +387,7 @@ $$
 \begin{bmatrix}-1\\5\end{bmatrix}.
 $$
 
-线性组合是后续“张成空间”“基”“线性层”和“注意力加权求和”的共同基础。
+每个系数决定对应向量被缩放多少；相加后的结果仍是同维向量。
 
 # 标准坐标向量
 
@@ -436,11 +439,11 @@ x_1\begin{bmatrix}1\\0\\0\end{bmatrix}
 \begin{bmatrix}x_1\\x_2\\x_3\end{bmatrix}.
 $$
 
-因此坐标 $x_i$ 可以理解为标准坐标方向 $\mathbf{e}_i$ 的权重。向量 $\mathbf{e}_1,\ldots,\mathbf{e}_n$ 后续会被证明构成 $\mathbb{R}^n$ 的标准基。
+因此坐标 $x_i$ 可以理解为标准坐标方向 $\mathbf{e}_i$ 的权重。一般地，$\mathbb{R}^n$ 中任意向量都满足 $\mathbf{x}=\sum_{i=1}^n x_i\mathbf{e}_i$。
 
-# 内积初步
+# 点积：对应分量相乘再求和
 
-对 $\mathbf{x},\mathbf{y}\in\mathbb{R}^{n}$，标准内积定义为：
+对 $\mathbf{x},\mathbf{y}\in\mathbb{R}^{n}$，点积（也称标准内积）定义为：
 
 $$
 \langle\mathbf{x},\mathbf{y}\rangle
@@ -499,22 +502,13 @@ $$
 = \alpha\langle\mathbf{x},\mathbf{y}\rangle + \beta\langle\mathbf{x},\mathbf{z}\rangle.
 $$
 
-验证：
-
-$$
-\langle\alpha\mathbf{x}+\beta\mathbf{y},\mathbf{z}\rangle
-= \sum_{i=1}^{n} (\alpha x_i+\beta y_i) z_i
-= \alpha\sum_{i=1}^{n} x_i z_i + \beta\sum_{i=1}^{n} y_i z_i
-= \alpha\langle\mathbf{x},\mathbf{z}\rangle + \beta\langle\mathbf{y},\mathbf{z}\rangle.
-$$
+将求和中的 $(\alpha x_i+\beta y_i)z_i$ 分配展开，再把两组求和分开，就得到第一个等式；第二个等式再由对称性得到。
 
 **正定性**：$\langle\mathbf{x},\mathbf{x}\rangle\ge 0$，且 $\langle\mathbf{x},\mathbf{x}\rangle=0$ 当且仅当 $\mathbf{x}=\mathbf{0}$。
 
 因为 $\langle\mathbf{x},\mathbf{x}\rangle=\sum_{i=1}^{n}x_i^2$ 是实数的平方和，每一项 $x_i^2\ge 0$，总和为 $0$ 要求每一项都是 $0$，即每个 $x_i=0$。
 
-这些性质可以推广成一般实内积空间的定义。当前只需关注 $\mathbb{R}^n$ 中的标准内积。
-
-# Euclidean 范数初步
+# Euclidean 范数：向量的长度
 
 向量的 Euclidean 范数定义为：
 
@@ -540,85 +534,43 @@ $$
 
 范数把向量映射为非负标量，可以理解为从原点到该向量的长度。
 
-## 推导备忘：Cauchy–Schwarz 不等式
-
-对于任意 $\mathbf{x},\mathbf{y}\in\mathbb{R}^{n}$：
+数乘对长度的影响也可以直接算出：
 
 $$
-|\langle\mathbf{x},\mathbf{y}\rangle|
-\le
-\lVert\mathbf{x}\rVert_2\,\lVert\mathbf{y}\rVert_2.
-$$ {#eq-cauchy-schwarz}
-
-**证明**：若 $\mathbf{y}=\mathbf{0}$，两边都是 $0$，不等式平凡成立。设 $\mathbf{y}\neq\mathbf{0}$。对任意 $t\in\mathbb{R}$，考虑：
-
-$$
-0
-\le \lVert\mathbf{x}-t\mathbf{y}\rVert_2^{2}
-= \langle\mathbf{x}-t\mathbf{y},\mathbf{x}-t\mathbf{y}\rangle.
+\lVert\alpha\mathbf{x}\rVert_2
+=\sqrt{\sum_{i=1}^n(\alpha x_i)^2}
+=\sqrt{\alpha^2\sum_{i=1}^n x_i^2}
+=|\alpha|\,\lVert\mathbf{x}\rVert_2.
 $$
 
-利用内积的双线性展开：
+这里必须取 $|\alpha|$，因为长度不能为负；零向量的长度为 $0$，但没有方向。
+
+## 平面中的点积与余弦
+
+在平面中，若 $\mathbf{u},\mathbf{v}\in\mathbb{R}^2$ 都是非零向量，记它们之间较小的夹角为 $\theta\in[0,\pi]$，则点积满足
 
 $$
-\begin{aligned}
-\langle\mathbf{x}-t\mathbf{y},\mathbf{x}-t\mathbf{y}\rangle
-&= \langle\mathbf{x},\mathbf{x}\rangle
-- t\langle\mathbf{x},\mathbf{y}\rangle
-- t\langle\mathbf{y},\mathbf{x}\rangle
-+ t^2\langle\mathbf{y},\mathbf{y}\rangle \\
-&= \lVert\mathbf{x}\rVert_2^{2}
-- 2t\langle\mathbf{x},\mathbf{y}\rangle
-+ t^2\lVert\mathbf{y}\rVert_2^{2}.
-\end{aligned}
-$$
+\boxed{\mathbf{u}^{\mathsf T}\mathbf{v}
+=\|\mathbf{u}\|_2\,\|\mathbf{v}\|_2\cos\theta.}
+$$ {#eq-plane-dot-cosine}
 
-这是关于 $t$ 的二次函数。因为 $\mathbf{y}\neq\mathbf{0}$，其二次项系数 $\lVert\mathbf{y}\rVert_2^2>0$；又因为它对所有 $t$ 都非负，所以判别式必须 $\le 0$：
+这正是平面几何中余弦定理的向量写法。由分量展开，
 
 $$
-(-2\langle\mathbf{x},\mathbf{y}\rangle)^2
-- 4\lVert\mathbf{y}\rVert_2^{2}\lVert\mathbf{x}\rVert_2^{2}
-\le 0.
+\|\mathbf{u}-\mathbf{v}\|_2^2
+=\|\mathbf{u}\|_2^2+\|\mathbf{v}\|_2^2
+-2\mathbf{u}^{\mathsf T}\mathbf{v};
 $$
 
-即：
+另一方面，三角形的余弦定理给出同一个左侧为
+$\|\mathbf{u}\|_2^2+\|\mathbf{v}\|_2^2
+-2\|\mathbf{u}\|_2\|\mathbf{v}\|_2\cos\theta$，比较两式即可得到上面的关系。同向或反向时，直接令 $\mathbf{v}=t\mathbf{u}$（$t\neq0$），也可核对 $\theta=0$ 或 $\pi$ 的情形。
 
-$$
-4\langle\mathbf{x},\mathbf{y}\rangle^2
-\le
-4\lVert\mathbf{x}\rVert_2^{2}\lVert\mathbf{y}\rVert_2^{2}.
-$$
+因此，点积为正表示夹角小于直角，为 $0$ 表示垂直，为负表示夹角大于直角。这里要求两个向量都非零，因为零向量没有方向，不能为它指定夹角，也不能用它的长度归一化。例如 $\mathbf{u}=[1,0]^{\mathsf T}$、$\mathbf{v}=[1,1]^{\mathsf T}$ 的点积为 $1$，长度分别是 $1$ 与 $\sqrt{2}$，所以 $\cos\theta=1/\sqrt{2}$，即 $\theta=\pi/4$。
 
-两边除以 $4$ 再开平方，得到 $|\langle\mathbf{x},\mathbf{y}\rangle|\le\lVert\mathbf{x}\rVert_2\lVert\mathbf{y}\rVert_2$。$\square$
+对于高维非零向量，若要用点积除以两者长度的乘积来定义夹角，还需要证明这个比值位于 $[-1,1]$；这由[内积、夹角与直线投影](inner-products-angles-and-line-projections.qmd)中的 Cauchy–Schwarz 不等式保证。
 
-对两个非零向量，可以把内积除以两者范数，得到取值范围在 $[-1,1]$ 内的余弦相似度。某些检索系统和归一化 attention 使用它；标准 Transformer attention 通常使用除以 $\sqrt{d_k}$ 的未归一化内积，因此两者不能直接等同。
-
-## 推导备忘：三角不等式
-
-对任意 $\mathbf{x},\mathbf{y}\in\mathbb{R}^{n}$：
-
-$$
-\lVert\mathbf{x}+\mathbf{y}\rVert_2
-\le
-\lVert\mathbf{x}\rVert_2 + \lVert\mathbf{y}\rVert_2.
-$$ {#eq-triangle-inequality}
-
-**证明**：
-
-$$
-\begin{aligned}
-\lVert\mathbf{x}+\mathbf{y}\rVert_2^{2}
-&= \langle\mathbf{x}+\mathbf{y},\mathbf{x}+\mathbf{y}\rangle \\
-&= \lVert\mathbf{x}\rVert_2^{2} + 2\langle\mathbf{x},\mathbf{y}\rangle + \lVert\mathbf{y}\rVert_2^{2} \\
-&\le \lVert\mathbf{x}\rVert_2^{2} + 2\lVert\mathbf{x}\rVert_2\lVert\mathbf{y}\rVert_2 + \lVert\mathbf{y}\rVert_2^{2}
-\quad\text{(由 Cauchy–Schwarz)} \\
-&= (\lVert\mathbf{x}\rVert_2 + \lVert\mathbf{y}\rVert_2)^2.
-\end{aligned}
-$$
-
-两边都是非负数，且平方根函数在 $[0,\infty)$ 上单调递增，因此开平方后得到三角不等式。$\square$
-
-几何上，三角不等式说明三角形任意一边的长度不超过另外两边长度之和。它保证 Euclidean 距离满足度量公理之一，也常作为优化误差估计中的基础工具；具体收敛结论还需要凸性、光滑性等额外条件。
+点积是一个数；上式说明在平面中它同时编码了两个非零向量的长度和方向关系。
 
 # NumPy 验证
 
@@ -701,6 +653,7 @@ $$
 4. 向量加法要求形状兼容；不能因为元素总数相同就随意相加。
 5. 内积的输出是标量，不是逐元素乘积向量。
 6. $\mathbf{x}^{\mathsf T}\mathbf{y}$ 与 $\mathbf{x}\mathbf{y}^{\mathsf T}$ 形状和含义都不同。
+7. 零向量与任何向量的点积都是 $0$，但这不赋予零向量一个方向或夹角。
 
 # 自检
 
@@ -712,11 +665,13 @@ $$
 6. 计算 $[1,2,3]^{\mathsf T}$ 与 $[-1,0,2]^{\mathsf T}$ 的内积。
 7. 计算 $[3,4]^{\mathsf T}$ 的 Euclidean 范数，并解释为什么结果是 $5$。
 8. 若 $\mathbf{v}_j\in\mathbb{R}^{d}$ 且 $a_j\in\mathbb{R}$，说明 $\sum_{j=1}^{T}a_j\mathbf{v}_j$ 的类型和形状。
-9. 对 $\mathbf{x}=[1,2,2]^{\mathsf T}$、$\mathbf{y}=[2,-1,1]^{\mathsf T}$，验证 Cauchy–Schwarz 不等式。
-10. 用三角不等式说明：若 $\lVert\mathbf{x}\rVert_2\le 1$ 且 $\lVert\mathbf{y}\rVert_2\le 1$，则 $\lVert\mathbf{x}+\mathbf{y}\rVert_2\le 2$。
-11. 逐一验证 $\mathbb{R}^{n}$ 满足向量空间的八条公理中的分配律（公理 7 和 8）。
+9. 从原点出发，先沿 $\mathbf{u}=[2,1]^{\mathsf T}$ 移动，再沿 $\mathbf{v}=[-1,3]^{\mathsf T}$ 移动，终点在哪里？交换两次移动的顺序，终点是否改变？画图并用分量计算核对。
+10. 画出 $\mathbf{x}=[3,4]^{\mathsf T}$、$2\mathbf{x}$、$-\mathbf{x}$ 和 $\mathbf{0}$，分别计算长度，并说明数乘怎样改变长度与方向。
+11. 取 $\mathbf{x}=[1,2]^{\mathsf T}$、$\mathbf{y}=[-3,1]^{\mathsf T}$，分别计算 $2(\mathbf{x}+\mathbf{y})$ 与 $2\mathbf{x}+2\mathbf{y}$，再计算 $(2-3)\mathbf{x}$ 与 $2\mathbf{x}-3\mathbf{x}$，核对两种分配律。
 
-# 通往下一页：怎样同时记录许多向量
+12. 对平面向量 $\mathbf{u}=[1,0]^{\mathsf T}$，分别计算它与 $[1,1]^{\mathsf T}$、$[0,2]^{\mathsf T}$、$[-1,1]^{\mathsf T}$ 的点积与夹角；为什么不能对零向量使用同样的夹角公式？
+
+# 怎样同时记录许多向量
 
 线性组合
 
@@ -726,8 +681,8 @@ $$
 
 仍然留下三个问题：怎样把 $\mathbf{v}_1,\ldots,\mathbf{v}_k$ 统一记录成一个对象？怎样一次计算多个输出分量？为什么知道标准坐标向量的去向，就足以决定所有输入的去向？
 
-下一页会把这些向量按列排列成矩阵，并证明矩阵与有限维线性映射之间的精确对应。这样，当前的线性组合将不再是孤立运算，而会成为描述空间变换的统一公式。
+把这些向量按列排列，就得到一个矩阵；线性组合中的系数可以集中写成一个列向量。这给出了用一个对象记录多个向量及其组合的方式。
 
 # 小结
 
-本页整理了 $\mathbb{R}^n$ 中坐标向量的基本语言。向量加法和标量乘法按分量定义，并产生线性组合；标准坐标向量解释了坐标的含义；内积把两个向量映射为标量，Euclidean 范数给出长度，并可进一步推出 Cauchy–Schwarz 不等式和三角不等式。下一页将把多个向量排列成矩阵，并把矩阵解释为线性映射。
+坐标向量是有序的实数分量，计算前要先核对维数与形状。加法和标量乘法按分量进行，组合起来得到线性组合；标准坐标向量把每个分量解释为相应坐标方向的权重。点积将两个同维向量映射为标量，Euclidean 范数由自身点积的平方根给出长度；在平面中，两个非零向量的点积等于长度之积乘夹角余弦。NumPy 的一维数组可实现这些计算，但其 `(n,)` 形状不区分行与列。

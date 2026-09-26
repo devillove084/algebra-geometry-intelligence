@@ -3,17 +3,13 @@ title: "向量空间、子空间、基与维数"
 description: "从坐标向量推广到抽象向量空间，统一理解张成、线性相关、基、维数、秩和齐次方程的解空间。"
 ---
 
-# 从上一页留下的问题出发
+# 从消元的主元与自由变量出发
 
-上一页考察了线性方程组在相容条件下的**自由变量数**
+[线性方程组与消元](linear-systems-and-elimination.qmd)已经说明：若 $n$ 个未知量的系统有 $r$ 个主元，相容时就有 $n-r$ 个自由变量。这个计数尚未说明：自由变量实际在什么对象中变化？为什么它们能产生一整个解集？为什么矩阵列的张成能覆盖所有可达到的右端？
 
-$$
-n-\operatorname{rank}(\mathbf{A}),
-$$
+答案是建立列空间、零空间、基与维数。矩阵列的张成、齐次方程的解、次数不超过 $d$ 的多项式，乃至定义在同一集合上的函数，都可以组成向量空间。本页以**列空间的维数定义秩**，再证明原矩阵的主元列构成列空间基、自由变量构造零空间基，从而得到秩等于主元个数以及秩—零度公式。
 
-其中 $n$ 是未知量个数。这个计数为每个齐次自由方向赋了一个数字，但尚未说明：自由变量实际在什么对象中变化？为什么它们能产生一整个解集？为什么矩阵列的张成能覆盖所有可达到的右端？
-
-答案是把坐标向量看成更一般结构的一个实例。矩阵列的张成（列空间）、齐次方程的解、次数不超过 $d$ 的多项式，乃至定义在同一集合上的函数，都可以组成向量空间。之后，消元中见过的主元、自由变量和秩会分别进入抽象框架：原矩阵的主元列可构成列空间的一组基；自由变量参数化零空间；秩等于列空间的维数。
+列空间记录所有可达到的右端，零空间记录映到零的输入；相容方程组的完整解集是零空间的一个平移。
 
 # 本页要回答的问题
 
@@ -29,8 +25,8 @@ $$
    $n-\operatorname{rank}(\mathbf{A})$ 是零空间的维数；
 8. 怎样区分齐次解空间与非齐次方程的仿射解集。
 
-::: {.callout-important title="本页的边界"}
-本页只在实数域 $\mathbb{R}$ 上讨论有限维向量空间，并把重点放在与矩阵、方程组和机器学习表示直接相连的概念。作为对照会提及一两个无限维示例，但不展开其分析细节。一般域、商空间、对偶空间和线性算子的谱理论会在后续专题中展开。
+::: {.callout-important title="讨论范围"}
+以下标量域为 $\mathbb{R}$；维数比较、基扩充与秩—零度结论均假设空间有有限生成组。向量空间与子空间的定义本身不要求有限维，例如定义在无限集合上的全体实值函数可以构成无限维向量空间。
 :::
 
 # 坐标向量只是最先遇到的向量
@@ -127,7 +123,7 @@ $$
 =\mathbf{0}.
 $$
 
-因此线性组合仍是齐次解。这正是上一页中“自由变量产生一整族解”的结构原因。
+因此线性组合仍是齐次解。这正是消元中“自由变量产生一整族解”的结构原因。
 
 ### 矩阵、多项式与函数
 
@@ -236,24 +232,33 @@ $$
 
 零向量不满足约束，因此 $H$ 不是子空间。它仍然是一个平面，但它被平移离开了原点，称为**仿射平面**。
 
-这与方程组的解集完全对应。若 $\mathbf{x}_p$ 是
+这与方程组的解集完全对应。设 $\mathbf{A}\in\mathbb{R}^{m\times n}$，$\mathbf{b}\in\mathbb{R}^m$。若 $\mathbf{x}_p$ 是 $\mathbf{A}\mathbf{x}=\mathbf{b}$ 的一个特解，则对任意 $\mathbf{x}\in\mathbb{R}^n$，
 
 $$
+\begin{aligned}
 \mathbf{A}\mathbf{x}=\mathbf{b}
+&\Longleftrightarrow
+\mathbf{A}\mathbf{x}-\mathbf{A}\mathbf{x}_p=\mathbf{0}\\
+&\Longleftrightarrow
+\mathbf{A}(\mathbf{x}-\mathbf{x}_p)=\mathbf{0}\\
+&\Longleftrightarrow
+\mathbf{x}-\mathbf{x}_p\in\mathcal{N}(\mathbf{A})\\
+&\Longleftrightarrow
+\mathbf{x}\in\mathbf{x}_p+\mathcal{N}(\mathbf{A}).
+\end{aligned}
 $$
 
-的一个特解，那么全体解是
+所以全体解是
 
 $$
 \mathbf{x}_p+\mathcal{N}(\mathbf{A})
 =
 \left\{
-\mathbf{x}_p+\mathbf{h}:
-\mathbf{h}\in\mathcal{N}(\mathbf{A})
+\mathbf{x}_p+\mathbf{h}:\mathbf{h}\in\mathcal{N}(\mathbf{A})
 \right\}.
 $$ {#eq-affine-solution-set}
 
-当 $\mathbf{b}=\mathbf{0}$ 时可以取 $\mathbf{x}_p=\mathbf{0}$，解集才退化为真正的子空间。
+这里的最后一个等价链同时给出必要性和充分性：任意解减去特解属于零空间，特解加上任意零空间向量仍满足方程。当 $\mathbf{b}=\mathbf{0}$ 时可以取 $\mathbf{x}_p=\mathbf{0}$，解集才退化为真正的子空间。
 
 # 线性组合、张成与列空间
 
@@ -445,7 +450,7 @@ $$
 \mathbf{A}\mathbf{x}=\mathbf{0}\text{ 只有零解}.
 $$ {#eq-column-independence-nullspace}
 
-上一页中“自由变量导致非零齐次解”的结论，现在可以读成：自由变量意味着矩阵列之间存在冗余关系。
+消元中“自由变量导致非零齐次解”的结论，现在可以读成：自由变量意味着矩阵列之间存在冗余关系。
 
 # 基：既完整又没有冗余的坐标系统
 
@@ -577,7 +582,7 @@ $$
 \dim(V).
 $$
 
-这个定理并不显然：同一平面可以选无限多组不同的基，但每一组都恰有两个向量。由此得到：
+这个定理并不显然：同一平面可以选无限多组不同的基，但每一组都恰有两个向量。[基的交换、扩充与维数定理](basis-exchange-and-dimension-theorems.qmd)中的交换引理给出完整证明：把第一组基视为无关组、第二组基视为生成组，得到第一组长度不超过第二组；交换角色即得反向不等式。这个证明只使用线性组合与线性无关。由此得到：
 
 $$
 \dim(\mathbb{R}^n)=n,
@@ -599,7 +604,9 @@ $$
 \dim(W)\leq\dim(V).
 $$
 
-并且只要 $\dim(W)=\dim(V)$，就必有 $W=V$。因此在 $\mathbb{R}^3$ 中，一个二维子空间只能是过原点的平面，不可能已经包含全部三维空间。
+从空组开始，只要尚未张成 $W$，就加入一个位于当前张成之外的 $W$ 中向量，所得向量组仍线性无关。交换引理保证其长度不超过 $\dim(V)$，因此有限步后得到 $W$ 的一组基，并有上述维数不等式。
+
+若 $\dim(W)=\dim(V)$ 而 $W\neq V$，则取 $\mathbf{v}\in V\setminus W$，把它加入 $W$ 的基后得到一个长度为 $\dim(V)+1$ 的无关组，与交换引理矛盾。因此 $W=V$。在 $\mathbb{R}^3$ 中，一个二维子空间只能是过原点的平面，不可能已经包含全部三维空间。
 
 # 秩与零空间维数：消元结论的空间版本
 
@@ -609,7 +616,7 @@ $$
 \mathbf{A}\in\mathbb{R}^{m\times n}.
 $$
 
-矩阵的秩可以定义为列空间的维数：
+本书将矩阵的**秩定义为列空间的维数**：
 
 $$
 \operatorname{rank}(\mathbf{A})
@@ -617,7 +624,26 @@ $$
 \dim(\mathcal{C}(\mathbf{A})).
 $$ {#eq-rank-column-space}
 
-这与上一页以“最大非零子式阶数”给出的定义相等，也等于行阶梯形中的主元个数。做行化简时，主元列标出哪些列提供了新方向；**原矩阵中**对应的主元列构成列空间的一组基。不能把化简后矩阵的列直接当作原列空间的基，因为行变换会改变列向量所在的具体空间位置。
+这个定义同时适用于方阵与长方形矩阵；零矩阵的列空间是 $\{\mathbf{0}\}$，所以秩为 $0$。接下来只用消元证明怎样计算它。
+
+## 原矩阵的主元列为什么构成列空间基
+
+把 $\mathbf{A}$ 化为简化行阶梯形 $\mathbf{R}$，设主元列指标为 $j_1,\ldots,j_r$。每步行变换都可撤销，因此对任意系数向量 $\mathbf{c}$：
+
+$$
+\mathbf{A}\mathbf{c}=\mathbf{0}
+\quad\Longleftrightarrow\quad
+\mathbf{R}\mathbf{c}=\mathbf{0}.
+$$
+
+这说明所有列关系及其系数保持不变。在 $\mathbf{R}$ 中，主元列是前 $r$ 个标准坐标向量，因而线性无关；其余各列在后 $m-r$ 个位置全为零，所以都是这些主元列的线性组合。把这些关系沿行变换还原到 $\mathbf{A}$，得到原主元列既线性无关，又张成全部原列。因此它们构成 $\mathcal{C}(\mathbf{A})$ 的一组基，故
+
+$$
+\operatorname{rank}(\mathbf{A})=r
+=\text{主元个数}.
+$$
+
+若 $r=0$，则 $\mathbf{R}=\mathbf{0}$，可撤销性给出 $\mathbf{A}=\mathbf{0}$，上述基为空组，结论仍成立。这里必须取**原矩阵中**对应的主元列；行变换一般不保留列空间在 $\mathbb{R}^m$ 中的具体位置。
 
 ## 秩—零度定理
 
@@ -643,7 +669,48 @@ $$
 \text{自由变量数}=n-\operatorname{rank}(\mathbf{A})
 $$
 
-的空间化表述：每个自由变量对应零空间基中的一个独立方向。
+的空间化表述，但还需证明自由参数确实给出一组基。
+
+**证明。** 设自由变量的位置为 $f_1,\ldots,f_{n-r}$。在齐次阶梯形系统中，令第 $\ell$ 个自由变量为 $1$、其他自由变量为 $0$，回代唯一确定全部主元变量，得到解向量 $\mathbf{z}_\ell$。任意齐次解 $\mathbf{x}$ 的自由坐标若为 $t_1,\ldots,t_{n-r}$，则
+
+$$
+\mathbf{x}=\sum_{\ell=1}^{n-r}t_\ell\mathbf{z}_\ell,
+$$
+
+因为两边自由坐标相同，回代确定的主元坐标也相同，所以这些向量张成零空间。若 $\sum_\ell c_\ell\mathbf{z}_\ell=\mathbf{0}$，读取第 $f_\ell$ 个坐标就得到 $c_\ell=0$，故它们线性无关。因此 $\dim\mathcal{N}(\mathbf{A})=n-r$，结合主元列证明即得 @eq-rank-nullity。若没有自由变量，零空间只有零向量，以空组为基，维数为 $0$。$\square$
+
+## 一般方程组的相容性与完整解集
+
+设 $\mathbf{A}\in\mathbb{R}^{m\times n}$，$\mathbf{b}\in\mathbb{R}^m$。由矩阵乘法的列组合表达，$\mathbf{A}\mathbf{x}=\mathbf{b}$ 有解当且仅当 $\mathbf{b}\in\mathcal{C}(\mathbf{A})$。增广矩阵的列空间为
+
+$$
+\mathcal{C}([\mathbf{A}\mid\mathbf{b}])
+=\operatorname{span}(\mathbf{a}_1,\ldots,\mathbf{a}_n,\mathbf{b}),
+\qquad
+\mathcal{C}(\mathbf{A})\subseteq\mathcal{C}([\mathbf{A}\mid\mathbf{b}]).
+$$
+
+若方程组有解，则添加 $\mathbf{b}$ 不会扩大列空间，两空间相等，因而维数相等。反过来，若两空间维数相等，由有限维子空间的包含关系与同维相等结论，它们必为同一空间，特别地 $\mathbf{b}\in\mathcal{C}(\mathbf{A})$。按秩的定义得到
+
+$$
+\mathbf{A}\mathbf{x}=\mathbf{b}\text{ 有解}
+\quad\Longleftrightarrow\quad
+\mathbf{b}\in\mathcal{C}(\mathbf{A})
+\quad\Longleftrightarrow\quad
+\operatorname{rank}([\mathbf{A}\mid\mathbf{b}])
+=\operatorname{rank}(\mathbf{A}).
+$$ {#eq-vector-rank-consistency}
+
+若相容，取任一特解 $\mathbf{x}_p$，由 @eq-affine-solution-set 的双向证明，全体解恰为 $\mathbf{x}_p+\mathcal{N}(\mathbf{A})$。若 $\mathbf{z}_1,\ldots,\mathbf{z}_{n-r}$ 是零空间的一组基，其中 $r=\operatorname{rank}(\mathbf{A})$，则
+
+$$
+\mathbf{x}=\mathbf{x}_p+\sum_{j=1}^{n-r}t_j\mathbf{z}_j,
+\qquad t_j\in\mathbb{R},
+$$
+
+给出所有解，每个解的参数唯一。当 $r=n$ 时零空间为 $\{\mathbf{0}\}$，解唯一；当 $r<n$ 时存在非零齐次方向，沿该方向取不同实数倍就得到无穷多解。若两秩不等，则解集为空。
+
+## 一个列关系与零空间相互对应的例子
 
 考虑
 
@@ -657,7 +724,7 @@ $$
 \end{bmatrix}.
 $$
 
-第三列等于前两列之和，所以秩至多为 $2$；前两列线性无关，例如它们前两个分量组成的 $2\times 2$ 子式行列式为 $1$，所以秩至少为 $2$。因此
+第三列等于前两列之和，所以前两列张成列空间；若 $c_1\mathbf{a}_1+c_2\mathbf{a}_2=\mathbf{0}$，读取第一、第二个分量分别得到 $c_1=0,c_2=0$，所以前两列线性无关，构成列空间的一组基。因此
 
 $$
 \operatorname{rank}(\mathbf{A})=2.
@@ -788,6 +855,16 @@ np.testing.assert_allclose(A @ null_vector, np.zeros(3))
 assert rank == 2
 assert A.shape[1] - rank == 1
 
+x_p = np.array([2.0, 1.0, 0.0])
+b_on = A @ x_p
+b_off = b_on + np.array([0.0, 0.0, 1.0])
+assert np.linalg.matrix_rank(np.column_stack((A, b_on))) == rank
+assert np.linalg.matrix_rank(np.column_stack((A, b_off))) == rank + 1
+for t in (-2.0, 0.0, 3.0):
+    solution = x_p + t * null_vector
+    np.testing.assert_allclose(A @ solution, b_on)
+    np.testing.assert_allclose(A @ (solution - x_p), np.zeros(3))
+
 # B 的列是一组非标准基；解 B @ coordinate = x 得到该基下坐标。
 B = np.array([[1.0, 1.0], [1.0, -1.0]])
 x = np.array([5.0, 1.0])
@@ -803,9 +880,9 @@ print("x 在非标准基下的坐标：", coordinate)
 
 `np.linalg.matrix_rank` 根据浮点奇异值和阈值估计数值秩；在接近相关的真实数据上，改变阈值可能改变结果。本例的非零奇异值为 $3$ 和 $1$，与零之间有明显间隔，因此默认阈值会稳定给出秩 $2$；整数元素本身并不能普遍排除数值秩歧义。
 
-# 本页小结与后续方向
+# 小结
 
-本页把此前分散出现的概念接成了同一条结构链：
+这些概念组成如下结构链：
 
 $$
 \begin{aligned}
@@ -819,7 +896,9 @@ $$
 
 对矩阵 $\mathbf{A}$：列空间说明能到达哪些输出，零空间说明哪些输入方向会消失，秩—零度定理则精确平衡二者的自由度。
 
-这里仍有一个证明缺口：“任意两组有限基等长”“无关组可扩充成基”和秩—零度并不直接来自定义。它们都可以从同一个交换原理推出：把线性无关组中的向量逐个放入生成组，同时移走冗余向量，并始终保持整个张成空间不变 [@strang2023linear; @axler2015linear]。
+主元列与自由变量给出了矩阵版秩—零度；任意两组有限基等长以及无关组可扩充成基由交换引理证明。交换证明只使用生成组、线性无关和有限维性，不使用行列式 [@strang2023linear; @axler2015linear]。
+
+补空间只要求直和分解；[内积](inner-products-angles-and-line-projections.qmd)给出长度与夹角，[正交补](orthogonal-complements-and-four-fundamental-subspaces.qmd)则由与子空间中所有向量垂直的向量组成。
 
 # 参考资料
 

@@ -31,13 +31,22 @@ book:
         - chapters/01-linear-algebra/matrices-and-linear-maps.qmd
         - chapters/01-linear-algebra/matrix-multiplication-and-composition.qmd
         - chapters/01-linear-algebra/linear-systems-and-elimination.qmd
-        - chapters/01-linear-algebra/permutations-inversions-and-determinants.qmd
-        - chapters/01-linear-algebra/determinants-and-linear-systems.qmd
+        - chapters/01-linear-algebra/elimination-inverses-and-invertibility.qmd
+        - chapters/01-linear-algebra/lu-plu-factorization-and-triangular-solves.qmd
         - chapters/01-linear-algebra/vector-spaces-bases-and-dimension.qmd
         - chapters/01-linear-algebra/basis-exchange-and-dimension-theorems.qmd
-        - chapters/01-linear-algebra/coordinate-matrices-change-of-basis-and-similarity.qmd
+        - chapters/01-linear-algebra/inner-products-angles-and-line-projections.qmd
+        - chapters/01-linear-algebra/orthogonal-complements-and-four-fundamental-subspaces.qmd
+        - chapters/01-linear-algebra/least-squares-projections-and-normal-equations.qmd
+        - chapters/01-linear-algebra/orthonormal-bases-gram-schmidt-and-qr.qmd
+        - chapters/01-linear-algebra/permutations-inversions-and-determinants.qmd
+        - chapters/01-linear-algebra/determinants-and-linear-systems.qmd
         - chapters/01-linear-algebra/determinant-multiplicativity-cofactors-and-invariants.qmd
-        - chapters/01-linear-algebra/lu-plu-factorization-and-triangular-solves.qmd
+    - part: "线性代数专题：分解证明与坐标变换"
+      chapters:
+        - chapters/01-linear-algebra/lu-existence-and-pivoting-proofs.qmd
+        - chapters/01-linear-algebra/coordinate-matrices-change-of-basis-and-similarity.qmd
+        - chapters/01-linear-algebra/similarity-determinant-and-trace.qmd
     - part: "附录"
       chapters:
         - appendices/symbol-index.qmd

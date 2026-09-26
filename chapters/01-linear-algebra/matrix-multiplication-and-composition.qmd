@@ -51,7 +51,7 @@ $$
 7. 为什么乘积转置会反转顺序；
 8. 两个仿射层连续作用时，权重和偏置怎样合并；
 9. 数学中的列向量复合怎样对应 NumPy 的批量行布局；
-10. 矩阵乘法怎样把这页笔记带到线性方程组与消元。
+10. 怎样用独立列和组合系数写出 $\mathbf{A}=\mathbf{C}\mathbf{R}$，并把列空间问题连接到线性方程组与消元。
 
 # 先确认：线性映射的复合仍然线性
 
@@ -719,6 +719,107 @@ $$ {#eq-affine-composition}
 
 这也解释了一个神经网络事实：若多个仿射层之间没有激活函数或其他非线性操作，它们可以合并成一个仿射层。
 
+# 用独立列重建矩阵：一个 $\mathbf{A}=\mathbf{C}\mathbf{R}$ 例子 {#sec-column-factorization-cr}
+
+矩阵乘法也可以反过来读：如果知道每一列由哪些向量组合而成，就能把这些关系写成一个乘积。以下是一个独立的例子；本节的 $\mathbf{A},\mathbf{C}$ 不沿用 @eq-running-matrix-product 中的数值。
+
+取
+
+$$
+\mathbf{A}=
+\begin{bmatrix}
+1&0&1&2\\
+0&1&1&-1\\
+1&1&2&1
+\end{bmatrix}
+=[\mathbf{a}_1\ \mathbf{a}_2\ \mathbf{a}_3\ \mathbf{a}_4].
+$$
+
+先看前两列是否独立。若
+
+$$
+s\mathbf{a}_1+t\mathbf{a}_2
+=\begin{bmatrix}s\\t\\s+t\end{bmatrix}=\mathbf{0},
+$$
+
+前两个坐标直接给出 $s=0$、$t=0$。所以这两列独立。其余两列则满足
+
+$$
+\mathbf{a}_3=\mathbf{a}_1+\mathbf{a}_2,
+\qquad
+\mathbf{a}_4=2\mathbf{a}_1-\mathbf{a}_2.
+$$ {#eq-cr-column-relations}
+
+把前两列收在 $\mathbf{C}$ 中，把重建每一列所需的两个系数按列收在 $\mathbf{R}$ 中：
+
+$$
+\underbrace{\begin{bmatrix}
+1&0&1&2\\0&1&1&-1\\1&1&2&1
+\end{bmatrix}}_{\mathbf{A}\;:\;3\times4}
+=
+\underbrace{\begin{bmatrix}1&0\\0&1\\1&1\end{bmatrix}}_{\mathbf{C}\;:\;3\times2}
+\underbrace{\begin{bmatrix}1&0&1&2\\0&1&1&-1\end{bmatrix}}_{\mathbf{R}\;:\;2\times4}.
+$$ {#eq-column-factorization-cr}
+
+例如 $\mathbf{R}$ 的第三列是 $(1,1)^{\mathsf T}$，所以乘积第三列是 $\mathbf{C}(1,1)^{\mathsf T}=\mathbf{a}_1+\mathbf{a}_2=\mathbf{a}_3$；第四列的 $(2,-1)^{\mathsf T}$ 同样还原 $\mathbf{a}_4$。前两列的系数分别为 $(1,0)^{\mathsf T}$ 和 $(0,1)^{\mathsf T}$，因此四列全部相等，$\mathbf{A}=\mathbf{C}\mathbf{R}$ 得证。
+
+这里 $\mathbf{C}$ 保存独立的原始列，$\mathbf{R}$ 是相对于这些列的**坐标矩阵**，记录每个原始列的组合系数。系数唯一也能直接看出来：$\mathbf{C}(s,t)^{\mathsf T}=(s,t,s+t)^{\mathsf T}$ 的前两个分量已经确定 $s,t$。这并不意味着任意矩阵的前两列都适合作为 $\mathbf{C}$；这个例子之所以可行，是因为它们独立且其余列都由它们组合得到。
+
+![四个原始列由两个独立列及其组合系数重建；作用于输入时，先用 R 汇总系数，再用 C 形成输出。](../../images/linear-algebra/column-factorization-cr.svg){#fig-column-factorization-cr fig-alt="上方展示三行四列矩阵 A 等于三行两列矩阵 C 乘两行四列矩阵 R，各对应列同色。下方展示四维输入 x 经 R 成为两个系数 s、t，再经 C 变成三维向量 (s,t,s+t)；全部输出位于平面 y3=y1+y2。" width="100%"}
+
+从复合视角，对任意 $\mathbf{x}\in\mathbb{R}^4$，
+
+$$
+\mathbf{x}
+\ \xmapsto{\ \mathbf{R}\ }\quad
+\begin{bmatrix}x_1+x_3+2x_4\\x_2+x_3-x_4\end{bmatrix}
+=\begin{bmatrix}s\\t\end{bmatrix}
+\ \xmapsto{\ \mathbf{C}\ }\quad
+\begin{bmatrix}s\\t\\s+t\end{bmatrix}
+=\mathbf{A}\mathbf{x}.
+$$ {#eq-cr-composition}
+
+$\mathbf{R}$ 先把四个输入权重汇总为两个系数，$\mathbf{C}$ 再用这两个系数组合出输出。所有输出都位于平面 $y_3=y_1+y_2$；反过来，任取 $s,t$，输入 $(s,t,0,0)^{\mathsf T}$ 就会产生 $(s,t,s+t)^{\mathsf T}$。因此
+
+$$
+C(\mathbf{A})=C(\mathbf{C})
+=\left\{(s,t,s+t)^{\mathsf T}:s,t\in\mathbb{R}\right\}.
+$$
+
+注意 $C(\mathbf{A})$ 是列空间这个集合，粗体 $\mathbf{C}$ 才是选出的列组成的矩阵。
+
+::: {.callout-note title="同一个字母 R，不同的定义"}
+这里的 $\mathbf{R}$ 由原始独立列的组合系数定义。后面 $\mathbf{A}=\mathbf{Q}\mathbf{R}$ 的 QR 分解使用的是标准正交列 $\mathbf{Q}$，其中的 $\mathbf{R}$ 按相对于 $\mathbf{Q}$ 的系数定义；两者不能因为同名就混同。本例 $\mathbf{C}$ 的两列点积为 $1$，长度都为 $\sqrt{2}$，并不是标准正交列。
+:::
+
+## 用整数精确核对列关系与复合
+
+下面使用 Python 整数对象数组，并逐项检查相等，不使用浮点近似或容差。变量加上 `_cr`，以免覆盖前面贯穿例子的矩阵。
+
+```{python}
+#| label: lst-column-factorization-cr
+#| echo: true
+
+import numpy as np
+
+A_cr = np.array([[1, 0, 1, 2], [0, 1, 1, -1], [1, 1, 2, 1]], dtype=object)
+C_cr = A_cr[:, :2]
+R_cr = np.array([[1, 0, 1, 2], [0, 1, 1, -1]], dtype=object)
+
+assert C_cr.shape == (3, 2) and R_cr.shape == (2, 4)
+assert np.array_equal(C_cr[:2, :], np.eye(2, dtype=object))
+assert np.array_equal(A_cr[:, 2], A_cr[:, 0] + A_cr[:, 1])
+assert np.array_equal(A_cr[:, 3], 2 * A_cr[:, 0] - A_cr[:, 1])
+assert np.array_equal(C_cr @ R_cr, A_cr)
+assert np.array_equal(A_cr[2, :], A_cr[0, :] + A_cr[1, :])
+
+x_cr = np.array([1, 2, -1, 1], dtype=object)
+assert np.array_equal(R_cr @ x_cr, [2, 0])
+assert np.array_equal(A_cr @ x_cr, [2, 0, 2])
+assert np.array_equal(C_cr @ (R_cr @ x_cr), A_cr @ x_cr)
+print("A = CR；列关系与复合的整数核验全部通过。")
+```
+
 # NumPy 验证
 
 ## 计算乘积与复合
@@ -979,14 +1080,7 @@ $$
 
 # 学习来源备忘
 
-这一页我主要用以下资料交叉核对：
-
-- Strang 的列视角帮助我把乘积理解为“左矩阵作用于右矩阵的每一列”，而不只记行乘列 [@strang2023linear]；
-- Axler 的线性映射视角帮助我从复合和标准基的像理解乘法与结合律 [@axler2015linear]；
-- 丘维声老师课程所代表的国内高等代数路线帮助我核对乘法性质、证明顺序以及与后续线性方程组的衔接；现有链接仍只是第三方课程录像检索入口 [@qiuAdvancedAlgebraCourse]；
-- Boyd 与 Vandenberghe 的应用路线提醒我把代数等式与 shape、批量计算和实际计算成本分开记录 [@boyd2018applied]。
-
-这些参考资料用于检查我的推导和补足视角，不要求这份笔记复现它们的章节结构。
+关于矩阵乘积的列视角、线性映射复合与结合律，可参照 Strang 与 Axler [@strang2023linear; @axler2015linear]；关于乘法性质及其与线性方程组的衔接，可参照丘维声高等代数课程的第三方检索入口 [@qiuAdvancedAlgebraCourse]；应用、批量计算和计算成本可参照 Boyd 与 Vandenberghe [@boyd2018applied]。
 
 # 我需要反复检查的地方
 
@@ -1026,6 +1120,9 @@ $$
 13. 给出一个例子，说明两个 shape 相容的轴在语义上仍可能不应该相乘。
 14. 对单个向量，比较先计算 $\mathbf{A}\mathbf{B}$ 与先计算 $\mathbf{B}\mathbf{x}$ 的大致运算量。
 
+15. 对 @eq-column-factorization-cr，不用秩或行列式证明 $\mathbf{C}$ 的两列独立，并逐列解释 $\mathbf{R}$。
+16. 在同一个例子中，目标 $[2,0,2]^{\mathsf T}$ 和 $[2,0,3]^{\mathsf T}$ 哪个能由 $\mathbf{A}\mathbf{x}$ 得到？能得到的那个是否只有一个输入？
+
 # 后续方向：从计算输出到反求输入
 
 到这里，我已经能沿正向计算
@@ -1046,7 +1143,9 @@ $$
 
 的 $\mathbf{x}$？解是否存在？若存在，是否唯一？
 
-矩阵乘法已经给出一个关键线索。若左乘某个矩阵 $\mathbf{E}$：
+列空间已经给出了存在性的语言：$\mathbf{y}$ 必须属于 $C(\mathbf{M})$。在 @eq-column-factorization-cr 中，这只要求 $y_3=y_1+y_2$。例如 $[2,0,2]^{\mathsf T}$ 可以到达，而 $[2,0,3]^{\mathsf T}$ 不行；前一个目标既可由 $[2,0,0,0]^{\mathsf T}$ 得到，也可由 $[1,-1,1,0]^{\mathsf T}$ 得到。相对于 $\mathbf{C}$ 的两个输出系数唯一，并不意味着原来的四个输入权重唯一。
+
+对更大的矩阵，怎样系统地判断目标是否可到达、求出输入，并找出独立列和其余列的组合关系？矩阵乘法已经给出一个关键线索。若左乘某个矩阵 $\mathbf{E}$：
 
 $$
 \mathbf{E}(\mathbf{M}\mathbf{x})
@@ -1062,11 +1161,11 @@ $$
 \mathbf{E}\mathbf{y}.
 $$
 
-从行视角看，$\mathbf{E}\mathbf{M}$ 是在重新组合 $\mathbf{M}$ 的行，也就是重新组合方程。后续整理线性方程组与增广矩阵时，我会研究怎样选择不会改变解集的行变换，并逐步得到 Gaussian 消元。
+从行视角看，$\mathbf{E}\mathbf{M}$ 是在重新组合 $\mathbf{M}$ 的行，也就是重新组合方程。但任意重组未必保留解集；需要选择可以撤销的行操作，并对左右两侧同步进行。[线性方程组与消元](linear-systems-and-elimination.qmd)将从增广矩阵出发，用这些操作逐步简化方程，判断无解、唯一解或存在自由选择的情形。
 
 # 小结
 
-矩阵乘法把线性映射的复合记录成一个新矩阵。对 $\mathbf{A}\in\mathbb{R}^{m\times p}$ 和 $\mathbf{B}\in\mathbb{R}^{p\times n}$，乘积属于 $\mathbb{R}^{m\times n}$，元素由左矩阵的一行与右矩阵的一列配对得到。按列看，左乘 $\mathbf{A}$ 会对 $\mathbf{B}$ 每一列应用同一个映射；按行看，$\mathbf{A}$ 的每一行给出重新组合 $\mathbf{B}$ 各行的系数。矩阵乘法不交换但满足结合律，乘积转置会反转顺序，连续仿射层的权重与偏置也可由同一套规则合并。代码中的批量行布局通过转置反序与列向量公式保持一致。
+矩阵乘法把线性映射的复合记录成一个新矩阵。对 $\mathbf{A}\in\mathbb{R}^{m\times p}$ 和 $\mathbf{B}\in\mathbb{R}^{p\times n}$，乘积属于 $\mathbb{R}^{m\times n}$，元素由左矩阵的一行与右矩阵的一列配对得到。按列看，左乘 $\mathbf{A}$ 会对 $\mathbf{B}$ 每一列应用同一个映射；按行看，$\mathbf{A}$ 的每一行给出重新组合 $\mathbf{B}$ 各行的系数。$\mathbf{A}=\mathbf{C}\mathbf{R}$ 则把列的组合关系组织成乘积：$\mathbf{C}$ 保存独立列，$\mathbf{R}$ 保存重建系数，作用于输入时先汇总系数再形成输出。矩阵乘法不交换但满足结合律，乘积转置会反转顺序，连续仿射层的权重与偏置也可由同一套规则合并。代码中的批量行布局通过转置反序与列向量公式保持一致。
 
 # 参考资料
 

@@ -1491,7 +1491,7 @@ def figure_basis_exchange_process() -> Figure:
         color=SLATE,
         bbox={"boxstyle": "round,pad=0.28", "facecolor": "white", "edgecolor": GRID, "alpha": 0.92},
     )
-    axes[2].text(0.97, 0.81, r"$\det[\mathbf{u}_1\ \mathbf{u}_2]=3\ne0$", transform=axes[2].transAxes, ha="right", fontsize=9.5, color="#7c3aed")
+    axes[2].text(0.97, 0.81, r"$2a-b=0,\ a+b=0\ \Rightarrow\ a=b=0$", transform=axes[2].transAxes, ha="right", fontsize=9.5, color="#7c3aed")
 
     fig.suptitle(r"Basis exchange in $\mathbb{R}^2$: two new directions occupy two old slots", fontsize=15, weight="bold")
     return fig
@@ -3134,6 +3134,321 @@ def figure_small_pivot_vs_partial_pivot() -> Figure:
     return fig
 
 
+# Keep the existing figures' typography unchanged.
+CHINESE_FIGURE_STYLE = {
+    "font.family": "Noto Sans CJK SC",
+    "font.sans-serif": ["Noto Sans CJK SC", "DejaVu Sans"],
+    "mathtext.fontset": "dejavusans",
+    "axes.titleweight": "normal",
+    "svg.fonttype": "path",
+}
+PURPLE = "#9333ea"
+
+
+def geometry_panels(
+    titles: tuple[str, ...],
+    *,
+    xlim: tuple[float, float] = (-0.6, 4.6),
+    ylim: tuple[float, float] = (-0.6, 3.8),
+) -> tuple[Figure, np.ndarray]:
+    """Use identical physical axes boxes, not independently fitted panels."""
+    count = len(titles)
+    width = 4.8 if count == 1 else 3.8 * count
+    height = 5.0 if count == 1 else 4.5
+    fig, axes = plt.subplots(1, count, figsize=(width, height), squeeze=False)
+    fig.subplots_adjust(left=0.07, right=0.98, top=0.89, bottom=0.26, wspace=0.20)
+    for ax, title in zip(axes[0], titles):
+        style_plane(ax, xlim=xlim, ylim=ylim, title=title)
+        ax.set_title(title, fontsize=11, pad=10)
+        ax.set_xticks(np.arange(np.ceil(xlim[0]), xlim[1], 1))
+        ax.set_yticks(np.arange(np.ceil(ylim[0]), ylim[1], 1))
+        ax.set_axisbelow(True)
+        ax.scatter(0, 0, s=16, color=SLATE, zorder=8)
+    return fig, axes[0]
+
+
+def geometry_label(
+    ax: Axes, point: np.ndarray, text: str, color: str = SLATE,
+    offset: tuple[float, float] = (6, 7),
+) -> None:
+    ax.annotate(
+        text, xy=point, xytext=offset, textcoords="offset points",
+        fontsize=10, color=color, zorder=9,
+    )
+
+
+def geometry_note(ax: Axes, text: str, color: str = SLATE) -> None:
+    ax.text(0.5, -0.18, text, transform=ax.transAxes, ha="center", va="top",
+            fontsize=10.5, color=color, linespacing=1.7)
+
+
+def right_angle(ax: Axes, vertex: np.ndarray, first: np.ndarray, second: np.ndarray) -> None:
+    assert np.isclose(first @ second, 0)
+    a = 0.20 * first / np.linalg.norm(first)
+    b = 0.20 * second / np.linalg.norm(second)
+    corners = np.array([vertex + a, vertex + a + b, vertex + b])
+    ax.plot(*corners.T, color=SLATE, linewidth=1.2, zorder=7)
+
+
+def projection_example() -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    u = np.array([2.0, 1.0])
+    v = np.array([1.0, 3.0])
+    t = (v @ u) / (u @ u)
+    p = t * u
+    e = v - p
+    assert np.isclose(t, 1)
+    assert np.allclose(p, [2, 1]) and np.allclose(e, [-1, 2])
+    assert np.isclose(e @ u, 0)
+    assert np.allclose([p @ p, e @ e, v @ v], [5, 5, 10])
+    return u, v, p, e
+
+
+def direction_line(ax: Axes, u: np.ndarray) -> None:
+    points = np.array([-0.4 * u, 2.3 * u])
+    ax.plot(*points.T, color=ORANGE, linewidth=1.2, linestyle="--", alpha=0.65)
+
+
+@mpl.rc_context(CHINESE_FIGURE_STYLE)
+def figure_lu_row_reconstruction() -> Figure:
+    r1 = np.array([2.0, 1.0])
+    r2 = np.array([4.0, 3.0])
+    residual = r2 - 2 * r1
+    zero = np.zeros(2)
+    assert np.allclose(residual, [0, 1])
+    assert np.allclose(2 * r1 + residual, r2)
+    assert np.allclose(np.array([[1, 0], [2, 1]]) @ np.array([r1, residual]), [r1, r2])
+    fig, axes = geometry_panels(("① 原来的两行", "② 减去两倍第一行", "③ 首尾相接，还原第二行"),
+                                xlim=(-0.7, 5.0), ylim=(-0.6, 3.9))
+    draw_vector_2d(axes[0], zero, r1, ORANGE, None)
+    draw_vector_2d(axes[0], zero, r2, BLUE, None)
+    geometry_label(axes[0], r1, r"$r_1=(2,1)$", ORANGE, (3, -18))
+    geometry_label(axes[0], r2, r"$r_2=(4,3)$", BLUE, (-75, 9))
+    geometry_note(axes[0], "三帧同尺度：每格都是 1")
+
+    draw_vector_2d(axes[1], zero, r2, BLUE, None)
+    draw_vector_2d(axes[1], r2, residual, ORANGE, None)
+    draw_vector_2d(axes[1], zero, residual, PURPLE, None)
+    axes[1].plot([0, 4], [0, 2], color=ORANGE, linestyle="--", linewidth=1)
+    geometry_label(axes[1], r2, r"$r_2$", BLUE, (4, 5))
+    geometry_label(axes[1], np.array([2, 2]), r"$-2r_1$", ORANGE, (-12, 13))
+    geometry_label(axes[1], residual, r"$(0,1)$", PURPLE, (7, -12))
+    geometry_note(axes[1], r"$r_2-2r_1=(0,1)$", PURPLE)
+
+    draw_vector_2d(axes[2], zero, r2, BLUE, None, alpha=0.75)
+    draw_vector_2d(axes[2], zero, r1, ORANGE, None)
+    draw_vector_2d(axes[2], r1, 2 * r1, ORANGE, None)
+    draw_vector_2d(axes[2], 2 * r1, r2, PURPLE, None)
+    geometry_label(axes[2], 0.5 * r1, r"$r_1$", ORANGE, (0, -18))
+    geometry_label(axes[2], 1.5 * r1, r"$r_1$", ORANGE, (0, -18))
+    geometry_label(axes[2], np.array([4, 2.4]), r"$(0,1)$", PURPLE, (6, 0))
+    geometry_label(axes[2], r2, r"$r_2$", BLUE, (-14, 10))
+    geometry_note(axes[2], r"$r_2=2r_1+(0,1)$", BLUE)
+    return fig
+
+
+@mpl.rc_context(CHINESE_FIGURE_STYLE)
+def figure_inner_product_moving_foot() -> Figure:
+    u, v, p, e = projection_example()
+    zero = np.zeros(2)
+    fig, axes = geometry_panels((r"① $t=0$", r"② $t=1$：恰好垂直", r"③ $t=1.6$"))
+    for ax, t, distance_squared in zip(axes, (0, 1, 1.6), (10, 5, 6.8)):
+        foot = t * u
+        residual = v - foot
+        assert np.isclose(residual @ residual, distance_squared)
+        assert np.isclose(residual @ u, 5 * (1 - t))
+        direction_line(ax, u)
+        draw_vector_2d(ax, zero, u, ORANGE, None, linewidth=5, alpha=0.6)
+        # At t=0 the residual equals v; the blue outline keeps both visible.
+        draw_vector_2d(ax, zero, v, BLUE, None, linewidth=5 if t == 0 else 2.6)
+        if t != 0:
+            draw_vector_2d(ax, zero, foot, GREEN, None, linewidth=2)
+        draw_vector_2d(ax, foot, v, PURPLE, None, linewidth=2)
+        ax.scatter(*foot, color=GREEN, s=28, zorder=8)
+        geometry_label(ax, v, r"$v=(1,3)$", BLUE, (5, 6))
+        geometry_label(ax, 0.5 * u, r"$u$", ORANGE, (2, -18))
+        geometry_label(ax, (foot + v) / 2, r"$v-tu$", PURPLE,
+                       (-44, 5) if t == 0 else (12, 6))
+        geometry_label(ax, foot, r"$tu=0$" if t == 0 else (r"$tu=p$" if t == 1 else r"$tu=1.6u$"),
+                       GREEN, (6, -19))
+        if t == 1:
+            right_angle(ax, p, -u, e)
+        geometry_note(ax, rf"$\|v-tu\|^2={distance_squared:g}$" + "\n" +
+                      ("垂足处残余最短" if t == 1 else "沿直线移动候选点"))
+    return fig
+
+
+@mpl.rc_context(CHINESE_FIGURE_STYLE)
+def figure_inner_product_orthogonal_components() -> Figure:
+    u, v, p, e = projection_example()
+    fig, (ax,) = geometry_panels(("投影与正交残余",), xlim=(-0.7, 3.4))
+    direction_line(ax, u)
+    ax.fill(*np.array([np.zeros(2), p, v]).T, color=GREEN, alpha=0.055)
+    draw_vector_2d(ax, np.zeros(2), v, BLUE, None)
+    draw_vector_2d(ax, np.zeros(2), p, GREEN, None)
+    draw_vector_2d(ax, p, v, PURPLE, None)
+    right_angle(ax, p, -u, e)
+    geometry_label(ax, v, r"$v=(1,3)$", BLUE, (6, 5))
+    geometry_label(ax, p, r"$p=(2,1)$", GREEN, (6, -13))
+    geometry_label(ax, 0.55 * p, r"$p=tu$", GREEN, (3, -22))
+    geometry_label(ax, p + 0.5 * e, r"$e=(-1,2)$", PURPLE, (12, 4))
+    geometry_label(ax, np.array([-0.45, 3.35]), r"$v=p+e$", BLUE, (0, 0))
+    geometry_label(ax, 1.5 * u, r"$u$ 方向", ORANGE, (-8, 5))
+    geometry_note(ax, r"系数 $t=1$　长度 $\|p\|=\sqrt{5}$" + "\n" +
+                  r"投影向量 $p=(2,1)$，不是标量")
+    return fig
+
+
+@mpl.rc_context(CHINESE_FIGURE_STYLE)
+def figure_inner_product_signed_shadow() -> Figure:
+    u = np.array([1.0, 0.0])
+    length = np.sqrt(10)
+    fig, axes = geometry_panels(("① 锐角：正影子", "② 直角：零影子", "③ 钝角：负影子"),
+                                xlim=(-3.5, 3.5), ylim=(-1.2, 4.1))
+    for ax, degrees, expected, label in zip(
+        axes, (45, 90, 135), (np.sqrt(5), 0, -np.sqrt(5)),
+        (r"$s=+\sqrt{5}$", r"$s=0$", r"$s=-\sqrt{5}$"),
+    ):
+        theta = np.deg2rad(degrees)
+        v = length * np.array([np.cos(theta), np.sin(theta)])
+        s = float(v @ u)
+        p = s * u
+        assert np.isclose(np.linalg.norm(v), length)
+        assert np.isclose(s, expected)
+        assert np.isclose((v - p) @ u, 0)
+        angles = np.linspace(0, np.pi, 100)
+        ax.plot(length * np.cos(angles), length * np.sin(angles), color=GRID, linestyle="--", linewidth=1)
+        ax.plot([p[0], v[0]], [p[1], v[1]], color=PURPLE, linestyle="--", linewidth=1.7)
+        draw_vector_2d(ax, np.zeros(2), v, BLUE, None)
+        draw_vector_2d(ax, np.array([2.6, 0]), np.array([3.3, 0]), ORANGE, None)
+        geometry_label(ax, np.array([2.5, 0]), r"$u$ 正向", ORANGE, (-2, -22))
+        if not np.isclose(s, 0):
+            draw_vector_2d(ax, np.zeros(2), p, GREEN, None, linewidth=3.2)
+        ax.scatter(*p, color=GREEN, s=27, zorder=8)
+        right_angle(ax, p, -u if s > 1e-10 else u, v - p)
+        geometry_label(ax, v, r"$v$", BLUE, (5, 8))
+        geometry_label(ax, p, r"$p$" if degrees != 90 else r"$p=0$", GREEN, (-9, -20))
+        arc = np.linspace(0, theta, 40)
+        ax.plot(0.65 * np.cos(arc), 0.65 * np.sin(arc), color=SLATE, linewidth=1)
+        geometry_label(ax, np.array([0.85, 0.65]), rf"${degrees}^\circ$", SLATE, (0, 0))
+        geometry_note(ax, label + "\n" + r"$\|v\|=\sqrt{10}$ 不变", GREEN)
+    fig.text(0.5, 0.035, r"有符号长度 $s=\langle v,u\rangle/\|u\|$：正向为正，反向为负",
+             ha="center", fontsize=10, color=SLATE)
+    return fig
+
+
+@mpl.rc_context(CHINESE_FIGURE_STYLE)
+def figure_inner_product_rescaled_direction() -> Figure:
+    u, v, p, e = projection_example()
+    fig, axes = geometry_panels(("① 用一个方向向量", "② 方向向量加倍"), xlim=(-0.6, 4.9))
+    for ax, scale, coefficient in zip(axes, (1, 2), (1, 0.5)):
+        direction = scale * u
+        t = (v @ direction) / (direction @ direction)
+        signed_length = (v @ direction) / np.linalg.norm(direction)
+        assert np.isclose(t, coefficient)
+        assert np.allclose(t * direction, p)
+        assert np.isclose(signed_length, np.sqrt(5))
+        direction_line(ax, u)
+        draw_vector_2d(ax, np.zeros(2), direction, ORANGE, None, linewidth=6, alpha=0.65)
+        draw_vector_2d(ax, np.zeros(2), v, BLUE, None)
+        draw_vector_2d(ax, np.zeros(2), p, GREEN, None, linewidth=2.4)
+        ax.plot(*np.array([p, v]).T, color=PURPLE, linestyle="--", linewidth=1.7)
+        right_angle(ax, p, -u, e)
+        geometry_label(ax, v, r"$v=(1,3)$", BLUE, (6, 6))
+        geometry_label(ax, p, r"$p=(2,1)$", GREEN, (12, -17))
+        geometry_label(ax, 0.7 * direction, r"$u=(2,1)$" if scale == 1 else r"$2u=(4,2)$",
+                       ORANGE, (-18, -24) if scale == 1 else (0, 32))
+        geometry_note(ax, (r"系数 $t=1$，$p=1u$" if scale == 1 else r"系数 $t'=\frac{1}{2}$，$p=\frac{1}{2}(2u)$") +
+                      "\n" + r"有符号长度 $s=+\sqrt{5}$", GREEN)
+    fig.text(0.5, 0.035, "橙色粗线：所选方向向量　绿色细线：同一个投影", ha="center", fontsize=10, color=SLATE)
+    return fig
+
+
+@mpl.rc_context(CHINESE_FIGURE_STYLE)
+def figure_inner_product_nearest_point() -> Figure:
+    u, v, p, e = projection_example()
+    q = 1.6 * u
+    assert np.allclose(q, [3.2, 1.6])
+    assert np.isclose((v - p) @ (q - p), 0)
+    assert np.allclose([np.sum((v - p) ** 2), np.sum((q - p) ** 2), np.sum((v - q) ** 2)], [5, 1.8, 6.8])
+    assert np.isclose(np.sum((v - q) ** 2), np.sum((v - p) ** 2) + np.sum((q - p) ** 2))
+    assert np.linalg.norm(p) <= np.linalg.norm(v)
+    fig, axes = geometry_panels(("① 垂足给出最近点", "② 投影不长于原向量"))
+    for ax in axes:
+        direction_line(ax, u)
+        draw_vector_2d(ax, np.zeros(2), v, BLUE, None)
+        draw_vector_2d(ax, np.zeros(2), p, GREEN, None)
+        draw_vector_2d(ax, p, v, PURPLE, None)
+        geometry_label(ax, v, r"$v$", BLUE, (5, 9))
+        geometry_label(ax, p, r"$p$", GREEN, (0, -20))
+    ax = axes[0]
+    ax.fill(*np.array([p, q, v]).T, color=PURPLE, alpha=0.06)
+    ax.plot(*np.array([p, q]).T, color=ORANGE, linewidth=2.4)
+    ax.plot(*np.array([q, v]).T, color=SLATE, linewidth=2)
+    ax.scatter(*q, color=ORANGE, s=28, zorder=8)
+    right_angle(ax, p, q - p, e)
+    geometry_label(ax, q, r"$q=1.6u$", ORANGE, (5, -13))
+    geometry_label(ax, (p + v) / 2, r"$\sqrt{5}$", PURPLE, (-29, 0))
+    geometry_label(ax, (p + q) / 2, r"$\sqrt{1.8}$", ORANGE, (-4, -24))
+    geometry_label(ax, (q + v) / 2, r"$\sqrt{6.8}$", SLATE, (9, 7))
+    geometry_note(ax, r"$\|v-q\|^2=\|v-p\|^2+\|q-p\|^2$" + "\n" + r"$6.8=5+1.8\ \geq\ 5$")
+    ax = axes[1]
+    ax.fill(*np.array([np.zeros(2), p, v]).T, color=GREEN, alpha=0.06)
+    right_angle(ax, p, -u, e)
+    geometry_label(ax, np.array([2.15, 3.05]), r"$\|v\|=\sqrt{10}$", BLUE, (0, 0))
+    geometry_label(ax, 0.5 * p, r"$\|p\|=\sqrt{5}$", GREEN, (8, -12))
+    geometry_label(ax, (p + v) / 2, r"$v-p$", PURPLE, (10, 5))
+    geometry_note(ax, r"$\|p\|\leq\|v\|$，且 $\|p\|=\frac{|\langle v,u\rangle|}{\|u\|}$" + "\n" +
+                  r"故 $|\langle v,u\rangle|\leq\|u\|\,\|v\|$")
+    return fig
+
+
+@mpl.rc_context(CHINESE_FIGURE_STYLE)
+def figure_inner_product_oblique_coordinates() -> Figure:
+    v = np.array([1.0, 3.0])
+    basis = np.array([[2.0, 0.0], [1.0, 1.0]])
+    c = np.array([0.5, 2.5])
+    assert np.allclose(basis @ c, v)
+    assert np.allclose(np.linalg.solve(basis, v), c)
+    assert np.isclose(v @ v, 10)
+    assert np.isclose(c @ basis.T @ basis @ c, 10)
+    assert not np.isclose(c @ c, v @ v)
+    fig, axes = geometry_panels(("① 标准基：直角网格", "② 斜基：同一个平面"),
+                                xlim=(-0.6, 3.7), ylim=(-0.6, 3.9))
+    for ax, frame, coordinates in zip(axes, (np.eye(2), basis), (v, c)):
+        ax.grid(False)
+        draw_basis_lattice(ax, frame[:, 0], frame[:, 1], extent=4, line_count=9)
+        first = coordinates[0] * frame[:, 0]
+        draw_vector_2d(ax, np.zeros(2), first, SLATE, None, linewidth=1.8, linestyle="--")
+        draw_vector_2d(ax, first, v, SLATE, None, linewidth=1.8, linestyle="--")
+        draw_vector_2d(ax, np.zeros(2), frame[:, 0], ORANGE, None)
+        draw_vector_2d(ax, np.zeros(2), frame[:, 1], SLATE, None)
+        draw_vector_2d(ax, np.zeros(2), v, BLUE, None, linewidth=3)
+        geometry_label(ax, v, r"$v=(1,3)$", BLUE, (6, 6))
+        geometry_label(ax, np.array([1.5, 1.8]), r"$\|v\|=\sqrt{10}$", BLUE, (0, 0))
+    geometry_label(axes[0], np.array([1, 0]), r"$e_1$", ORANGE, (3, -19))
+    geometry_label(axes[0], np.array([0, 1]), r"$e_2$", SLATE, (-22, 2))
+    geometry_label(axes[0], np.array([1, 2.5]), r"$3e_2$", SLATE, (10, 0))
+    geometry_note(axes[0], r"坐标 $(1,3)$：$v=e_1+3e_2$" + "\n" + r"$\|v\|^2=1^2+3^2=10$")
+    geometry_label(axes[1], basis[:, 0], r"$b_1=(2,1)$", ORANGE, (3, -17))
+    geometry_label(axes[1], basis[:, 1], r"$b_2$", SLATE, (-23, 3))
+    geometry_label(axes[1], np.array([0.65, 0.325]), r"$0.5b_1$", SLATE, (0, -30))
+    geometry_label(axes[1], np.array([1, 2.6]), r"$2.5b_2$", SLATE, (10, 0))
+    geometry_note(axes[1], r"坐标 $c=(0.5,2.5)$：$v=0.5b_1+2.5b_2$" + "\n" +
+                  r"$\|v\|^2=c^{\mathsf{T}}B^{\mathsf{T}}Bc=10\ne c^{\mathsf{T}}c$")
+    return fig
+
+
+GEOMETRY_STORYBOARDS = {
+    "lu-row-reconstruction": figure_lu_row_reconstruction,
+    "inner-product-moving-foot": figure_inner_product_moving_foot,
+    "inner-product-orthogonal-components": figure_inner_product_orthogonal_components,
+    "inner-product-signed-shadow": figure_inner_product_signed_shadow,
+    "inner-product-rescaled-direction": figure_inner_product_rescaled_direction,
+    "inner-product-nearest-point": figure_inner_product_nearest_point,
+    "inner-product-oblique-coordinates": figure_inner_product_oblique_coordinates,
+}
+
+
 def normalize_svg(path: Path) -> None:
     """Remove generator-introduced trailing whitespace from an SVG file."""
     content = path.read_text(encoding="utf-8")
@@ -3165,6 +3480,10 @@ def parse_args() -> argparse.Namespace:
         default="svg",
         help="output format (default: svg)",
     )
+    parser.add_argument(
+        "--geometry-storyboards-only", action="store_true",
+        help="generate only the seven Chinese LU/projection storyboards",
+    )
     return parser.parse_args()
 
 
@@ -3172,6 +3491,10 @@ def main() -> None:
     args = parse_args()
     configure_matplotlib()
     formats = ("svg", "png") if args.format == "both" else (args.format,)
+    for stem, factory in GEOMETRY_STORYBOARDS.items():
+        save_figure(factory(), stem, formats)
+    if args.geometry_storyboards_only:
+        return
     save_figure(figure_basis_transformation(), "basis-transformation", formats)
     save_figure(figure_column_combination(), "column-combination", formats)
     save_figure(figure_linear_vs_affine(), "linear-vs-affine", formats)

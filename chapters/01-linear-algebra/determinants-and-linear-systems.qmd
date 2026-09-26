@@ -2,72 +2,25 @@
 title: "行列式、可逆性与方程组判别"
 ---
 
-# 从上一页留下的问题出发
+# 行列式与方程组的非退化性
 
-上一页从消元构造了行列式，并看到
+方阵的行列式描述有向体积的缩放：行列式非零意味着体积没有被压成零，这与矩阵有齐全的主元、对应线性映射可逆是等价的。长方形矩阵虽没有整体行列式，却可以通过方形子矩阵的行列式刻画秩。
 
-$$
-\det(\mathbf{A})=0
-$$
-
-意味着方阵把有向体积压扁。这个几何现象暗示某些输入方向在变换后消失，但还没有正式回答方程组问题：
-
-$$
-\mathbf{A}\mathbf{x}=\mathbf{b}
-$$
-
-什么时候唯一可解？行列式为零时，为什么有时无解、有时又有无穷多解？矩阵不是方阵时，没有整体行列式，又该用什么判别？
-
-本页把这些问题接回消元。重点不在增加更多公式，而在确认每个新对象补上了哪一块缺口。
+由[排列、逆序数与行列式](permutations-inversions-and-determinants.qmd)中的构造与基本性质，可以证明这些等价关系，并从列线性推出 Cramer 法则。
 
 # 本页要回答的问题
 
-核心问题是：**能否把消元读出的“主元、矛盾行和自由变量”改写成不依赖某一次具体消元过程的判别？**
+1. 为什么 $\det(\mathbf{A})\neq0$ 当且仅当方阵可逆；
+2. Cramer 法则为什么能由行列式的列线性直接推出；
+3. 为什么 $\det(\mathbf{A})=0$ 不能区分无解与无穷多解；
+4. 为什么最大非零子式阶数等于列空间维数；
+5. 怎样用秩与子式判断一般方程组的相容性。
 
-需要依次解决：
+::: {.callout-important title="可逆性与秩"}
+对 $n\times n$ 方阵，主元齐全、齐次方程只有零解、每个右端唯一可解与逆矩阵存在互相等价，证明见[从消元到逆矩阵与可逆性](elimination-inverses-and-invertibility.qmd)。对任意 $m\times n$ 矩阵，秩定义为列空间维数；原主元列构成列空间基，自由变量给出零空间基，因此秩等于主元个数且满足秩—零度公式，证明见[向量空间、基与维数](vector-spaces-bases-and-dimension.qmd)。
+:::
 
-1. 为什么 $\det(\mathbf{A})\neq0$ 恰好表示方阵有 $n$ 个主元；
-2. 为什么这又等价于齐次方程只有零解、每个右端都有唯一解；
-3. 为什么“同时处理所有右端”会自然引出逆矩阵；
-4. Cramer 法则为什么能由行列式的列线性直接推出；
-5. 为什么 $\det(\mathbf{A})=0$ 不能区分无解与无穷多解；
-6. 为什么长方形矩阵需要考察子式，并用最大非零子式定义秩；
-7. 为什么秩又等于主元个数；
-8. 怎样由
-   $$
-   \operatorname{rank}(\mathbf{A})
-   =
-   \operatorname{rank}([\mathbf{A}\mid\mathbf{b}])
-   $$
-   完成一般线性方程组的相容性判别。
-
-整条问题链是
-
-$$
-\det\neq0
-\longleftrightarrow
-n\text{ 个主元}
-\longleftrightarrow
-\text{没有非零齐次方向}
-\longleftrightarrow
-\text{每个右端唯一可解}
-\longleftrightarrow
-\text{可逆},
-$$
-
-然后再处理这条链失效的地方：
-
-$$
-\det=0\text{ 或矩阵不是方阵}
-\longrightarrow
-\text{子式}
-\longrightarrow
-\text{秩}
-\longrightarrow
-\text{一般相容性判据}.
-$$
-
-# 行列式非零为什么等价于主元齐全
+# 行列式非零当且仅当主元齐全
 
 先只考虑
 
@@ -93,7 +46,7 @@ $$
 
 当且仅当每个 $u_{ii}$ 都非零，也就是消元过程中没有丢失任何主元。
 
-::: {.callout-important title="方阵的第一个等价关系"}
+::: {.callout-important title="行列式与主元的等价条件"}
 对 $\mathbf{A}\in\mathbb{R}^{n\times n}$：
 
 $$
@@ -105,216 +58,25 @@ $$ {#eq-det-n-pivots}
 
 若消元中还把某行乘以非零标量，行列式会乘上同一个非零倍数，但“是否等于零”仍然不变。因此 @eq-det-n-pivots 不依赖具体采用哪条合法消元路线。
 
-这一步回答了行列式最初被提出的问题：它把“全部主元都存在”压缩成了一个标量的非零性。
-
-# 主元齐全为什么决定解的唯一性
-
-行列式只看系数矩阵，方程组却还含有右端 $\mathbf{b}$。两者之间的桥梁是齐次方程
+这一步把“全部主元都存在”压缩成一个标量的非零性。结合已由消元证明的 @eq-elimination-invertibility-equivalences，立即得到
 
 $$
-\mathbf{A}\mathbf{h}=\mathbf{0}.
-$$
-
-## 非零齐次方向会破坏唯一性
-
-若 $\mathbf{x}_p$ 满足
-
-$$
-\mathbf{A}\mathbf{x}_p=\mathbf{b},
-$$
-
-而存在 $\mathbf{h}\neq\mathbf{0}$ 使
-
-$$
-\mathbf{A}\mathbf{h}=\mathbf{0},
-$$
-
-那么对任意 $t\in\mathbb{R}$：
-
-$$
-\mathbf{A}(\mathbf{x}_p+t\mathbf{h})
-=
-\mathbf{b}.
-$$
-
-只要系统有一个解，就会沿 $\mathbf{h}$ 方向产生无穷多个解。因此唯一性要求齐次方程不能有非零方向。
-
-反过来，若同一个非齐次方程有两个不同解 $\mathbf{x}_1,\mathbf{x}_2$，则
-
-$$
-\mathbf{A}(\mathbf{x}_1-\mathbf{x}_2)
-=
-\mathbf{0},
-$$
-
-而 $\mathbf{x}_1-\mathbf{x}_2\neq\mathbf{0}$。所以解不唯一必然暴露出一个非零齐次解。
-
-于是，只要非齐次系统有解：
-
-$$
-\text{解唯一}
+\det(\mathbf{A})\neq0
 \quad\Longleftrightarrow\quad
-\mathbf{A}\mathbf{h}=\mathbf{0}\text{ 只有零解}.
-$$ {#eq-uniqueness-trivial-homogeneous}
-
-## 方阵为什么还能保证“对每个右端都有解”
-
-对 $n\times n$ 方阵，若有 $n$ 个主元，消元后的系数部分每行、每列都有主元。把同样的行操作施加到任意增广矩阵
-
-$$
-[\mathbf{A}\mid\mathbf{b}]
+\mathbf{A}\text{ 可逆}
+\quad\Longleftrightarrow\quad
+\text{每个右端都唯一可解}.
 $$
 
-时，不可能出现系数部分全零、增广项非零的矛盾行，因为系数部分没有零行。回代会对每个 $\mathbf{b}$ 给出唯一解。
+此时解可写为 $\mathbf{x}=\mathbf{A}^{-1}\mathbf{b}$；若两个向量都满足方程，它们的差属于零空间，而主元齐全使零空间只有零向量，故两解相同。
 
-若主元少于 $n$，齐次系统至少有一个自由变量，因而存在非零齐次解。此时任何相容的非齐次系统都不可能唯一。
-
-::: {.callout-important title="方阵唯一可解的等价条件"}
-对 $\mathbf{A}\in\mathbb{R}^{n\times n}$，以下条件等价：
-
-1. $\det(\mathbf{A})\neq0$；
-2. $\mathbf{A}$ 有 $n$ 个主元；
-3. $\mathbf{A}\mathbf{h}=\mathbf{0}$ 只有零解；
-4. 对每个 $\mathbf{b}\in\mathbb{R}^{n}$，$\mathbf{A}\mathbf{x}=\mathbf{b}$ 都有唯一解。
-:::
 
 ![行列式非零、主元齐全、齐次方程只有零解、每个右端唯一可解与矩阵可逆并不是五个并列结论，而是同一个非退化事实的五种表达。](../../images/linear-algebra/invertibility-equivalences.svg){#fig-invertibility-equivalences fig-alt="一条自上而下的等价链依次连接行列式非零、n 个主元、零空间只有零向量、每个右端唯一可解和存在逆矩阵，侧边标注代数体积、消元、齐次方向、方程组和映射五种视角。" width="88%"}
 
-# 为什么“每个右端唯一可解”会引出逆矩阵
-
-上面的结论仍把每个 $\mathbf{b}$ 当成一次新的求解任务。若系数矩阵固定，只是右端反复变化，更自然的问题是：**能否把“从 $\mathbf{b}$ 找到唯一解 $\mathbf{x}$”本身记录成一个矩阵？**
-
-先分别求解 $n$ 个基准系统
-
-$$
-\mathbf{A}\mathbf{x}_j=\mathbf{e}_j,
-\qquad
-j=1,\ldots,n.
-$$
-
-把这些解作为列组成
-
-$$
-\mathbf{B}
-=
-\begin{bmatrix}
-\vert&&\vert\\
-\mathbf{x}_1&\cdots&\mathbf{x}_n\\
-\vert&&\vert
-\end{bmatrix}.
-$$
-
-矩阵乘法的列视角给出
-
-$$
-\mathbf{A}\mathbf{B}
-=
-\begin{bmatrix}
-\mathbf{A}\mathbf{x}_1&\cdots&\mathbf{A}\mathbf{x}_n
-\end{bmatrix}
-=
-\begin{bmatrix}
-\mathbf{e}_1&\cdots&\mathbf{e}_n
-\end{bmatrix}
-=
-\mathbf{I}_n.
-$$
-
-由于 $\mathbf{A}\mathbf{h}=\mathbf{0}$ 只有零解，对任意 $\mathbf{x}$：
-
-$$
-\mathbf{A}(\mathbf{B}\mathbf{A}\mathbf{x}-\mathbf{x})
-=
-\mathbf{0}
-$$
-
-意味着括号中的向量只能为零，因此
-
-$$
-\mathbf{B}\mathbf{A}\mathbf{x}=\mathbf{x}.
-$$
-
-所以
-
-$$
-\mathbf{B}\mathbf{A}=\mathbf{I}_n.
-$$
-
-这个同时满足
-
-$$
-\mathbf{A}\mathbf{B}
-=
-\mathbf{B}\mathbf{A}
-=
-\mathbf{I}_n
-$$
-
-的矩阵称为 $\mathbf{A}$ 的**逆矩阵**，记为
-
-$$
-\mathbf{A}^{-1}.
-$$
-
-于是任意右端的唯一解都统一写成
-
-$$
-\mathbf{x}=\mathbf{A}^{-1}\mathbf{b}.
-$$ {#eq-solve-with-inverse}
-
-反方向也直接成立：若 $\mathbf{A}^{-1}$ 存在，则
-
-$$
-\mathbf{A}(\mathbf{A}^{-1}\mathbf{b})=\mathbf{b},
-$$
-
-所以对任意 $\mathbf{b}$ 至少有一个解；若 $\mathbf{A}\mathbf{x}=\mathbf{b}$，在等式两侧左乘 $\mathbf{A}^{-1}$，只能得到 $\mathbf{x}=\mathbf{A}^{-1}\mathbf{b}$，所以解也唯一。至此，“对每个右端唯一可解”与“逆矩阵存在”的两个方向都闭合。
-
-逆矩阵不是为了把“除以矩阵”写得像标量除法，而是把**同一个线性变换的逆过程**记录成矩阵。
-
-![分别求解 $\mathbf{A}\mathbf{x}_j=\mathbf{e}_j$ 会得到逆矩阵的第 $j$ 列；把这些列收集起来，就能一次表示任意右端到解的映射。](../../images/linear-algebra/inverse-solves-basis.svg){#fig-inverse-solves-basis fig-alt="标准基向量 e1 到 en 分别经过逆向求解得到 x1 到 xn，这些解组成 A 的逆矩阵；右侧显示任意 b 经过 A 逆得到 x，再经 A 回到 b。" width="100%"}
-
-## 逆矩阵为什么唯一
-
-若 $\mathbf{B}$ 和 $\mathbf{C}$ 都是 $\mathbf{A}$ 的逆矩阵，则
-
-$$
-\mathbf{B}
-=
-\mathbf{B}\mathbf{I}_n
-=
-\mathbf{B}(\mathbf{A}\mathbf{C})
-=
-(\mathbf{B}\mathbf{A})\mathbf{C}
-=
-\mathbf{I}_n\mathbf{C}
-=
-\mathbf{C}.
-$$
-
-因此逆矩阵如果存在，就只有一个。
-
-## 用 Gauss–Jordan 消元同时求出逆矩阵
-
-对增广矩阵
-
-$$
-[\mathbf{A}\mid\mathbf{I}_n]
-$$
-
-实施行变换。若左侧能够化为 $\mathbf{I}_n$，同一串行变换在右侧留下的就是 $\mathbf{A}^{-1}$：
-
-$$
-[\mathbf{A}\mid\mathbf{I}_n]
-\longrightarrow
-[\mathbf{I}_n\mid\mathbf{A}^{-1}].
-$$
-
-若左侧不能得到 $n$ 个主元，逆矩阵不存在。这个算法再次说明，可逆性不是额外条件，而是主元齐全的另一种表达。
 
 # Cramer 法则为什么会从列线性中出现
 
-逆矩阵说明解可以统一表示，但还没有直接给出每个坐标 $x_j$ 的行列式公式。行列式对列也分别线性，这正好可以从方程
+当 $\det(\mathbf{A})\neq0$ 时唯一解存在，并满足 @eq-solve-with-inverse。利用行列式对列分别线性的性质，可以从方程
 
 $$
 \mathbf{b}
@@ -530,7 +292,7 @@ $$
 1. $\det=0$ 不能判断右端是否落在矩阵能够产生的输出集合中；
 2. 长方形矩阵根本没有一个对应的整体行列式。
 
-要继续推进，需要保留行列式“检测非退化方块”的能力，但不能再要求整个矩阵必须是方阵。
+列空间决定哪些右端可达，主元个数等于秩。若用行列式检测长方形矩阵中的非退化部分，就需考察它的方形子矩阵。
 
 # 长方形矩阵为什么引出子式
 
@@ -599,23 +361,23 @@ $$
 
 另一方面，第三行等于前两行之和。任取三列得到的 $3\times3$ 子矩阵都具有同样的行关系，因此所有三阶子式都为零。最大的非零子式阶数正好是 $2$。
 
-# 秩：最大的非退化方块有多大
+# 秩与最大的非退化方块
 
-矩阵 $\mathbf{A}$ 的**秩**定义为其非零子式的最大阶数，记为
-
-$$
-\operatorname{rank}(\mathbf{A}).
-$$
-
-零矩阵没有正阶非零子式，约定其秩为 $0$。
-
-对 @eq-rank-example-matrix：
+由秩的定义 @eq-rank-column-space，
 
 $$
-\operatorname{rank}(\mathbf{A})=2.
+\operatorname{rank}(\mathbf{A})=\dim\mathcal{C}(\mathbf{A}).
 $$
 
-这个定义同时覆盖方阵和长方形矩阵。特别地，对 $n\times n$ 方阵：
+原主元列构成列空间基，已经证明这个数等于主元个数。现在另外记 $\mu(\mathbf{A})$ 为最大非零子式阶数；若没有正阶非零子式，令 $\mu(\mathbf{A})=0$。下面将证明
+
+$$
+\mu(\mathbf{A})=\operatorname{rank}(\mathbf{A}),
+$$
+
+即最大非零子式阶数与列空间维数相等。对 @eq-rank-example-matrix，消元给出两个主元，子式计算也给出 $\mu(\mathbf{A})=2$。
+
+特别地，对 $n\times n$ 方阵，主元计数与 @eq-det-n-pivots 已经给出：
 
 $$
 \operatorname{rank}(\mathbf{A})=n
@@ -623,7 +385,7 @@ $$
 \det(\mathbf{A})\neq0.
 $$ {#eq-full-rank-det-nonzero}
 
-但秩真正有用，还需要证明它与消元中的主元个数是同一个数。
+对于一般长方形矩阵，$\mu(\mathbf{A})$ 与主元个数的相等性可由初等行变换证明。
 
 # 为什么最大非零子式阶数等于主元个数
 
@@ -631,7 +393,7 @@ $$ {#eq-full-rank-det-nonzero}
 
 - 交换两行，只会重排行选择及相应符号；
 - 一行乘非零标量，只会让涉及该行的子式乘非零倍数；
-- 一行加另一行的倍数时，新子式由原来的 $k$ 阶子式线性组合得到。
+- 对 $R_i\leftarrow R_i+cR_j$（$i\neq j$），不含第 $i$ 行的子式不变；含第 $i$ 行的子式按该行线性展开为原子式与一个附加项。若所选行已含第 $j$ 行，附加项因重复行为零；否则把所选的第 $i$ 行换成第 $j$ 行，附加项就是某个原 $k$ 阶子式的 $\pm c$ 倍，符号只来自恢复行指标顺序。
 
 因此，若原矩阵所有 $k$ 阶子式都为零，行变换后仍全部为零。每个初等行变换都可逆，反方向同样成立，所以最大非零子式阶数在消元中保持不变。
 
@@ -639,26 +401,27 @@ $$ {#eq-full-rank-det-nonzero}
 
 一方面，任何 $(r+1)\times(r+1)$ 子矩阵都要选取 $r+1$ 行，但 $\mathbf{U}$ 只有 $r$ 个非零行，所以所有 $r+1$ 阶及更高阶子式都为零。
 
-另一方面，选取 $r$ 个非零行和 $r$ 个主元列，会得到一个上三角 $r\times r$ 子矩阵；它的对角元素正是 $r$ 个非零主元，因此行列式非零。
+另一方面，若 $r>0$，选取 $r$ 个非零行和 $r$ 个主元列，会得到一个上三角 $r\times r$ 子矩阵；它的对角元素正是 $r$ 个非零主元，因此行列式非零。若 $r=0$，则 $\mathbf{U}=\mathbf{0}$，所有正阶子式均为零，故 $\mu(\mathbf{U})=0$。
 
-所以最大非零子式阶数恰好是 $r$：
+所以 $\mu(\mathbf{A})=\mu(\mathbf{U})=r$。结合已证明的主元列定理：
 
 $$
 \operatorname{rank}(\mathbf{A})
 =
-\text{行阶梯形中的主元个数}.
+\text{行阶梯形中的主元个数}
+=
+\mu(\mathbf{A}).
 $$ {#eq-rank-pivot-count}
 
 ![原矩阵中的非零二阶子式说明至少有两个有效方向；消元后恰好出现两个主元和一个零行，因此最大非零子式阶数与主元个数相同。](../../images/linear-algebra/rank-minor-pivots.svg){#fig-rank-minor-pivots fig-alt="左侧三乘四矩阵高亮前两行前两列的非零二阶子式，中间箭头表示行消元，右侧阶梯形高亮两个绿色主元和底部零行，底部总结最大非零子式阶数等于主元个数等于二。" width="100%"}
 
-秩因此把两种视角统一起来：
-
-- 子式定义不依赖某一次具体消元；
-- 主元个数给出实际可计算的方法。
+因此列空间维数、主元个数与最大非零子式阶数是同一个整数；它们分别以空间、消元与非退化子矩阵描述矩阵的秩。
 
 # 一般方程组为什么要比较两个秩
 
-现在回到任意
+相容性是列空间问题：$\mathbf{b}\in\mathcal{C}(\mathbf{A})$ 当且仅当添加 $\mathbf{b}$ 后张成空间不变。因为 $\mathcal{C}(\mathbf{A})\subseteq\mathcal{C}([\mathbf{A}\mid\mathbf{b}])$，有限维子空间在包含关系下维数相等当且仅当两空间相等，所以两秩相等当且仅当方程组有解。消元则把这一条件表达为没有矛盾行。
+
+考虑任意
 
 $$
 \mathbf{A}\in\mathbb{R}^{m\times n},
@@ -680,7 +443,7 @@ $$
 r=\operatorname{rank}(\mathbf{A}).
 $$
 
-根据 @eq-rank-pivot-count，系数部分有 $r$ 个主元。此时只有两种可能：
+根据主元列构成列空间基的结论，系数部分有 $r$ 个主元。此时只有两种可能：
 
 1. 增广列没有产生新主元，增广矩阵仍有 $r$ 个主元；
 2. 增广列产生一个新主元，即出现
@@ -708,7 +471,7 @@ $$
 $$ {#eq-rank-consistency-criterion}
 :::
 
-这不是独立于消元的新规则，而是把“增广列是否出现矛盾主元”改写成秩的语言。
+两秩相等恰好表示增广列没有产生矛盾主元。由 @eq-rank-pivot-count，同一判据也等价于系数矩阵与增广矩阵的最大非零子式阶数相等，即 $\mu(\mathbf{A})=\mu([\mathbf{A}\mid\mathbf{b}])$。
 
 # 有解以后，秩怎样决定自由变量数量
 
@@ -770,7 +533,7 @@ $$
 
 ![比较系数矩阵秩与增广矩阵秩先判断是否相容；相容时再比较秩与未知量个数，分别得到唯一解或无穷多解。](../../images/linear-algebra/rank-consistency-criterion.svg){#fig-rank-consistency-criterion fig-alt="顶部先比较 rank A 与 rank 增广矩阵，不相等的分支到无解；相等后继续比较 rank A 与未知量数 n，相等到唯一解，小于 n 到无穷多解，每个结果旁标出矛盾行或自由变量原因。" width="92%"}
 
-# 方阵结论现在成为一般判据的特例
+# 方阵是一般判据的特例
 
 若 $\mathbf{A}$ 是 $n\times n$ 方阵，则
 
@@ -809,10 +572,10 @@ $$
 
 # 用 NumPy 核对
 
-## Cramer 法则与逆矩阵
+## Cramer 法则与直接求解
 
 ```{python}
-#| label: lst-cramer-and-inverse
+#| label: lst-cramer-rule
 #| echo: true
 
 import numpy as np
@@ -834,16 +597,14 @@ def cramers_rule(matrix: np.ndarray, rhs: np.ndarray) -> np.ndarray:
 A = np.array([[2.0, 1.0], [1.0, 3.0]])
 b = np.array([5.0, 7.0])
 x = cramers_rule(A, b)
-A_inverse = np.linalg.solve(A, np.eye(2))
 
 np.testing.assert_allclose(x, [1.6, 1.8])
+np.testing.assert_allclose(x, np.linalg.solve(A, b))
 np.testing.assert_allclose(A @ x, b)
-np.testing.assert_allclose(A @ A_inverse, np.eye(2), atol=1e-12)
-np.testing.assert_allclose(A_inverse @ A, np.eye(2), atol=1e-12)
 print("Cramer 解：", x)
 ```
 
-`np.linalg.solve(A, I)` 可以把单位矩阵的每一列同时当作右端，得到逆矩阵。实际只求 $\mathbf{A}\mathbf{x}=\mathbf{b}$ 时，直接使用 `solve` 通常比先显式计算 `inv(A)` 再乘 $b$ 更合适。
+`solve(A, b)` 的结果与 Cramer 公式一致，代回 `A @ x` 也得到右端 `b`。
 
 ## 同一个奇异矩阵的两种右端
 
@@ -923,9 +684,9 @@ np.linalg.matrix_rank(A)
 
 # 学习来源备忘
 
-本页延续国内高等代数中“从方程组消元进入，再用行列式、子式和秩压缩判别条件”的路线。丘维声相关课程的第三方检索线索用于核对概念依赖，但不是官方课程页面，因此不作逐句或精确课时归因 [@qiuAdvancedAlgebraCourse]。
+行列式、可逆性、Cramer 法则与矩阵秩的相关论述可参见 Strang [@strang2023linear]。
 
-Strang 的列图景帮助连接“$\det=0$ 表示体积压扁”“存在非零齐次方向”和“右端是否落在可达到的输出集合中” [@strang2023linear]。NumPy 部分只用于核对小例子与数值边界，不替代代数证明。
+NumPy 部分只用于核对小例子与数值边界，不替代代数证明。
 
 # 容易混淆、需要反复检查的地方
 
@@ -935,7 +696,7 @@ Strang 的列图景帮助连接“$\det=0$ 表示体积压扁”“存在非零�
 4. $\mathbf{A}^{-1}\mathbf{b}$ 不是把矩阵当作普通标量做除法。
 5. Cramer 法则要求 $\det(\mathbf{A})\neq0$。
 6. 子矩阵是选出的方块；子式是该方形子矩阵的行列式。
-7. 秩是最大非零子式阶数，也等于消元后的主元个数。
+7. 秩定义为列空间维数，并等于主元个数与最大非零子式阶数。
 8. 相容性比较的是 $\operatorname{rank}(\mathbf{A})$ 与 $\operatorname{rank}([\mathbf{A}\mid\mathbf{b}])$。
 9. 相容以后，自由变量数是 $n-r$，其中 $n$ 是未知量个数。
 10. 浮点数值秩依赖阈值，不能与精确秩混为一谈。
@@ -943,10 +704,10 @@ Strang 的列图景帮助连接“$\det=0$ 表示体积压扁”“存在非零�
 # 自检
 
 1. 用消元证明 $\det(\mathbf{A})\neq0$ 当且仅当方阵有 $n$ 个主元。
-2. 证明同一个非齐次方程的两个解之差一定是齐次解。
-3. 解释为什么非零齐次解会破坏非齐次解的唯一性。
-4. 从分别求解 $\mathbf{A}\mathbf{x}_j=\mathbf{e}_j$ 推导 $\mathbf{A}^{-1}$ 的列。
-5. 证明逆矩阵如果存在就唯一。
+2. 利用主元条件证明 $\det(\mathbf{A})\neq0$ 当且仅当 $\mathbf{A}$ 可逆。
+3. 用已知的零空间判据解释：为什么 $\det(\mathbf{A})=0$ 不能保证非齐次方程有解。
+4. 为什么 Cramer 法则的推导应先确认唯一解存在？
+5. 解释列空间维数、主元个数、最大非零子式阶数三者为何相等。
 6. 从行列式的列线性推导 @eq-cramer-key-identity。
 7. 对一个 $2\times2$ 非奇异系统手算 Cramer 法则，并代回检查。
 8. 为同一个奇异方阵构造一个无解右端和一个有无穷多解的右端。
@@ -960,18 +721,11 @@ Strang 的列图景帮助连接“$\det=0$ 表示体积压扁”“存在非零�
 
 行列式非零、方阵有 $n$ 个主元、齐次方程只有零解、每个右端唯一可解以及逆矩阵存在，描述的是同一个非退化事实。Cramer 法则进一步利用列线性提取每个解坐标。
 
-行列式为零时，只能知道唯一性失败；要区分无解与无穷多解，必须比较右端是否带来新的主元。子式把行列式的非退化检测推广到方阵内部和长方形矩阵，秩则记录最大非零子式阶数，也就是主元个数。最终，一般方程组有解当且仅当系数矩阵与增广矩阵秩相等；相容时自由变量数为 $n-r$。
+行列式为零时，只能知道唯一性失败；要区分无解与无穷多解，必须比较右端是否带来新的主元。秩定义为列空间维数，并等于主元个数与最大非零子式阶数。一般方程组有解当且仅当系数矩阵与增广矩阵秩相等；相容时自由变量数为 $n-r$。
 
-# 后续方向：为什么现在才进入线性空间
+# 行列式的乘法性与不变量
 
-到这里，仍有几句话只停留在消元语言中：
-
-- 齐次解对线性组合封闭；
-- 全部非齐次解是“特解加齐次方向”；
-- $\operatorname{rank}(\mathbf{A})$ 记录矩阵保留的有效方向数；
-- 自由变量数 $n-r$ 记录齐次解中的独立参数数量。
-
-要把“方向”“独立”“参数数量”说准确，需要统一定义向量空间、子空间、线性相关、生成、基和维数。此时进入线性空间不再是换一本目录，而是为了给已经反复出现的解结构提供正式语言。
+复合变换的行列式等于各变换行列式的乘积；Laplace 展开把行列式分解为元素与余子式的乘积之和；伴随恒等式联系行列式与逆矩阵。相似变换则保持行列式与迹不变。这些结论的证明见[行列式的乘法性、余子式与相似不变量](determinant-multiplicativity-cofactors-and-invariants.qmd)。
 
 # 参考资料
 

@@ -63,7 +63,7 @@ title: "符号索引"
 | $\mathbf{A}_j(\mathbf{b})$ | 矩阵 | 把方阵 $\mathbf{A}$ 的第 $j$ 列替换为 $\mathbf{b}$ 后得到的矩阵 |
 | $\mathbf{A}[I,J]$ | 矩阵 | 从 $\mathbf{A}$ 中选取行指标集 $I$ 与列指标集 $J$ 得到的子矩阵 |
 | $\Delta_{I,J}$ | 标量 | 方形子矩阵 $\mathbf{A}[I,J]$ 的行列式，即对应子式 |
-| $\operatorname{rank}(\mathbf{A})$ | 非负整数 | $\mathbf{A}$ 的秩；等于最大非零子式阶数、主元个数、行空间维数与列空间维数 |
+| $\operatorname{rank}(\mathbf{A})$ | 非负整数 | 定义为列空间维数；等于主元个数、行空间维数，也等于最大非零子式阶数 |
 | $\operatorname{span}(\mathbf{v}_1,\ldots,\mathbf{v}_k)$ | 向量空间 | 给定向量全部线性组合组成的最小子空间 |
 | $\mathcal{C}(\mathbf{A})$ | 向量空间 | $\mathbf{A}$ 的列空间，也就是线性映射 $\mathbf{x}\mapsto\mathbf{A}\mathbf{x}$ 的像 |
 | $\mathcal{R}(\mathbf{A})$ | 向量空间 | $\mathbf{A}$ 的行空间；本文把各行转置后视作 $\mathbb{R}^n$ 中的向量 |
@@ -92,6 +92,22 @@ title: "符号索引"
 | $\mathbf{e}_i$ | 向量 | 第 $i$ 个标准坐标向量 |
 | $\lVert\mathbf{x}\rVert_2$ | 标量 | $\mathbf{x}$ 的 Euclidean 范数 |
 | $\mathbf{x}^{\mathsf T}\mathbf{y}$ | 标量 | 实向量的标准内积 |
+| $\langle\mathbf x,\mathbf y\rangle$ | 标量 | 指定实内积；标准坐标内积时等于 $\mathbf x^{\mathsf T}\mathbf y$ |
+| $\mathbf x\perp\mathbf y$ | 关系 | 两向量的内积为零，称为正交 |
+| $U^\perp$ | 子空间 | 指定环境与内积下，与 $U$ 中每个向量正交的全部向量 |
+| $\mathcal N(\mathbf A^{\mathsf T})$ | 输出空间的子空间 | 左零空间；标准内积下等于 $\mathcal C(\mathbf A)^\perp$ |
+| $\operatorname{proj}_U(\mathbf v)$ | 向量 | 有限维实内积空间中，子空间 $U$ 内离 $\mathbf v$ 最近的唯一向量 |
+| $\widehat{\mathbf u}=\mathbf u/\|\mathbf u\|$ | 单位向量 | 非零方向向量的归一化 |
+| $\operatorname{proj}_{\ell}(\mathbf v)$ | 向量 | $\mathbf v$ 到过原点直线 $\ell=\operatorname{span}(\mathbf u)$ 的正交投影，$\mathbf u\neq0$ |
+| $d(\mathbf x,\mathbf y)=\|\mathbf x-\mathbf y\|$ | 非负标量 | 范数诱导的两点距离 |
+| $\mathbf G=\mathbf B^{\mathsf T}\mathbf B$ | 矩阵 | 标准 Euclidean 内积下基矩阵 $\mathbf B$ 的 Gram 矩阵；在该基坐标中记录原内积 |
+| $\delta_{ij}$ | 标量 | $i=j$ 时为 $1$、否则为 $0$ 的 Kronecker delta |
+| $Q^{\mathsf T}Q=I$ | 矩阵关系 | $Q$ 的列正交归一；长方形 $Q$ 时不推出 $QQ^{\mathsf T}=I$ |
+| $A=CR$ | 矩阵分解 | $C$ 由独立列组成，$R$ 记录重建各列的系数；此处的 $R$ 不等同于 QR 的上三角因子 |
+| $A^{\mathsf T}A\widehat x=A^{\mathsf T}\mathbf b$ | 矩阵方程 | 最小二乘的正规方程，等价于残差与列空间正交 |
+| $P=A(A^{\mathsf T}A)^{-1}A^{\mathsf T}$ | 矩阵 | 满列秩时到 $\mathcal C(A)$ 的正交投影；公式不要求显式求逆实现 |
+| $A=QR$ | 矩阵分解 | QR 分解；满列秩薄 QR 中 $Q$ 列正交归一、$R$ 上三角且对角线可规范为正 |
+| $P=QQ^{\mathsf T}$ | 矩阵 | $Q$ 列正交归一时，投影到 $\mathcal C(Q)$ 的正交投影矩阵 |
 
 # 函数与微积分
 

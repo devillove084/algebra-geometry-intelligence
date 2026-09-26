@@ -30,6 +30,25 @@ make figures  # 重新生成线性代数 SVG 插图
 make clean    # 清理构建产物
 ```
 
+`make figures` 重建通用线代插图以及正交补、QR、独立列分解和最小二乘插图。只重建正交补插图可运行：
+
+```bash
+.venv/bin/python scripts/generate_orthogonal_complement_figures.py --format svg
+```
+
+正交基与 QR 专题插图也可单独重建：
+
+```bash
+.venv/bin/python scripts/generate_orthonormal_qr_figures.py --format svg
+```
+
+独立列分解与最小二乘插图可分别重建：
+
+```bash
+.venv/bin/python scripts/generate_column_factorization_figure.py --format svg
+.venv/bin/python scripts/generate_least_squares_figures.py
+```
+
 ## 开发预览
 
 ```bash

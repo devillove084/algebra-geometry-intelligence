@@ -23,7 +23,15 @@ translations:
 
 figures:
 	@if [ -x .venv/bin/python ]; then \
-		.venv/bin/python scripts/generate_linear_algebra_figures.py --format svg; \
+		.venv/bin/python scripts/generate_linear_algebra_figures.py --format svg && \
+		.venv/bin/python scripts/generate_orthogonal_complement_figures.py --format svg && \
+		.venv/bin/python scripts/generate_orthonormal_qr_figures.py --format svg && \
+		.venv/bin/python scripts/generate_column_factorization_figure.py --format svg && \
+		.venv/bin/python scripts/generate_least_squares_figures.py; \
 	else \
-		python3 scripts/generate_linear_algebra_figures.py --format svg; \
+		python3 scripts/generate_linear_algebra_figures.py --format svg && \
+		python3 scripts/generate_orthogonal_complement_figures.py --format svg && \
+		python3 scripts/generate_orthonormal_qr_figures.py --format svg && \
+		python3 scripts/generate_column_factorization_figure.py --format svg && \
+		python3 scripts/generate_least_squares_figures.py; \
 	fi
