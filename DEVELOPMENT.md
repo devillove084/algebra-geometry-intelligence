@@ -2,6 +2,29 @@
 
 项目源文件使用 Quarto Markdown，数学公式使用 LaTeX 语法。网页由 Quarto 生成，PDF 使用 Quarto 内置 Typst，因此不依赖 TinyTeX。
 
+## 基础主线与第一处交汇
+
+第二、第三部分分别保留微积分和概率论的基础章节，第四部分“三种方法的交汇”位于 `chapters/04-connections/`，围绕同一个问题比较不同方法，而不挪动基础章节。数学语言作为全书总纲，不占部分编号。
+
+本轮对照的 MIT 官方材料：
+
+- 18.01SC [近似与曲线描绘](https://ocw.mit.edu/courses/18-01sc-single-variable-calculus-fall-2010/pages/unit-2-applications-of-differentiation/part-a-approximation-and-curve-sketching/)由线性、二次近似进入函数形状；[Session 29](https://ocw.mit.edu/courses/18-01sc-single-variable-calculus-fall-2010/pages/unit-2-applications-of-differentiation/part-b-optimization-related-rates-and-newtons-method/session-29-optimization-problems/)讨论优化的边界与内部极值。本书在现有近似章之后补中值定理和导数判别，不声称已逐讲覆盖课程中的所有求导技巧。
+- 6.041SC [Lecture 3](https://ocw.mit.edu/courses/6-041sc-probabilistic-systems-analysis-and-applied-probability-fall-2013/pages/unit-i/lecture-3/)讨论事件独立性；[Lecture 5](https://ocw.mit.edu/courses/6-041sc-probabilistic-systems-analysis-and-applied-probability-fall-2013/pages/unit-i/lecture-5/)讨论离散随机变量、期望与方差；[Lecture 7](https://ocw.mit.edu/courses/6-041sc-probabilistic-systems-analysis-and-applied-probability-fall-2013/pages/unit-i/lecture-7/)讨论联合分布、条件化与独立。二项分布所需的位置计数在重复试验章内证明；当前聚焦有限支持，并非已覆盖全部可数离散分布。
+
+第一处交汇选择“重复测量一个常数”，因为三条前置都已具备：
+
+| 主线 | 需要的结论 | 对同一测量问题的贡献 |
+|---|---|---|
+| 线性代数 | 直线投影、正交残差与最小二乘 | 把读数向量投影到常数向量空间 |
+| 微积分 | 导数符号、一元二次目标的全局最优性 | 求平方误差最小的常数 |
+| 概率论 | 期望线性、方差和、协方差 | 判断估计规则的偏差与重复实验波动 |
+
+交汇章进一步证明偏差—方差分解，以及固定线性无偏类别中的等权与逆方差最优性。不使用大数定律、中心极限定理或高斯似然，因此不需要假装这些尚未铺开的知识已经掌握。
+
+后续主线继续补齐求导与积分计算、连续概率、独立随机变量及多元导数；有了连续密度、偏导和二次型后，再把一般线性拟合、正态噪声与似然放到下一层交汇中。基础路线不会因已有一个交汇例子而结束。
+
+新章节的图形内嵌在 QMD 中，由 `make build` 执行；没有新增外部 SVG 生成脚本，不需要扩展 `make figures`。配图分镜分别展示候选变化、曲线斜率、概率质量聚合、独立与相关模型，以及同一测量问题的几何与统计区别。
+
 ## 环境
 
 Ubuntu/Debian：

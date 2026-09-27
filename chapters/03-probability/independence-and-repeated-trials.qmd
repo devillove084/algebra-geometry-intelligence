@@ -1,0 +1,302 @@
+---
+title: "独立性与重复试验"
+description: "由条件概率建立独立性，辨析互斥与两两独立，并用有限计数推导 Bernoulli 重复试验的二项分布。"
+---
+
+# 条件信息与独立性 {#prob-independent-question}
+
+[条件化、全概率与 Bayes](conditioning-total-probability-and-bayes.qmd) 说明，得到信息后要重新分配概率。如果已经完成一次检测，下一次成功的概率是否仍与原来相同？“先后做了两次”不能回答这个问题，必须检查联合权重。
+
+设 $A,B$ 是同一有限模型中的事件。当 $\mathbb P(A)>0$ 时，条件概率的定义给出
+
+$$
+\mathbb P(B\mid A)=\mathbb P(B)
+\quad\Longleftrightarrow\quad
+\mathbb P(A\cap B)=\mathbb P(A)\mathbb P(B).
+$$
+
+因此定义 $A,B$ **独立**，当且仅当
+
+$$
+\boxed{\mathbb P(A\cap B)=\mathbb P(A)\mathbb P(B).}
+$$ {#eq-prob-independent-events}
+
+乘积形式对 $A,B$ 对称，而且没有除法。当 $\mathbb P(B)>0$ 时，它也等价于 $\mathbb P(A\mid B)=\mathbb P(A)$；若某一事件概率为零，它与任意事件的交集概率也是零，仍满足独立性定义，但不能据此写以零概率事件为条件的商。
+
+独立性是**模型的联合权重条件**，不是“听起来无关”的判断。例如两次试验各自的成功率都为 $1/2$，可以取四条路径 $00,01,10,11$ 各有质量 $1/4$；也可以只给 $00,11$ 各质量 $1/2$。两种模型每次都公平，只有前一种独立。
+
+## 独立与互斥
+
+互斥要求 $A\cap B=\varnothing$，即不可能同时发生。若两者概率都为正，则
+
+$$
+\mathbb P(A\cap B)=0<\mathbb P(A)\mathbb P(B),
+$$
+
+所以不独立。互斥事件独立当且仅当其中至少一个概率为零。一次公平掷骰的“点数为 1”和“点数为 2”就是两个正概率互斥事件；知道前者发生后，后者的概率降为零。
+
+反过来，两次独立公平掷骰的“第一次为 1”和“第二次为 2”可以同时发生，交集概率为 $1/36=(1/6)(1/6)$。独立不要求交集为空，而要求交集恰好具有乘积质量。
+
+## 补事件的独立性
+
+若 $A,B$ 独立，把 $B$ 分成 $A\cap B$ 与 $A^c\cap B$ 两个互斥部分，则
+
+$$
+\mathbb P(A^c\cap B)=\mathbb P(B)-\mathbb P(A\cap B)
+=(1-\mathbb P(A))\mathbb P(B)=\mathbb P(A^c)\mathbb P(B).
+$$
+
+所以 $A^c,B$ 也独立。交换两事件并再次应用这个结论，得到 $A,B^c$ 和 $A^c,B^c$ 独立。这解释了为什么独立的成功事件也允许将成功、失败的混合路径按乘积赋权。
+
+# 相互独立与两两独立 {#prob-independent-mutual}
+
+对 $n$ 个事件 $A_1,\ldots,A_n$，**相互独立**要求每个非空指标集合 $I\subseteq\{1,\ldots,n\}$ 都满足
+
+$$
+\boxed{\mathbb P\left(\bigcap_{i\in I}A_i\right)
+=\prod_{i\in I}\mathbb P(A_i).}
+$$ {#eq-prob-independent-mutual}
+
+**两两独立**只要求上述等式对每个二元素指标集合成立。相互独立包含所有二项交集条件，还要求三项以及更高阶交集分解；不仅仅是检查全体 $n$ 个事件的一次交集。
+
+## 异或反例
+
+用四个等权样本点记录两个二进制坐标 $U,V$，再令 $W=U\operatorname{XOR}V$：两坐标不同时 $W=1$，相同时 $W=0$。这里 $U,V,W$ 都是取值为 $0,1$ 的函数。
+
+| 样本点 $(U,V)$ | $(0,0)$ | $(0,1)$ | $(1,0)$ | $(1,1)$ |
+|:--|--:|--:|--:|--:|
+| $W$ | $0$ | $1$ | $1$ | $0$ |
+| 权重 | $1/4$ | $1/4$ | $1/4$ | $1/4$ |
+
+令 $A=\{U=1\},B=\{V=1\},C=\{W=1\}$。每个事件含两个点，概率为 $1/2$；每个两项交集恰含一个点，概率为 $1/4$，所以三事件两两独立。事实上，任取两个坐标，四种二元取值组合各出现一次，每种质量都为 $1/4$。
+
+但 $(U,V,W)=(1,1,1)$ 不可能出现，因此
+
+$$
+\mathbb P(A\cap B\cap C)=0\ne\frac18
+=\mathbb P(A)\mathbb P(B)\mathbb P(C).
+$$
+
+三事件并不相互独立。知道 $U=1$ 不改变 $W=1$ 的概率，同时知道 $U=V=1$ 却能断定 $W=0$。三者之间的约束无法从任意两个坐标单独看出。
+
+```{python}
+#| label: prob-independent-model
+#| code-fold: true
+#| code-summary: "查看精确模型与统一绘图设置"
+from fractions import Fraction as F
+from itertools import product, combinations
+from math import comb, prod
+import matplotlib.pyplot as plt
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+xor = {(u, v, u ^ v): F(1, 4) for u, v in product((0, 1), repeat=2)}
+set_matplotlib_formats("svg")
+plt.rcParams.update({"font.family": "sans-serif", "font.size": 12,
+                     "font.sans-serif": ["Noto Sans CJK SC", "DejaVu Sans"],
+                     "axes.unicode_minus": False, "svg.fonttype": "path",
+                     "svg.hashsalt": "prob-independent"})
+ink, paper = "#243447", "#FBFAF7"
+blue, coral = "#4878A8", "#E78368"
+```
+
+@fig-prob-independent 先比较三个具有相同边缘概率的模型，再揭示异或模型的联合约束。蓝色始终表示实际质量，珊瑚色虚线表示独立性所要求的乘积；分数和标签保证不依赖颜色辨认。
+
+```{python}
+#| label: fig-prob-independent
+#| fig-format: svg
+#| fig-cap: "上镜固定两个事件的概率各为 1/2，交集却可以不同；下镜为异或模型，每个点质量 1/4，三项交集所需的 111 缺失。上镜柱高按概率绘制，下镜只是样本点排列，不是概率面积图。"
+#| fig-alt: "互斥、独立、相同事件的交集质量分别为 0、1/4、1/2，独立乘积基线为 1/4。下方列出异或三元组 000、011、101、110，每个权重为 1/4。"
+#| code-fold: true
+fig, axes = plt.subplots(2, 1, figsize=(8, 7), layout="constrained")
+fig.set_facecolor(paper)
+ax = axes[0]
+ax.set_facecolor(paper)
+values = [F(0), F(1, 4), F(1, 2)]
+ax.bar(range(3), [float(v) for v in values], color=blue, width=.5)
+for i, v in enumerate(values):
+    ax.text(i, float(v) + .02, str(v), ha="center")
+ax.axhline(.25, color=coral, linestyle="--", label="边缘概率乘积 1/4")
+ax.set(xticks=range(3), xticklabels=["互斥事件", "独立事件", "相同事件"],
+       ylim=(0, .68), ylabel="交集概率", title="① 相同边缘，不同交集")
+ax.legend(loc="upper left", frameon=False)
+ax.spines[["top", "right"]].set_visible(False)
+ax.grid(axis="y", alpha=.15)
+ax = axes[1]
+ax.set(xlim=(-.7, 3.7), ylim=(-.8, .85), title="② 两两独立不等于相互独立")
+ax.axis("off")
+for i, row in enumerate(xor):
+    ax.text(i, .25, "".join(map(str, row)), ha="center", va="center",
+            color=ink, fontsize=17, bbox=dict(facecolor=paper, edgecolor=blue, pad=12))
+    ax.text(i, -.12, "质量 1/4", ha="center")
+ax.text(1.5, -.57, "111 缺失：三项交集为 0，独立乘积为 1/8", ha="center")
+plt.show()
+```
+
+# Bernoulli 有限乘积模型 {#prob-independent-bernoulli}
+
+一次只记录成功或失败的试验称为 **Bernoulli 试验**。令 $X_i$ 记录第 $i$ 次结果，成功记 $1$，失败记 $0$；成功率 $p_i\in[0,1]$ 是无量纲概率。$n\geq1$ 次试验的完整样本空间为 $\Omega_n=\{0,1\}^n$。
+
+定义单次权重 $q_i(1)=p_i$、$q_i(0)=1-p_i$。在每个有序样本点 $x=(x_1,\ldots,x_n)$ 上指定
+
+$$
+\boxed{w(x)=\prod_{i=1}^n q_i(x_i).}
+$$ {#eq-prob-independent-product}
+
+这些质量非负；反复使用有限分配律，有
+
+$$
+\sum_{x\in\{0,1\}^n}w(x)
+=\sum_{x_1=0}^1\cdots\sum_{x_n=0}^1\prod_iq_i(x_i)
+=\prod_i\bigl(q_i(0)+q_i(1)\bigr)=1.
+$$
+
+所以这确实是合法的有限概率模型。固定任意一些坐标，对未固定坐标求和时每个都贡献因子 $1$，故
+
+$$
+\mathbb P(X_i=x_i\text{ 对所有 }i\in I)=\prod_{i\in I}q_i(x_i).
+$$
+
+特别地，所有成功事件 $A_i=\{X_i=1\}$ 相互独立，且各概率为 $p_i$。这同时证明了乘积模型具有所声称的边缘概率与独立性。
+
+反过来，假定 $A_1,\ldots,A_n$ 相互独立，可以逐个把事件换为补集。若要将 $A_j$ 换成 $A_j^c$，对任意不含 $j$ 的指标集合 $J$，令 $B=\bigcap_{i\in J}A_i$（$J$ 为空时取 $B=\Omega$），则
+
+$$
+\mathbb P(A_j^c\cap B)=\mathbb P(B)-\mathbb P(A_j\cap B)
+=(1-p_j)\prod_{i\in J}p_i.
+$$
+
+不含第 $j$ 项的交集不变，含该项的交集满足新的乘积式，所以替换后的整个事件族仍相互独立。重复替换便得到任意成功、失败混合路径的乘积质量。这一步不能仅凭两两独立完成。
+
+若所有 $p_i=p$，每次同成功率，称为独立同分布的 Bernoulli 重复试验。含 $k$ 个成功的每条路径质量为 $p^k(1-p)^{n-k}$。在 $p=0$ 或 $1$ 时，直接用 $q_i$ 的乘积理解，避免把端点出现的 $0^0$ 当作未说明的运算。
+
+# 有限计数与二项分布 {#prob-independent-counting}
+
+令 $K=X_1+\cdots+X_n$ 记录成功次数。求 $\mathbb P(K=k)$，需要把恰含 $k$ 个 $1$ 的路径全部相加；一条路径的质量不能代替这一整组路径的质量。
+
+## 位置选择的计数
+
+若每一步可作的选择数固定为 $m_1,\ldots,m_r$，逐层分支得到 $m_1\cdots m_r$ 条有序选择。这是有限计数的乘法规则，不是概率独立性：它数的是对象，尚未给任何对象赋概率。
+
+从 $n$ 个可区分的位置依次选出 $k$ 个、不许重复，有 $n(n-1)\cdots(n-k+1)$ 种有序选择。对同一个含 $k$ 个位置的集合，内部有 $k!=k(k-1)\cdots1$ 种排列，全部被重复计入。因此不计内部顺序的选择数为
+
+$$
+\boxed{\binom nk=\frac{n(n-1)\cdots(n-k+1)}{k!}
+=\frac{n!}{k!(n-k)!}},\qquad 0\leq k\leq n.
+$$ {#eq-prob-independent-binomial-count}
+
+约定 $0!=1$：选择空集只有一种方式，全选也只有一种。$\binom nk$ 读作“$n$ 选 $k$”；这里位置可区分，第 2 次成功和第 5 次成功不是同一条记录。这些规则已补齐二项计数所需的有限计数前提。
+
+## 从路径质量到次数分布
+
+对每个大小为 $k$ 的位置集合 $S\subseteq\{1,\ldots,n\}$，指定其中全部成功、其余全部失败，得到唯一一条路径。不同的 $S$ 产生不同路径，因此对应的单点事件互斥；所有这样的路径恰好覆盖 $\{K=k\}$。
+
+在独立同成功率模型中，它们每条都有质量 $p^k(1-p)^{n-k}$。把 $\binom nk$ 条路径相加，得到
+
+$$
+\boxed{\mathbb P(K=k)=\binom nk p^k(1-p)^{n-k},
+\qquad k=0,1,\ldots,n.}
+$$ {#eq-prob-independent-binomial}
+
+这称为参数 $n,p$ 的**二项分布**，记作 $K\sim\operatorname{Bin}(n,p)$。$p=0$ 时 $K=0$ 的概率为一，$p=1$ 时 $K=n$ 的概率为一。全部次数事件互斥且覆盖样本空间，所以这些概率总和为一；无需先假定二项式定理才能完成归一化证明。
+
+例如四次成功率 $p=1/3$ 的独立试验中，恰好两次成功的六条路径为
+
+$$
+0011,\quad0101,\quad0110,\quad1001,\quad1010,\quad1100.
+$$
+
+每条质量为 $(1/3)^2(2/3)^2=4/81$，总概率为 $6(4/81)=8/27$。十六条路径并不等可能，但**成功次数相同**的路径等权。只有 $p=1/2$ 时全部路径等权，才可直接用符合条件的路径数除以 $2^n$。
+
+@fig-prob-independent-counting 把路径先按次数排列，再逐组相加。蓝色始终表示路径或次数事件的概率质量，两镜纵轴一致；没有用等大小的点假装不同路径等权。
+
+```{python}
+#| label: fig-prob-independent-counting
+#| fig-format: svg
+#| fig-cap: "四次成功率 1/3 的独立试验。上镜按成功次数排列十六条路径，柱高是单条质量；下镜聚合相同次数的路径。两镜共用 0 到 0.52 的概率刻度。"
+#| fig-alt: "上镜十六条路径的质量随成功次数从 16/81 降至 1/81；下镜零到四次成功的概率为 16/81、32/81、8/27、8/81、1/81，对应路径数为 1、4、6、4、1。"
+#| code-fold: true
+n, p = 4, F(1, 3)
+paths = sorted(product((0, 1), repeat=n), key=lambda row: (sum(row), row))
+masses = {row: prod(p if bit else 1-p for bit in row) for row in paths}
+count_probs = {k: sum((w for row, w in masses.items() if sum(row) == k), F(0))
+               for k in range(n+1)}
+fig, axes = plt.subplots(2, 1, figsize=(9, 7.6), layout="constrained")
+fig.set_facecolor(paper)
+for ax in axes:
+    ax.set_facecolor(paper)
+    ax.set(ylim=(0, .52), ylabel="概率质量")
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.grid(axis="y", alpha=.15)
+axes[0].bar(range(16), [float(w) for w in masses.values()], color=blue, width=.7)
+axes[0].set(xticks=range(16), xticklabels=["".join(map(str, row)) for row in paths],
+            title="① 每条有序路径各有一份质量")
+axes[0].tick_params(axis="x", labelrotation=60, labelsize=10)
+start = 0
+for k in range(5):
+    size = comb(n, k)
+    axes[0].text(start + (size-1)/2, .34, f"{k} 次\n{size} 条", ha="center")
+    if start:
+        axes[0].axvline(start-.5, color=ink, alpha=.2, linewidth=1)
+    start += size
+axes[1].bar(range(5), [float(v) for v in count_probs.values()], color=blue, width=.5)
+for k, v in count_probs.items():
+    axes[1].text(k, float(v)+.018, str(v), ha="center")
+axes[1].set(xticks=range(5), xlabel="成功次数 k", title="② 相同次数的路径质量相加")
+plt.show()
+```
+
+全失败只有一条路径，其概率为 $(1-p)^n$。因此至少一次成功的概率为 $1-(1-p)^n$。这只是补集规则与有限乘积，并不是对实际成功频率的保证，也没有使用极限定理。
+
+# 模型条件与精确核查 {#prob-independent-checks}
+
+重复、同分布、独立是不同条件。各次独立但成功率不同，完整路径仍按 $q_i$ 相乘，但同次数路径不必等权，不能提取一个公共 $p^k(1-p)^{n-k}$。各次同分布却相关时，连完整路径乘积也不能使用。
+
+例如四次都复制同一个成功率 $1/3$ 的结果，则只有 $0000,1111$ 具有正质量。每次成功率仍是 $1/3$，恰好两次成功的概率却是零，而非 $8/27$。重复测量是否共享同一扰动，需要从实验机制判断，不能从“次数多”推出独立。
+
+下面用 `Fraction` 精确枚举乘积模型的所有坐标子集，包含 $p=0,1$ 的端点；这些断言核查例子，不替代前面的证明。
+
+```{python}
+#| label: prob-independent-exact-checks
+#| code-fold: true
+#| code-summary: "查看 Fraction 精确核查"
+for p in (F(0), F(1, 3), F(1, 2), F(1)):
+    model = {row: prod(p if bit else 1-p for bit in row)
+             for row in product((0, 1), repeat=4)}
+    assert sum(model.values(), F(0)) == 1 and all(w >= 0 for w in model.values())
+    for r in range(1, 5):
+        for indices in combinations(range(4), r):
+            for bits in product((0, 1), repeat=r):
+                actual = sum((w for row, w in model.items()
+                              if all(row[i] == b for i, b in zip(indices, bits))), F(0))
+                assert actual == prod(p if b else 1-p for b in bits)
+    for k in range(5):
+        rows = [row for row in model if sum(row) == k]
+        assert len(rows) == comb(4, k)
+        path_weight = prod([p]*k + [1-p]*(4-k))
+        assert sum((model[row] for row in rows), F(0)) == comb(4, k)*path_weight
+    assert sum((w for row, w in model.items() if sum(row) >= 1), F(0)) == 1-(1-p)**4
+for i, j in combinations(range(3), 2):
+    for a, b in product((0, 1), repeat=2):
+        assert sum((w for row, w in xor.items() if row[i] == a and row[j] == b), F(0)) == F(1, 4)
+assert xor.get((1, 1, 1), F(0)) == 0 != F(1, 2)**3
+assert count_probs[2] == F(8, 27)
+print("精确断言通过：坐标子集独立、端点、异或反例与二项计数。")
+```
+
+## 自检题与部分解答 {#prob-independent-exercises}
+
+1. 一次公平掷骰中，“点数为偶数”和“点数大于 3”是否独立？计算交集与概率乘积。
+2. 三事件满足三项交集概率等于三个边缘概率的乘积，就一定相互独立吗？还缺哪些条件？
+3. 三次独立成功率为 $p$ 的试验中，恰好一次成功的路径是什么？求其概率。
+4. 在异或模型中，求 $\mathbb P(W=1\mid U=1)$ 与 $\mathbb P(W=1\mid U=1,V=1)$。
+5. 四次成功率为 $1/3$ 的独立试验，恰好三次成功与至少一次成功的概率各是多少？
+
+**第 1 题。** 交集为 $\{4,6\}$，概率 $1/3$；边缘概率乘积为 $(1/2)(1/2)=1/4$，故不独立。
+
+**第 3 题。** $100,010,001$ 互斥，每条质量为 $p(1-p)^2$，总概率为 $3p(1-p)^2$。
+
+**第 4 题。** 两者分别为 $1/2$ 与 $0$；两个条件事件的概率分别是 $1/2$ 与 $1/4$，条件化均有定义。
+
+**第 5 题。** 恰好三次为 $\binom43(1/3)^3(2/3)=8/81$；至少一次为 $1-(2/3)^4=65/81$。
+
+独立事件与独立重复试验可参见 MIT 6.041SC Lecture 3 [@mit6041independence2013]。这里的二项公式由有限路径与位置计数直接推导；独立性与同成功率是模型条件，而不是由计数公式反推的事实。

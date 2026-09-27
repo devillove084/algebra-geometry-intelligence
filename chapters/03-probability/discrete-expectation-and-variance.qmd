@@ -1,0 +1,426 @@
+---
+title: "离散随机变量、期望与方差"
+description: "从有限支持的概率质量函数推导期望、方差、联合分布与协方差，说明独立重复测量的平均为何具有较小方差。"
+---
+
+# 从试验路径到测量数值 {#prob-moments-question}
+
+前一章把多条试验路径聚合成成功次数。如果记录的不是成败，而是传感器的读数，仍可以先给完整结果赋权，再把相同数值的质量相加。数值的平均位置与波动大小，要由这份分布而不是取值个数决定。
+
+本章始终从有限样本空间 $\Omega$ 出发。每个样本点 $\omega$ 的权重记为 $w(\omega)\geq0$，并满足 $\sum_{\omega\in\Omega}w(\omega)=1$。一个实值随机变量是函数 $X:\Omega\to\mathbb R$；函数规则固定，随机的是实际出现的样本点。
+
+# 概率质量函数 {#prob-moments-pmf}
+
+对任意实数 $x$，定义 $X$ 的**概率质量函数**（pmf）
+
+$$
+p_X(x)=\mathbb P(X=x)
+=\sum_{\omega:X(\omega)=x}w(\omega).
+$$ {#eq-prob-moments-pmf}
+
+令 $S_X=\{x:p_X(x)>0\}$ 为支持。本章的 $S_X$ 有限；不在支持内的数值质量为零。因为不同取值的原像互斥，而所有原像合起来覆盖样本空间，故 $p_X(x)\geq0$ 且 $\sum_{x\in S_X}p_X(x)=1$。
+
+例如一个传感器的离散读数 $X$，以毫米为单位，来自四个结果：
+
+| 样本点 | $a$ | $b$ | $c$ | $d$ |
+|:--|--:|--:|--:|--:|
+| 权重 | $1/4$ | $1/4$ | $1/8$ | $3/8$ |
+| $X$ 的读数 | $-1$ | $1$ | $1$ | $3$ |
+
+结果 $b,c$ 的数值相同，因此支持是 $S_X=\{-1,1,3\}$，不是四个互不相同的读数。聚合得到
+
+$$
+p_X(-1)=\frac14,\qquad p_X(1)=\frac38,\qquad p_X(3)=\frac38.
+$$
+
+## 期望与函数期望
+
+定义 $X$ 的**期望**为概率加权的数值平均：
+
+$$
+\boxed{\mathbb E[X]=\sum_{x\in S_X}x\,p_X(x)
+=\sum_{\omega\in\Omega}X(\omega)w(\omega).}
+$$ {#eq-prob-moments-expectation}
+
+第二个等号来自按 $X$ 的取值对样本点分组：每组中的 $X(\omega)$ 都等于同一个 $x$，可以提到组内求和号外。例中的均值为 $\mu=\mathbb E[X]=-1/4+3/8+9/8=5/4$ 毫米。均值不必是一次试验能出现的值，也不是这一批数据已经算出的样本平均。
+
+若 $g:S_X\to\mathbb R$ 是任意实值函数，$g(X)$ 也是随机变量。令 $T=g(S_X)$，按 $g(X)$ 的取值先求期望，再展开每一组的原像：
+
+$$
+\begin{aligned}
+\mathbb E[g(X)]
+&=\sum_{t\in T}t\sum_{\omega:g(X(\omega))=t}w(\omega)\\
+&=\sum_{\omega\in\Omega}g(X(\omega))w(\omega)\\
+&=\sum_{x\in S_X}g(x)\sum_{\omega:X(\omega)=x}w(\omega)
+=\boxed{\sum_{x\in S_X}g(x)p_X(x)}.
+\end{aligned}
+$$ {#eq-prob-moments-function-expectation}
+
+这证明了函数期望公式；$g$ 不必一一对应。所有和都有限，重分组没有收敛性问题。例如 $g(x)=x^2$ 时，不必先另算 $X^2$ 的分布，直接得到 $\mathbb E[X^2]=1/4+3/8+27/8=4$ 平方毫米。一般不能把 $\mathbb E[g(X)]$ 写成 $g(\mathbb E[X])$；这里 $4\ne(5/4)^2$。
+
+```{python}
+#| label: prob-moments-model
+#| code-fold: true
+#| code-summary: "查看有限模型与统一绘图设置"
+from fractions import Fraction as F
+from itertools import product
+import matplotlib.pyplot as plt
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+weights = {"a": F(1, 4), "b": F(1, 4), "c": F(1, 8), "d": F(3, 8)}
+readings = {"a": -1, "b": 1, "c": 1, "d": 3}
+pmf = {x: sum((weights[s] for s in weights if readings[s] == x), F(0))
+       for x in sorted(set(readings.values()))}
+
+def mean(distribution):
+    return sum((x * p for x, p in distribution.items()), F(0))
+
+def variance(distribution):
+    mu = mean(distribution)
+    return sum(((x - mu)**2 * p for x, p in distribution.items()), F(0))
+
+mu = mean(pmf)
+set_matplotlib_formats("svg")
+plt.rcParams.update({"font.family": "sans-serif", "font.size": 12,
+                     "font.sans-serif": ["Noto Sans CJK SC", "DejaVu Sans"],
+                     "axes.unicode_minus": False, "svg.fonttype": "path",
+                     "svg.hashsalt": "prob-moments"})
+ink, paper = "#243447", "#FBFAF7"
+blue, coral, gold, teal = "#4878A8", "#E78368", "#E4B84E", "#38A89D"
+```
+
+@fig-prob-moments 中第一镜显示原始样本点，第二镜才以读数为横轴。第三镜将每个读数代入平方函数；横坐标的单位随之变成平方毫米。柱高始终表示概率，均值虚线表示概率加权位置，不是额外的概率柱。
+
+```{python}
+#| label: fig-prob-moments
+#| fig-format: svg
+#| fig-cap: "从样本点聚合为读数分布，再将读数平方。原始结果 b、c 合并于读数 1，平方后 -1 与 1 的概率再次合并；各镜的概率轴相同。"
+#| fig-alt: "上镜四个样本点质量为 1/4、1/4、1/8、3/8；中镜读数 -1、1、3 的质量为 1/4、3/8、3/8，均值为 5/4；下镜平方读数 1、9 的质量为 5/8、3/8，均值为 4。"
+#| code-fold: true
+squared = {z: sum((p for x, p in pmf.items() if x*x == z), F(0))
+           for z in sorted({x*x for x in pmf})}
+fig, axes = plt.subplots(3, 1, figsize=(8, 9.6), layout="constrained")
+fig.set_facecolor(paper)
+frames = [(weights, "① 原始样本点", "样本点（不是数值刻度）"),
+          (pmf, "② 按相同读数聚合", "读数 / mm"),
+          (squared, "③ 平方后再次聚合", r"读数的平方 / $\mathrm{mm}^2$")]
+for ax, (dist, title, xlabel) in zip(axes, frames):
+    ax.set_facecolor(paper)
+    ax.bar(list(dist), [float(p) for p in dist.values()], color=blue, width=.5)
+    for x, p in dist.items():
+        ax.text(x, float(p) + .025, str(p), ha="center")
+    ax.set(title=title, xlabel=xlabel, ylabel="概率质量", ylim=(0, .77))
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.grid(axis="y", alpha=.15)
+for ax, dist in zip(axes[1:], [pmf, squared]):
+    ax.axvline(float(mean(dist)), color=coral, linestyle="--",
+               label=f"均值 {mean(dist)}")
+    ax.set_xticks(list(dist))
+    ax.legend(loc="upper right", frameon=False)
+plt.show()
+```
+
+# 期望的线性性 {#prob-moments-linearity}
+
+设 $X,Y$ 定义在同一个有限样本空间上，$a,b,c$ 是确定的实数。由样本点形式直接计算：
+
+$$
+\begin{aligned}
+\mathbb E[aX+bY+c]
+&=\sum_{\omega\in\Omega}
+\bigl(aX(\omega)+bY(\omega)+c\bigr)w(\omega)\\
+&=a\sum_\omega X(\omega)w(\omega)
++b\sum_\omega Y(\omega)w(\omega)+c\sum_\omega w(\omega)\\
+&=\boxed{a\mathbb E[X]+b\mathbb E[Y]+c}.
+\end{aligned}
+$$ {#eq-prob-moments-linearity}
+
+整个证明没有使用独立性。重复应用两变量结论，就有 $\mathbb E[\sum_{i=1}^n a_iX_i]=\sum_{i=1}^n a_i\mathbb E[X_i]$。物理量相加时需具有相同单位，系数应承担必要的单位换算。
+
+例如令 $Y=X$，两者显然携带完全相同的信息，但 $\mathbb E[X+Y]=2\mathbb E[X]$ 仍成立。期望是有限加权和，线性性来自分配律，而不是来自多次试验互不影响。
+
+对事件 $A$，**指示变量** $\mathbf1_A$ 在 $A$ 中取 $1$，其余取 $0$。由定义 $\mathbb E[\mathbf1_A]=\mathbb P(A)$。因此成功次数 $K=\sum_{i=1}^n\mathbf1_{A_i}$ 满足
+
+$$
+\mathbb E[K]=\sum_{i=1}^n\mathbb P(A_i).
+$$
+
+如果每次成功率都是 $p$，期望次数就是 $np$，即使各次不独立也成立。独立性决定前一章的二项分布是否适用，却不是这条期望公式的必要条件。$np$ 也不必为整数，更不是每批必然出现的次数。
+
+# 方差与尺度变换 {#prob-moments-variance}
+
+偏差 $X-\mu$ 的期望总为零，因为 $\mu=\mathbb E[X]$。正负偏差相互抵消，无法用它们的平均衡量波动。定义**方差**为平方偏差的期望：
+
+$$
+\boxed{\operatorname{Var}(X)=\mathbb E[(X-\mu)^2]
+=\sum_{x\in S_X}(x-\mu)^2p_X(x).}
+$$ {#eq-prob-moments-variance}
+
+方差非负，其平方根 $\sigma_X=\sqrt{\operatorname{Var}(X)}$ 称为标准差。若 $X$ 用毫米计，方差用平方毫米计，标准差又回到毫米。由于支持上的权重严格为正，方差为零当且仅当支持只包含均值，即 $\mathbb P(X=\mu)=1$。
+
+展开平方并使用线性性，得到常用恒等式：
+
+$$
+\begin{aligned}
+\operatorname{Var}(X)
+&=\mathbb E[X^2]-2\mu\mathbb E[X]+\mu^2\\
+&=\boxed{\mathbb E[X^2]-(\mathbb E[X])^2}.
+\end{aligned}
+$$ {#eq-prob-moments-second-moment}
+
+例中的方差为 $4-25/16=39/16$ 平方毫米。直接按定义也有 $(81/16)(1/4)+(1/16)(3/8)+(49/16)(3/8)=39/16$，两条计算路径一致。
+
+若 $a,b\in\mathbb R$ 是常数，$Z=aX+b$ 的均值为 $a\mu+b$，所以
+
+$$
+Z-\mathbb E[Z]=a(X-\mu),\qquad
+\boxed{\operatorname{Var}(aX+b)=a^2\operatorname{Var}(X)}.
+$$ {#eq-prob-moments-scale}
+
+这给出了完整证明：平移只改变中心，不改变相对中心的偏差；缩放把偏差乘 $a$，故平方偏差乘 $a^2$。它也涵盖 $a=0$ 与负缩放。标准差则乘 $|a|$。
+
+# 联合概率质量函数 {#prob-moments-joint}
+
+分别知道两个变量的分布，尚不知道它们如何一起变化。对同一模型中的 $X,Y$，定义**联合 pmf**
+
+$$
+p_{X,Y}(x,y)=\mathbb P(X=x,Y=y)
+=\sum_{\omega:X(\omega)=x,\,Y(\omega)=y}w(\omega).
+$$
+
+联合表的每格质量非负，所有格的质量和为一。固定 $x$ 对 $y$ 求和时，事件 $\{X=x,Y=y\}$ 互斥地拼成 $\{X=x\}$，因此**边缘 pmf** 满足
+
+$$
+p_X(x)=\sum_{y\in S_Y}p_{X,Y}(x,y),\qquad
+p_Y(y)=\sum_{x\in S_X}p_{X,Y}(x,y).
+$$ {#eq-prob-moments-marginal}
+
+下面比较两个无量纲的 $0,1$ 变量。独立模型的四格质量都是 $1/4$；相同模型只给 $(0,0),(1,1)$ 各 $1/2$，此时 $Y=X$。二者的边缘分布都是各以 $1/2$ 取 $0,1$，但前者同时为 $1$ 的概率为 $1/4$，后者为 $1/2$。
+
+```{python}
+#| label: fig-prob-moments-joint
+#| fig-format: svg
+#| fig-cap: "两个模型有相同的行和与列和，但内部联合质量不同。左镜四格各为 1/4；右镜只在对角线上各有 1/2。方格面积相同，颜色深浅仅辅助表示概率，格内分数给出精确质量。"
+#| fig-alt: "左右两个二乘二联合概率表，外侧各边缘均为 1/2。独立表四格均为 1/4，相同变量表对角线为 1/2，其余为零。"
+#| code-fold: true
+from matplotlib.colors import LinearSegmentedColormap
+independent = {(x, y): F(1, 4) for x, y in product((0, 1), repeat=2)}
+identical = {(x, y): F(int(x == y), 2) for x, y in product((0, 1), repeat=2)}
+fig, axes = plt.subplots(1, 2, figsize=(9, 5.4), layout="constrained")
+fig.get_layout_engine().set(h_pad=.18, w_pad=.12)
+fig.set_facecolor(paper)
+cmap = LinearSegmentedColormap.from_list("mass", [paper, blue])
+for ax, joint, title in zip(axes, [independent, identical],
+                           ["① 独立的 X、Y", "② 相同的 X、Y"]):
+    cells = [[float(joint[x, y]) for y in (0, 1)] for x in (0, 1)]
+    ax.imshow(cells, cmap=cmap, vmin=0, vmax=.5)
+    for x, y in product((0, 1), repeat=2):
+        ax.text(y, x, str(joint[x, y]), ha="center", va="center",
+                color="white" if joint[x, y] == F(1, 2) else ink, fontsize=16)
+    for i in (0, 1):
+        ax.text(1.65, i, "1/2", ha="center", va="center", color=ink)
+        ax.text(i, 1.7, "1/2", ha="center", va="center", color=ink)
+    ax.text(1.65, -.65, r"$p_X$", ha="center")
+    ax.text(-.65, 1.7, r"$p_Y$", ha="center")
+    ax.set(xlim=(-.85, 2), ylim=(2, -.95), xticks=[0, 1], yticks=[0, 1],
+           xlabel="Y", ylabel="X", title=title)
+    ax.set_facecolor(paper)
+    ax.spines[:].set_visible(False)
+plt.show()
+```
+
+## 独立随机变量与乘积期望
+
+称 $X,Y$ **独立**，若对所有 $x\in S_X,y\in S_Y$ 有
+
+$$
+\boxed{p_{X,Y}(x,y)=p_X(x)p_Y(y).}
+$$ {#eq-prob-moments-independent}
+
+这也等价于任意取值集合 $C,D\subseteq\mathbb R$ 的事件 $\{X\in C\}$ 与 $\{Y\in D\}$ 独立。正方向只需将乘积质量在 $x\in C\cap S_X,y\in D\cap S_Y$ 上求和，有限分配律给出两份边缘和的乘积；反方向取单点集合 $C=\{x\},D=\{y\}$ 即可。
+
+按 $(X,Y)$ 的取值对样本点重分组，任意实值函数 $h$ 都满足 $\mathbb E[h(X,Y)]=\sum_x\sum_y h(x,y)p_{X,Y}(x,y)$，理由与 @eq-prob-moments-function-expectation 完全相同。若 $X,Y$ 独立，取 $h(x,y)=g(x)r(y)$，得到
+
+$$
+\begin{aligned}
+\mathbb E[g(X)r(Y)]
+&=\sum_x\sum_y g(x)r(y)p_X(x)p_Y(y)\\
+&=\left(\sum_x g(x)p_X(x)\right)
+  \left(\sum_y r(y)p_Y(y)\right)\\
+&=\boxed{\mathbb E[g(X)]\mathbb E[r(Y)]}.
+\end{aligned}
+$$ {#eq-prob-moments-product}
+
+特别地，独立推出 $\mathbb E[XY]=\mathbb E[X]\mathbb E[Y]$。与期望的加法不同，乘积的分离用了联合 pmf 的分解。若 $Y=X$ 且以相同概率取 $0,1$，则 $\mathbb E[XY]=\mathbb E[X^2]=1/2$，却有 $\mathbb E[X]\mathbb E[Y]=1/4$。
+
+对多个变量，**相互独立**定义为每个取值组合的联合质量等于全部边缘质量之积。对未选中的坐标求和可得到每个子组的同样分解，特别地，每对变量独立。同分布则只要求各变量的 pmf 相同，不能保证任何联合分解。
+
+# 协方差与和的方差 {#prob-moments-covariance}
+
+设 $\mu_X=\mathbb E[X]$、$\mu_Y=\mathbb E[Y]$。定义**协方差**
+
+$$
+\operatorname{Cov}(X,Y)
+=\mathbb E[(X-\mu_X)(Y-\mu_Y)]
+=\boxed{\mathbb E[XY]-\mathbb E[X]\mathbb E[Y]}.
+$$ {#eq-prob-moments-covariance}
+
+最后一个等号由展开括号和线性性得到：两个一次项各为 $-\mu_X\mu_Y$，常数项补回一份。协方差具有两个变量单位的乘积；其正负反映中心化乘积的平均符号，不是因果方向。
+
+独立变量的乘积期望可分离，故协方差为零；反向不成立。例如 $X$ 等概率取 $-1,0,1$，令 $Y=X^2$。有 $\mathbb E[X]=\mathbb E[X^3]=0$，所以 $\operatorname{Cov}(X,Y)=0$；但 $\mathbb P(X=0,Y=0)=1/3\ne(1/3)(1/3)$，因此二者不独立。
+
+设 $X_1,\ldots,X_n$ 是同一有限模型中的变量，$a_1,\ldots,a_n$ 为常数，记 $Z_i=X_i-\mathbb E[X_i]$。线性性给出和的中心化形式 $\sum_i a_iZ_i$，于是
+
+$$
+\begin{aligned}
+\operatorname{Var}\left(\sum_{i=1}^n a_iX_i\right)
+&=\mathbb E\left[\left(\sum_{i=1}^n a_iZ_i\right)^2\right]\\
+&=\mathbb E\left[\sum_i a_i^2Z_i^2
++2\sum_{i<j}a_ia_jZ_iZ_j\right]\\
+&=\boxed{\sum_i a_i^2\operatorname{Var}(X_i)
++2\sum_{i<j}a_ia_j\operatorname{Cov}(X_i,X_j)}.
+\end{aligned}
+$$ {#eq-prob-moments-variance-sum}
+
+这就是一般公式及其证明，不要求独立。取 $n=2,a_1=a_2=1$，交叉项为 $2\operatorname{Cov}(X_1,X_2)$。如果变量两两独立，各协方差都为零，方差便相加；相互独立是更强的充分条件。事实上两两协方差为零已足够，不能因此反推独立。
+
+# 样本均值的方差 {#prob-moments-sample-mean}
+
+考虑 $n\geq1$ 次相互独立且同分布的有限取值测量 $X_1,\ldots,X_n$，共同均值为 $\mu$，共同方差为 $\sigma^2$。称
+
+$$
+\overline X_n=\frac1n\sum_{i=1}^nX_i
+$$
+
+为**样本均值**。观测前它是随机变量；观测到数值 $x_1,\ldots,x_n$ 后，$\overline x_n=(1/n)\sum_i x_i$ 才是一份已实现的数值平均。
+
+由期望线性性，无须独立就有 $\mathbb E[\overline X_n]=(1/n)\sum_i\mu=\mu$。而方差计算必须处理交叉项。将 $a_i=1/n$ 代入一般公式，再使用独立性，得到
+
+$$
+\begin{aligned}
+\operatorname{Var}(\overline X_n)
+&=\frac1{n^2}\left[\sum_i\operatorname{Var}(X_i)
++2\sum_{i<j}\operatorname{Cov}(X_i,X_j)\right]\\
+&=\frac1{n^2}\left[n\sigma^2+0\right]
+=\boxed{\frac{\sigma^2}{n}}.
+\end{aligned}
+$$ {#eq-prob-moments-average}
+
+分母是 $n^2$，因为对总和乘 $1/n$ 时方差要乘 $(1/n)^2$；分子是 $n\sigma^2$，因为独立变量的方差相加。因此标准差为 $\sigma/\sqrt n$，不是 $\sigma/n$。这里计算的是已知概率模型下样本均值的方差，不是从数据计算的样本方差。
+
+## 完全相关的反例
+
+令所有读数都等于同一个随机变量 $Z$，即 $X_i=Z$，其中 $\operatorname{Var}(Z)=\sigma^2>0$。它们仍同分布，但每一对的协方差都是 $\sigma^2$。样本均值逐点等于 $Z$，也可以在一般式中精确核对：
+
+$$
+\operatorname{Var}(\overline X_n)
+=\frac{n\sigma^2+2\binom n2\sigma^2}{n^2}
+=\frac{[n+n(n-1)]\sigma^2}{n^2}=\sigma^2.
+$$
+
+重复记录同一个波动，并没有增加独立的信息。在下面的有限模型中，每次误差取 $-1,1$ 毫米且各有概率 $1/2$。独立重复时，各有序误差组合等权；完全相关时只有“全为 $-1$”和“全为 $1$”两条路径。
+
+```{python}
+#| label: fig-prob-moments-average
+#| fig-format: svg
+#| fig-cap: "从一次到四次测量，比较独立误差与完全相同的误差。每镜横轴都是均值误差，纵轴都是概率质量，尺度相同；独立平均的方差依次为 1、1/2、1/4，完全相关时始终为 1。"
+#| fig-alt: "三个上下分镜分别为一、二、四次平均。蓝色圆点为独立模型，珊瑚色叉号为完全相关模型；后者一直只在 -1、1 各有 1/2 质量，前者逐渐把更多质量集中在零附近。"
+#| code-fold: true
+def independent_average(n):
+    dist = {}
+    for row in product((-1, 1), repeat=n):
+        x = F(sum(row), n)
+        dist[x] = dist.get(x, F(0)) + F(1, 2**n)
+    return dict(sorted(dist.items()))
+
+common = {F(-1): F(1, 2), F(1): F(1, 2)}
+fig, axes = plt.subplots(3, 1, figsize=(8, 9.2), sharex=True, sharey=True,
+                         layout="constrained")
+fig.set_facecolor(paper)
+for ax, n in zip(axes, [1, 2, 4]):
+    dist = independent_average(n)
+    ax.set_facecolor(paper)
+    for x, p in dist.items():
+        ax.vlines(float(x), 0, float(p), color=blue, linewidth=2)
+    ax.plot([float(x) for x in dist], [float(p) for p in dist.values()],
+            "o", color=blue, markersize=10, label=f"独立，方差 {variance(dist)}")
+    ax.plot([-1, 1], [.5, .5], "x", color=coral, markersize=12, mew=2,
+            label="完全相关，方差 1")
+    ax.set(title=f"{n} 次测量的平均", xlim=(-1.2, 1.2), ylim=(0, .68),
+           ylabel="概率质量", xticks=[-1, -.5, 0, .5, 1])
+    ax.legend(loc="upper center", ncol=2, fontsize=10, frameon=False)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.grid(axis="y", alpha=.15)
+axes[-1].set_xlabel("均值误差 / mm")
+plt.show()
+```
+
+@fig-prob-moments-average 展示的是完整分布而不是随机抽取的几批数据。方差降低只意味着模型中的平均平方偏差变小，不保证每次平均都比单次更接近 $\mu$。它也不自动保证 $\mu$ 等于待测真值；共同的固定偏移不会被重复平均消除。方差不是确定性误差界，不能直接把 $\sigma/\sqrt n$ 宣称为每批误差的最大值。
+
+# 精确核查与自检 {#prob-moments-checks}
+
+以下断言枚举有限模型，核对正文中的数值与反例。一般结论的依据是前面的分组求和与平方展开，不是这些有限例子的通过。
+
+```{python}
+#| label: prob-moments-exact-checks
+#| code-fold: true
+#| code-summary: "查看 Fraction 精确核查"
+assert sum(weights.values(), F(0)) == sum(pmf.values(), F(0)) == 1
+assert pmf == {-1: F(1, 4), 1: F(3, 8), 3: F(3, 8)}
+assert mu == F(5, 4) and mean(squared) == 4
+assert mean(squared) != mu**2 and variance(pmf) == F(39, 16)
+for a, b in [(F(2), F(3)), (F(-2), F(1, 2)), (F(0), F(7))]:
+    transformed = {}
+    for x, p in pmf.items():
+        z = a*x + b
+        transformed[z] = transformed.get(z, F(0)) + p
+    assert mean(transformed) == a*mu + b
+    assert variance(transformed) == a*a*variance(pmf)
+
+def covariance(joint):
+    ex = sum((x*p for (x, y), p in joint.items()), F(0))
+    ey = sum((y*p for (x, y), p in joint.items()), F(0))
+    return sum(((x-ex)*(y-ey)*p for (x, y), p in joint.items()), F(0))
+
+assert covariance(independent) == 0 and covariance(identical) == F(1, 4)
+nonlinear = {(x, x*x): F(1, 3) for x in (-1, 0, 1)}
+assert covariance(nonlinear) == 0 and nonlinear[0, 0] != F(1, 3)**2
+for joint in (independent, identical, nonlinear):
+    px = {x: sum((p for (u, v), p in joint.items() if u == x), F(0))
+          for x, y in joint}
+    py = {y: sum((p for (u, v), p in joint.items() if v == y), F(0))
+          for x, y in joint}
+    summed = {}
+    for (x, y), p in joint.items():
+        summed[x+y] = summed.get(x+y, F(0)) + p
+    assert mean(summed) == mean(px) + mean(py)
+    assert variance(summed) == variance(px) + variance(py) + 2*covariance(joint)
+for n in range(1, 9):
+    dist = independent_average(n)
+    assert sum(dist.values(), F(0)) == 1 and mean(dist) == 0
+    assert variance(dist) == F(1, n)
+    assert variance(common) == 1
+    assert F(n + n*(n-1), n*n) == 1
+print("精确断言通过：聚合、函数期望、方差变换、协方差与样本均值。")
+```
+
+## 自检题与部分解答 {#prob-moments-exercises}
+
+1. 用正文四点模型计算 $\mathbb E[|X|]$，并比较 $|\mathbb E[X]|$。为什么不能任意交换函数与期望？
+2. 若 $Y=3X-2$，求期望与方差。这里减去的常数与读数使用相同单位。
+3. 指示变量 $I$ 以概率 $p$ 取 $1$。证明 $\operatorname{Var}(I)=p(1-p)$，再求 $n$ 次独立同成功率试验的成功次数方差。
+4. 已知 $\operatorname{Var}(X)=\operatorname{Var}(Y)=1$、$\operatorname{Cov}(X,Y)=1/2$，求 $(X+Y)/2$ 的方差。为什么不是 $1/2$？
+5. 四个同均值、同方差变量仅两两独立，均值的方差公式还成立吗？为什么不需要所有四阶联合概率？
+6. 取正文完全相关模型，证明 $(X_1+\cdots+X_n)/n=Z$ 对每个样本点都成立，而不仅是期望相等。
+
+**第 1 题。** $\mathbb E[|X|]=1/4+3/8+9/8=7/4$，而 $|\mathbb E[X]|=5/4$。先取绝对值再加权，与先加权再取绝对值是不同运算。
+
+**第 2 题。** $\mathbb E[Y]=3(5/4)-2=7/4$，$\operatorname{Var}(Y)=9(39/16)=351/16$。减去常数不改变方差。
+
+**第 3 题。** 因 $I^2=I$，有 $\mathbb E[I^2]=p$，方差为 $p-p^2=p(1-p)$。独立时各协方差为零，成功次数的方差是 $np(1-p)$，而期望仍为 $np$。
+
+**第 4 题。** 方差为 $[1+1+2(1/2)]/4=3/4$。正的协方差使这次平均的方差大于独立情形。
+
+**第 5 题。** 成立，结果为 $\sigma^2/4$。平方展开只涉及单项平方和两项乘积，两两独立已足够令所有协方差消失；这并不意味着完整联合分布也能分解。
+
+有限分布的期望是加权和，方差是中心化后平方的加权和；联合分布决定交叉项能否消失。关于离散随机变量、pmf、期望与方差，可参见 MIT 6.041SC Lecture 5 [@mit6041expectation2013]；联合分布、独立随机变量与多变量函数期望见 Lecture 7 [@mit6041multiple2013]。

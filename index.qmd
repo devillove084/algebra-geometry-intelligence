@@ -43,10 +43,11 @@ number-sections: false
 6. [极限、导数与积分的定义](chapters/00-foundations/calculus-definitions.qmd)；
 7. [概率模型、随机变量与统计样本](chapters/00-foundations/probability-statistics-definitions.qmd)；
 8. [线性代数导论](chapters/01-linear-algebra/index.qmd)；
-9. [标量与向量](chapters/01-linear-algebra/scalars-and-vectors.qmd)及第二部分的后续章节；
-10. 第三部分：[变化与累积](chapters/02-calculus/index.qmd)、[线性近似与误差](chapters/02-calculus/linear-approximation-and-error.qmd)；
-11. 第四部分：[有限概率模型](chapters/03-probability/index.qmd)、[条件化、全概率与 Bayes](chapters/03-probability/conditioning-total-probability-and-bayes.qmd)。
+9. [标量与向量](chapters/01-linear-algebra/scalars-and-vectors.qmd)及第一部分的后续章节；
+10. 第二部分：[变化与累积](chapters/02-calculus/index.qmd)、[线性近似与误差](chapters/02-calculus/linear-approximation-and-error.qmd)、[导数、单调性与最优化](chapters/02-calculus/derivatives-and-optimization.qmd)；
+11. 第三部分：[有限概率模型](chapters/03-probability/index.qmd)、[条件化、全概率与 Bayes](chapters/03-probability/conditioning-total-probability-and-bayes.qmd)、[独立性与重复试验](chapters/03-probability/independence-and-repeated-trials.qmd)、[离散随机变量、期望与方差](chapters/03-probability/discrete-expectation-and-variance.qmd)；
+12. 第四部分：[重复测量与最小二乘](chapters/04-connections/repeated-measurements-and-least-squares.qmd)。
 
-第一部分的微积分与概率统计页面保留为全书总纲；第三、第四部分从具体问题出发展开。线性代数、微积分与概率论有各自的入口，也在局部线性近似、加权求和和连续累积等问题中相互连接。
+数学语言部分的微积分与概率统计页面保留为全书总纲；第二、第三部分分别展开微积分与概率论，第四部分从具体问题出发展开。线性代数、微积分与概率论有各自的入口，也在局部线性近似、加权求和和连续累积等问题中相互连接。
 
 后续内容按知识依赖逐章加入。路线图中的高级主题是明确的内容规划，不代表章节已经完成。

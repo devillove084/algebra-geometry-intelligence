@@ -1,0 +1,389 @@
+---
+title: "重复测量与最小二乘"
+description: "用同一组测量连接误差平方和、正交投影与随机估计，区分几何最优、无偏性和测量可靠性。"
+---
+
+# 两个读数与一个未知量
+
+同一个零件的尺寸偏离标称值多少？两次测量分别得到 $1$ 毫米和 $3$ 毫米。仪器报告不同的数，但被测对象只对应一个固定的偏差。选择 $1$、$2$ 或 $3$ 毫米作为最终报告，各有什么理由？
+
+以下以毫米为单位记录数值，真实偏差记为固定但未知的实数 $\theta$。先把已得到的读数记为
+
+$$
+\mathbf b=\begin{bmatrix}1\\3\end{bmatrix}\in\mathbb R^2.
+$$
+
+这里有两个不能混在一起的问题：
+
+1. 对**这组固定数据**，哪个常数最接近所有读数？
+2. 若**重新进行测量**，按同一规则算出的结果会怎样变化，是否接近真实值？
+
+第一个问题可以不谈概率。第二个问题必须说明测量是怎样产生的，仅凭两个数字不能回答。
+
+本章使用[一元最优化](../02-calculus/derivatives-and-optimization.qmd)、[正交投影与最小二乘](../01-linear-algebra/least-squares-projections-and-normal-equations.qmd)以及[期望与方差](../03-probability/discrete-expectation-and-variance.qmd)。每一步都保留其输入与假设。
+
+# 平方误差目标
+
+给定候选报告值 $c\in\mathbb R$，两个残差为 $1-c$ 和 $3-c$。采用平方和作为损失：
+
+$$
+Q(c)=(1-c)^2+(3-c)^2=2(c-2)^2+2.
+$$ {#eq-connect-two-loss}
+
+$Q$ 的单位是平方毫米，$c$ 的单位是毫米。平方使正负残差不能抵消，并对较大偏离施加较大的代价；选择这种损失是一项评价标准，而不是“测量”二字自动规定的唯一标准。
+
+导数为 $Q'(c)=4(c-2)$：$c<2$ 时目标下降，$c>2$ 时目标上升。因此 $c=2$ 是唯一全局最小点。配方还给出更直接的证明：偏离 $2$ 一个量 $h$ 后，损失精确增加 $2h^2$。
+
+```{python}
+#| label: fig-connect-measurement-loss
+#| fig-format: svg
+#| fig-cap: "同一候选值依次取 1、2、3 毫米。上排橙色线段标出两个残差；下排在同一损失曲线上标记当前候选。所有列使用相同尺度，最小损失不等于零。"
+#| fig-alt: "三列分镜比较候选报告值 1、2、3 毫米；平方误差和分别为 4、2、4 平方毫米。最优报告值 2 毫米位于两个读数之间，但两个残差仍分别为负 1 和正 1 毫米。"
+#| code-fold: true
+#| code-summary: "查看读数与目标函数分镜"
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib_inline.backend_inline import InlineBackend, set_matplotlib_formats
+
+InlineBackend.instance().print_figure_kwargs = {
+    "bbox_inches": "tight", "metadata": {"Date": None, "Creator": "AGI connections"},
+}
+set_matplotlib_formats("svg")
+plt.rcParams.update({
+    "font.family": "sans-serif", "font.sans-serif": ["Noto Sans CJK SC", "DejaVu Sans"],
+    "font.size": 12, "axes.unicode_minus": False,
+    "svg.fonttype": "path", "svg.hashsalt": "repeated-measurements",
+})
+BLUE, GREEN, ORANGE, PURPLE = "#274C77", "#2A9D8F", "#C96B35", "#8656A0"
+INK, PAPER = "#243447", "#FBFAF7"
+
+def finish(fig):
+    fig.canvas.draw()
+    fig.set_layout_engine("none")
+    plt.show()
+    plt.close(fig)
+
+fig, axes = plt.subplots(2, 3, figsize=(11.4, 6.4), layout="constrained", facecolor=PAPER)
+cs = np.linspace(0, 4, 301)
+for j, c in enumerate([1, 2, 3]):
+    ax = axes[0, j]
+    ax.scatter([1, 3], [1, 2], color=BLUE, s=60, label="读数", zorder=4)
+    ax.axvline(c, color=GREEN, ls="--", label="报告值")
+    for y, b in [(1, 1), (2, 3)]:
+        ax.plot([c, b], [y, y], color=ORANGE, lw=3)
+        ax.text(b, y+0.17, f"读数 {b}", ha="center", fontsize=11,
+                        bbox=dict(facecolor=PAPER, edgecolor="none", pad=1.5), zorder=5)
+    ax.set(xlim=(-0.2, 4.2), ylim=(0.5, 2.6), yticks=[1, 2],
+           yticklabels=["测量一", "测量二"], xlabel="偏差 / mm", title=f"候选 c = {c}")
+    ax = axes[1, j]
+    ax.plot(cs, 2*(cs-2)**2+2, color=BLUE, lw=2.4)
+    ax.scatter([c], [2*(c-2)**2+2], color=GREEN, s=65, zorder=4)
+    ax.text(c, 2*(c-2)**2+2+0.5, f"Q = {2*(c-2)**2+2}", ha="center")
+    ax.set(xlim=(-0.2, 4.2), ylim=(0, 11), xlabel="报告值 c / mm", ylabel=r"平方和 / $\mathrm{mm}^2$")
+for ax in axes.flat:
+    ax.set_facecolor(PAPER)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.grid(alpha=0.12)
+finish(fig)
+```
+
+# 一般读数组的最优常数
+
+设已经记录 $n\ge1$ 个实数读数 $b_1,\ldots,b_n$，样本平均为 $\bar b=n^{-1}\sum_{i=1}^n b_i$。对任意 $c$，展开 $b_i-c=(b_i-\bar b)+(\bar b-c)$：
+
+$$
+\begin{aligned}
+Q(c)&=\sum_{i=1}^n(b_i-c)^2\\
+&=\sum_{i=1}^n(b_i-\bar b)^2
++2(\bar b-c)\sum_{i=1}^n(b_i-\bar b)+n(\bar b-c)^2\\
+&=Q(\bar b)+n(c-\bar b)^2.
+\end{aligned}
+$$ {#eq-connect-sum-squares}
+
+中间项为零，因为 $\sum_i(b_i-\bar b)=0$。最后一项非负且仅在 $c=\bar b$ 时为零，所以**样本平均是固定数据平方误差的唯一最优常数**。
+
+微积分给出相同结论：
+
+$$
+Q'(c)=2\sum_i(c-b_i)=2n(c-\bar b),\qquad Q''(c)=2n>0.
+$$
+
+导数符号或 @eq-connect-sum-squares 都能证明全局最小性，而不仅是找出一个驻点。这里没有假设测量独立、噪声均值为零或噪声服从某种分布；它是对任意实数数据成立的代数事实。
+
+# 到常数向量空间的投影
+
+一般情形的读数向量为 $\mathbf b=(b_1,\ldots,b_n)^{\mathsf T}\in\mathbb R^n$。把所有候选报告值同时复制到 $n$ 次测量中。记 $\mathbf1=(1,\ldots,1)^{\mathsf T}\in\mathbb R^n$，那么候选输出是 $c\mathbf1$，全部候选构成直线 $\mathcal C=\operatorname{span}\{\mathbf1\}$。
+
+平方误差就是欧氏距离的平方：
+
+$$
+Q(c)=\|\mathbf b-c\mathbf1\|^2.
+$$
+
+由直线投影公式，
+
+$$
+\widehat c=\frac{\mathbf1^{\mathsf T}\mathbf b}{\mathbf1^{\mathsf T}\mathbf1}
+=\frac{\sum_i b_i}{n}=\bar b,
+\qquad \mathbf p=\bar b\mathbf1,
+\qquad \mathbf r=\mathbf b-\mathbf p.
+$$ {#eq-connect-projection}
+
+$\mathbf1^{\mathsf T}\mathbf r=0$ 正是残差和为零。这与导数方程 $Q'(\widehat c)=0$ 表达同一条件：沿可选方向 $\mathbf1$ 移动，不能再降低距离平方。
+
+对任意 $c$，向量分解
+
+$$
+\mathbf b-c\mathbf1=\mathbf r+(\bar b-c)\mathbf1
+$$
+
+的两部分相互正交。勾股定理因此给出 @eq-connect-sum-squares。代数中的“交叉项为零”和几何中的“残差垂直于候选空间”是同一件事，不是两个碰巧给出同样数值的计算。
+
+```{python}
+#| label: fig-connect-projection
+#| fig-format: svg
+#| fig-cap: "两次测量的输出空间，坐标单位均为毫米。左镜在直线 $b_2=b_1$ 上比较候选输出；右镜将读数向量分成投影与正交残差。两镜横纵轴等比例且范围相同，箭头表示向量而非随时间运动。"
+#| fig-alt: "读数点为 1、3 毫米，候选输出在对角线上。最近点是 2、2 毫米，残差分量为负 1、正 1 毫米，与无量纲方向向量 (1,1) 正交；其他候选距离更长。"
+#| code-fold: true
+b, p = np.array([1., 3.]), np.array([2., 2.])
+fig, axes = plt.subplots(1, 2, figsize=(10, 4.8), layout="constrained", facecolor=PAPER)
+for ax in axes:
+    ax.set_facecolor(PAPER)
+    ax.plot([-.3, 3.8], [-.3, 3.8], color=GREEN, lw=2, label="常数输出直线")
+    ax.scatter(*b, color=BLUE, s=65, zorder=5)
+    ax.text(.8, 3.2, r"$\mathbf{b}=(1,3)$", color=BLUE, ha="center")
+    ax.set(xlim=(-.3, 3.8), ylim=(-.3, 3.8), xlabel="第一次测量的输出坐标 / mm", ylabel="第二次测量的输出坐标 / mm")
+    ax.set_aspect("equal")
+    ax.grid(alpha=.15)
+    ax.spines[["top", "right"]].set_visible(False)
+for c in [1., 2., 3.]:
+    axes[0].plot([c, b[0]], [c, b[1]], color=ORANGE, ls="--", lw=1.7)
+    axes[0].scatter(c, c, color=GREEN, s=45)
+    axes[0].text(c+.12, c-.22, f"({c:g},{c:g})", fontsize=10)
+axes[0].set_title("候选输出与距离")
+for start, end, color in [(np.zeros(2), p, GREEN), (p, b, PURPLE), (np.zeros(2), b, BLUE)]:
+    axes[1].annotate("", xy=end, xytext=start,
+                     arrowprops=dict(arrowstyle="-|>", color=color, lw=2.3, shrinkA=0, shrinkB=0))
+u, v = np.array([1, 1])/np.sqrt(2), np.array([-1, 1])/np.sqrt(2)
+corner = np.array([p+.18*u, p+.18*(u+v), p+.18*v])
+axes[1].plot(corner[:, 0], corner[:, 1], color=INK, lw=1)
+axes[1].text(2.15, 1.85, r"$\mathbf{p}=(2,2)$", color=GREEN)
+axes[1].text(2.05, 2.85, r"$\mathbf{r}=(-1,1)$", color=PURPLE, fontsize=11)
+axes[1].set_title("投影与正交残差")
+finish(fig)
+```
+
+$n=2$ 时这是一张普通平面图；$n>2$ 时证明仍成立，不依赖能否把整个空间画出来。相应的投影矩阵为 $P=\mathbf1\mathbf1^{\mathsf T}/n\in\mathbb R^{n\times n}$，满足 $P^{\mathsf T}=P$、$P^2=P$。
+
+# 从固定数据到随机估计
+
+现在明确加入测量模型。测量前，第 $i$ 次读数是随机变量
+
+$$
+B_i=\theta+\varepsilon_i,
+\qquad \mathbb E[\varepsilon_i]=0,
+\qquad \operatorname{Var}(\varepsilon_i)=\sigma^2.
+$$ {#eq-connect-noise-model}
+
+这里 $\theta$ 是同一个未知常数，不是随机变量；$\varepsilon_i$ 是有限支持的随机误差。$\varepsilon_i$ 与标准差 $\sigma$ 以毫米计，方差 $\sigma^2$ 以平方毫米计。为得到下面的方差简式，先假设误差两两独立。模型中的零均值、相同方差与独立性都要靠测量机制或数据依据判断，不能由最小二乘恒等式推出。
+
+用样本平均作为估计量：
+
+$$
+\widehat\theta=\bar B=\frac1n\sum_i B_i.
+$$
+
+测量前 $\bar B$ 是随机变量，测量后计算出的 $\bar b$ 是一个确定数。前者有分布、期望和方差，后者是这一次的估计值。
+
+由期望线性性，$\mathbb E[\bar B]=\theta$，称为**无偏**。由独立误差的方差相加，
+
+$$
+\operatorname{Var}(\bar B)=\frac1{n^2}\sum_i\operatorname{Var}(B_i)=\frac{\sigma^2}{n}.
+$$ {#eq-connect-mean-variance}
+
+无偏不是“这一次正好测准”；方差减少也不是“每次取平均都会比每个单次读数更近”。它们是在指定模型下，比较重复实验中估计量的分布。
+
+例如令 $\theta=2$ 毫米，两次误差独立，各以 $1/2$ 概率取 $-1$ 或 $1$ 毫米。四个有序读数组 $(1,1),(1,3),(3,1),(3,3)$ 各有 $1/4$ 概率。平均值分别是 $1,2,2,3$ 毫米，因此无偏且方差为 $1/2$ 平方毫米；平均值仍可能偏离真实值整整一毫米。
+
+# 偏差与均方误差
+
+对任意有限支持估计量 $T$，记 $\mu_T=\mathbb E[T]$，偏差为 $\mu_T-\theta$，均方误差为 $\operatorname{MSE}(T)=\mathbb E[(T-\theta)^2]$。展开并使用 $\mathbb E[T-\mu_T]=0$，得到
+
+$$
+\begin{aligned}
+\operatorname{MSE}(T)
+&=\mathbb E[(T-\mu_T+\mu_T-\theta)^2]\\
+&=\operatorname{Var}(T)+(\mu_T-\theta)^2.
+\end{aligned}
+$$ {#eq-connect-bias-variance}
+
+若每次读数都有同一个固定偏移 $d$，即 $B_i=\theta+d+\varepsilon_i$，独立平均的均方误差便是 $\sigma^2/n+d^2$。增加测量次数可以减小随机波动，却不能消除这份系统偏差。
+
+若读数共享同一个随机误差 $Z$，$B_i=\theta+Z$，则平均后仍是 $\theta+Z$。一般地，
+
+$$
+\operatorname{Var}(\bar B)=\frac1{n^2}\left[
+\sum_i\operatorname{Var}(B_i)+2\sum_{i<j}\operatorname{Cov}(B_i,B_j)\right].
+$$
+
+正协方差可能使平均值的方差不再按 $\sigma^2/n$ 缩小。即使在独立同方差模型中，标准差也只是按 $\sigma/\sqrt n$ 缩小，不能把这两种误差尺度混用。更隐蔽的是：共享偏移沿 $\mathbf1$ 方向，恰好落在可以拟合的常数空间中，因此残差可以为零，而估计仍偏离真实值。
+
+```{python}
+#| label: fig-connect-bias-and-residual
+#| fig-format: svg
+#| fig-cap: "左镜比较三种明确模型的均方误差，单次零均值噪声方差均为 1 平方毫米；固定偏差模型另加 0.5 毫米偏移。右镜比较两组各含两次测量的具体读数，全部一致不等于全部准确。两镜的横轴含义不同。"
+#| fig-alt: "左图的均方误差单位为平方毫米：独立无偏平均为 1/n，固定偏差模型为 1/n 加 1/4，共享误差模型恒为 1。右图的读数、平均值和真值单位为毫米；两组各含两次测量，1、3 的均值是 2，3、3 的均值是 3，而真值均为 2。纵向错位仅用于区分两组读数。"
+#| code-fold: true
+fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.8), layout="constrained", facecolor=PAPER)
+ns = np.arange(1, 17)
+axes[0].plot(ns, 1/ns, "o-", color=BLUE, label="独立且无偏")
+axes[0].plot(ns, 1/ns+.25, "s-", color=ORANGE, label="独立且固定偏差 0.5 mm")
+axes[0].plot(ns, np.ones_like(ns), "--", color=PURPLE, label="共享同一零均值误差")
+axes[0].set(xlabel="测量次数 n", ylabel=r"均方误差 / $\mathrm{mm}^2$", title="随机波动与系统偏差", ylim=(0, 1.5), xticks=[1, 4, 8, 12, 16])
+axes[0].legend(fontsize=9, frameon=False, loc="upper right")
+for i, readings in enumerate(([1, 3], [3, 3])):
+    axes[1].scatter(readings, [i-.08, i+.08], color=BLUE, s=55)
+    axes[1].scatter(np.mean(readings), i, marker="D", color=GREEN, s=60)
+axes[1].axvline(2, color=INK, ls="--", label="设定真值 2 mm")
+axes[1].scatter([], [], color=BLUE, label="读数")
+axes[1].scatter([], [], marker="D", color=GREEN, label="平均值")
+axes[1].set(xlim=(.5, 3.6), ylim=(-.5, 1.6), yticks=[0, 1], yticklabels=["读数 1,3", "读数 3,3"], xlabel="测量值 / mm", title="残差小不保证测准")
+axes[1].legend(fontsize=9, frameon=False, loc="upper left")
+for ax in axes:
+    ax.set_facecolor(PAPER)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.grid(alpha=.13)
+finish(fig)
+```
+
+# 平均值的最优范围
+
+在独立、零均值、同方差模型下，样本平均是否“最好”？必须先规定与哪些估计量比较。
+
+考虑预先固定的实数权重 $w_1,\ldots,w_n$，构成线性估计量 $T=\sum_i w_i B_i$。要求它对**所有可能的 $\theta$** 都无偏，则
+
+$$
+\mathbb E[T]=\theta\sum_iw_i=\theta
+\quad\Longleftrightarrow\quad \sum_iw_i=1.
+$$
+
+在这个约束下，$\operatorname{Var}(T)=\sigma^2\sum_iw_i^2$，而
+
+$$
+\sum_iw_i^2=\frac1n+\sum_i\left(w_i-\frac1n\right)^2\ge\frac1n.
+$$ {#eq-connect-equal-weight-optimum}
+
+当 $\sigma^2>0$ 时，等号仅在每个 $w_i=1/n$ 时成立。因此样本平均在**固定权重的线性无偏估计量**中具有最小方差。若 $\sigma^2=0$，所有这类估计量都精确，权重不再唯一。
+
+这个结论没有比较全部非线性估计量，也没有证明样本平均对任意噪声分布都是最大似然估计。尤其前面的离散误差模型并不是高斯模型，不能仅因出现平方和，就宣称已经作了高斯似然推导。
+
+# 不同精度的测量
+
+若误差仍两两独立、均值为零，但已知方差为 $\sigma_i^2>0$，同样的权重约束下
+
+$$
+\operatorname{Var}(T)=\sum_i w_i^2\sigma_i^2.
+$$
+
+令 $S=\sum_i\sigma_i^{-2}>0$、$\alpha_i=\sigma_i^{-2}/S$。因为 $\sum_i\alpha_i=1$，且 $\sigma_i^2\alpha_i=1/S$，展开平方可得
+
+$$
+\sum_iw_i^2\sigma_i^2
+=\frac1S+\sum_i\sigma_i^2(w_i-\alpha_i)^2.
+$$ {#eq-connect-inverse-variance}
+
+交叉项为 $2S^{-1}\sum_i(w_i-\alpha_i)=0$。因此唯一最优权重与方差成反比。
+
+例如两个传感器的误差方差分别为 $1$ 和 $4$ 平方毫米，最优权重是 $4/5$、$1/5$，估计方差为 $4/5$ 平方毫米；等权平均的方差则为 $5/4$ 平方毫米。对于已经看到的读数 $(1,3)$，加权报告值为 $7/5$ 毫米，不再是 $2$ 毫米。这不是“知道哪一次测错了”，而是根据预先已知的可靠性分配权重。
+
+同一个报告值也最小化加权平方和
+
+$$
+Q_w(c)=\sum_i\frac{(b_i-c)^2}{\sigma_i^2}.
+$$
+
+求导得到 $Q_w'(c)=2\sum_i(c-b_i)/\sigma_i^2$，唯一零点为 $c=\sum_i\alpha_i b_i$，二阶导数为 $2S>0$。这里 $Q_w$ 无量纲，因为每项用平方毫米除以平方毫米。
+
+几何上，令 $\sigma_i=\sqrt{\sigma_i^2}>0$ 为第 $i$ 次测量的标准差，将读数和候选方向分别按已知标准差缩放：
+
+$$
+z_i=\frac{b_i}{\sigma_i},\qquad a_i=\frac1{\sigma_i},\qquad
+Q_w(c)=\|\mathbf z-c\mathbf a\|^2,
+\qquad \widehat c=\frac{\mathbf a^{\mathsf T}\mathbf z}{\mathbf a^{\mathsf T}\mathbf a}.
+$$
+
+$\mathbf z\in\mathbb R^n$ 无量纲，$\mathbf a$ 的分量单位为毫米的倒数，$c\mathbf a$ 无量纲，投影系数 $\widehat c$ 的单位仍是毫米。加权并没有破坏投影，而是改变了衡量不同坐标误差的尺度。
+
+如果误差有相关性，上面的方差公式会多出协方差项；只按各自方差倒数加权不再保证最优。如果方差本身由有限数据估计，它也具有不确定性，不能当作已知常数的证明原封不动地使用。
+
+# 三种方法的分工
+
+| 方法 | 输入与假设 | 得到的结论 | 不能单独保证什么 |
+|---|---|---|---|
+| 代数与投影 | 固定读数、常数输出空间、选定内积 | 最近输出、正交残差、平方和分解 | 真实值在哪里、测量是否无偏 |
+| 微积分 | 固定读数、本章的正二次目标与可行域 | 变化方向、驻点；由导数符号证明全局最小性 | 平方损失是否适合仪器噪声 |
+| 概率 | 随机读数模型、均值、方差和依赖条件 | 估计偏差、重复实验的波动、指定类别中的最优性 | 单次估计必然精确、模型假设必然真实 |
+
+投影与微积分在这里求解同一个确定性最小化问题，所以可以给出完全相同的 $\bar b$。概率论回答的却是另一个层次：这个计算规则作用于随机数据时，如何评价它的表现。只有明确了模型条件，才可以把“这组数据拟合得好”连接到“重复实验中估计得可靠”。
+
+# 精确核查
+
+```{python}
+#| label: connect-measurements-checks
+#| code-fold: true
+#| code-summary: "查看代数、投影与概率核查"
+from fractions import Fraction as F
+from itertools import product
+import sympy as sp
+
+c = sp.symbols("c", real=True)
+b = sp.Matrix([1, 3])
+one = sp.ones(2, 1)
+P = one * one.T / 2
+p = P * b
+r = b-p
+assert P.T == P and P*P == P
+assert p == sp.Matrix([2, 2]) and (one.T*r)[0] == 0
+assert sp.expand((1-c)**2+(3-c)**2 - (2+2*(c-2)**2)) == 0
+assert sp.diff((1-c)**2+(3-c)**2, c) == 4*(c-2)
+rows = list(product((-1, 1), repeat=2))
+errors = [F(sum(row), 2) for row in rows]
+assert sum(errors, F(0))/4 == 0
+assert sum((e*e for e in errors), F(0))/4 == F(1, 2)
+assert sum(((e+F(1, 2))**2 for e in errors), F(0))/4 == F(3, 4)
+variances = [F(1), F(4)]
+alpha = [F(4, 5), F(1, 5)]
+assert sum(alpha) == 1
+assert sum(w*w*v for w, v in zip(alpha, variances)) == F(4, 5)
+assert sum(F(1, 2)**2*v for v in variances) == F(5, 4)
+assert alpha[0]*1+alpha[1]*3 == F(7, 5)
+weighted_loss = (1-c)**2+(3-c)**2/4
+assert sp.diff(weighted_loss, c).subs(c, sp.Rational(7, 5)) == 0
+assert sp.diff(weighted_loss, c, 2) > 0
+print("平方和分解、投影、偏差方差分解与逆方差权重核查通过。")
+```
+
+有限枚举只检查给定的离散例子；最优权重和平方和分解对一般 $n$ 的结论来自前面的证明。
+
+# 自检题与部分解答
+
+1. 对读数 $(1,2,6)$ 求最优常数、残差和最小平方误差；分别用配方和投影核查。
+2. 三次读数完全相同，能否据此断言报告值准确？给出一个共同偏移模型。
+3. 若每次误差均值为 $d\ne0$，但彼此独立且方差为 $\sigma^2$，写出平均值的偏差、方差和均方误差。
+4. 两个传感器方差为 $1,9$ 平方毫米，求最优固定线性无偏权重及最小方差。若两者误差具有非零协方差，证明还能沿用吗？
+5. 对数据 $(0,0,9)$，平方损失的最优常数是多少？若改成绝对误差和 $|c|+|c|+|9-c|$，答案是否相同？
+
+**第 1 题。** 均值为 $3$ 毫米，残差分量以毫米计，为 $(-2,-1,3)$ 毫米；它们的和为零，最小平方误差为 $14$ 平方毫米。一般候选 $c$ 的平方误差为 $14+3(c-3)^2$ 平方毫米。
+
+**第 3 题。** 偏差为 $d$，方差为 $\sigma^2/n$，均方误差为 $d^2+\sigma^2/n$。独立性无法消除非零均值。
+
+**第 4 题。** 权重为 $9/10,1/10$，最小方差为 $9/10$ 平方毫米。协方差不为零时，应在方差表达式中加入交叉项并重新计算，不能沿用独立情形的证明。
+
+**第 5 题。** 平方损失由均值 $3$ 最小化。对绝对损失，在 $c<0$、$0\le c\le9$、$c>9$ 三段分别为 $9-3c$、$9+c$、$3c-9$，唯一最小点是 $0$。最优性必须附带所用损失，不能只说一个数“最接近数据”。
+
+# 参考资料
+
+投影与最小二乘的基础见 Strang [@strang2023linear]；一元极值方法与离散期望、联合变量的背景分别见 MIT 18.01SC 和 6.041SC [@mit1801optimization2010; @mit6041expectation2013; @mit6041multiple2013]。本章使用有限噪声模型，不需要连续分布或高斯似然假设。
+
+::: {#refs}
+:::

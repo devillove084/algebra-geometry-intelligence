@@ -164,19 +164,26 @@ Gram 矩阵与协方差
 
 ## 微积分与概率论入口
 
-第一部分“数学语言”中的微积分、概率统计总纲保持不变。第三部分和第四部分独立展开，不以读完全部线性代数为前提，也不把三个领域割裂开来。
+“数学语言”总纲中的微积分、概率统计内容保持不变。第一部分线性代数、第二部分微积分和第三部分概率论分别展开，不以读完其他主线为前提，也不把三个领域割裂开来。
 
-- **第三部分：微积分**——从[变化与累积](chapters/02-calculus/index.qmd)进入，再到[线性近似与误差](chapters/02-calculus/linear-approximation-and-error.qmd)，讨论切线模型、二阶误差界、凸凹性和复合量的误差传播。参考 Strang 的 [Calculus Open Textbook](https://ocw.mit.edu/courses/res-18-001-calculus-fall-2023/) 和 MIT 18.01SC 的[导数入门](https://ocw.mit.edu/courses/18-01sc-single-variable-calculus-fall-2010/pages/1.-differentiation/part-a-definition-and-basic-rules/session-1-introduction-to-derivatives/)与[线性近似](https://ocw.mit.edu/courses/18-01sc-single-variable-calculus-fall-2010/pages/unit-2-applications-of-differentiation/part-a-approximation-and-curve-sketching/session-23-linear-approximation/)。
-- **第四部分：概率论**——从[有限概率模型](chapters/03-probability/index.qmd)进入，再到[条件化、全概率与 Bayes](chapters/03-probability/conditioning-total-probability-and-bayes.qmd)，讨论观测信息如何改变来源判断。参考 MIT 6.041SC 的[概率模型与公理](https://ocw.mit.edu/courses/6-041sc-probabilistic-systems-analysis-and-applied-probability-fall-2013/pages/unit-i/lecture-1/)和[条件化与 Bayes](https://ocw.mit.edu/courses/6-041sc-probabilistic-systems-analysis-and-applied-probability-fall-2013/pages/unit-i/lecture-2/)。
+- **第二部分：微积分**——从[变化与累积](chapters/02-calculus/index.qmd)进入，再到[线性近似与误差](chapters/02-calculus/linear-approximation-and-error.qmd)，讨论切线模型、二阶误差界、凸凹性和复合量的误差传播。参考 Strang 的 [Calculus Open Textbook](https://ocw.mit.edu/courses/res-18-001-calculus-fall-2023/) 和 MIT 18.01SC 的[导数入门](https://ocw.mit.edu/courses/18-01sc-single-variable-calculus-fall-2010/pages/1.-differentiation/part-a-definition-and-basic-rules/session-1-introduction-to-derivatives/)与[线性近似](https://ocw.mit.edu/courses/18-01sc-single-variable-calculus-fall-2010/pages/unit-2-applications-of-differentiation/part-a-approximation-and-curve-sketching/session-23-linear-approximation/)。
+- **第三部分：概率论**——从[有限概率模型](chapters/03-probability/index.qmd)进入，再到[条件化、全概率与 Bayes](chapters/03-probability/conditioning-total-probability-and-bayes.qmd)，讨论观测信息如何改变来源判断。参考 MIT 6.041SC 的[概率模型与公理](https://ocw.mit.edu/courses/6-041sc-probabilistic-systems-analysis-and-applied-probability-fall-2013/pages/unit-i/lecture-1/)和[条件化与 Bayes](https://ocw.mit.edu/courses/6-041sc-probabilistic-systems-analysis-and-applied-probability-fall-2013/pages/unit-i/lecture-2/)。
 
-两部分已经从开篇进入第二章，但仍不表示已覆盖完整课程。后续逐步展开求导规则、积分理论、分布和期望，再在多元导数、连续概率与最小二乘等具体问题中连接三个领域。
+微积分现已推进到[导数、单调性与最优化](chapters/02-calculus/derivatives-and-optimization.qmd)，概率论进一步展开[独立性与重复试验](chapters/03-probability/independence-and-repeated-trials.qmd)和[离散随机变量、期望与方差](chapters/03-probability/discrete-expectation-and-variance.qmd)。这仍不是完整课程，也不表示积分理论、连续分布或多元主题已经完成。
+
+## 三种方法的交汇
+
+第四部分独立放在 `chapters/04-connections/`。第一章[重复测量与最小二乘](chapters/04-connections/repeated-measurements-and-least-squares.qmd)复用同一组读数，比较平方和分解、导数最优化、常数子空间投影与随机估计；再讨论系统偏差、相关误差和不同方差下的加权。基础章节仍留在各自主线。
+
+当前交汇只需要一元微积分、有限概率模型与直线投影，不提前使用高斯似然或多元梯度。下一层交汇需要先补连续分布与密度、积分计算、偏导和二次型，再讨论一般线性拟合与噪声模型。路线依据及尚未覆盖的前置知识见 [DEVELOPMENT.md](DEVELOPMENT.md)。
 
 ## 当前进度
 
 | 状态 | 内容 |
 |---|---|
 | 已整理 | 数学语言导论；数、集合与区间；函数与映射；命题、量词与证明；微积分核心定义；概率统计核心定义；标量与向量；矩阵与线性映射；矩阵乘法与线性映射复合；线性方程组与 Gaussian 消元；排列、逆序对、逆序数与行列式；可逆性、Cramer 法则、子式、秩与一般方程组判别准则；向量空间、子空间、张成、线性相关与基；交换引理、维数定理、秩—零度以及行秩等于列秩；坐标同构、一般基下的线性映射矩阵、换基与相似；行列式乘法性、Laplace 展开、伴随矩阵、迹与相似不变量；LU/PLU 分解、三角求解与部分选主元；LU 存在唯一性与一般 PLU 证明；内积的几何、夹角、直线投影、最近点与坐标度量；正交补、四个基本子空间、左零空间相容性判据与最小范数特解；正交基、Gram–Schmidt、QR 分解与正交投影；独立列分解 A=CR；不依赖行列式的可逆性；最小二乘、正规方程与直线拟合 |
-| 微积分与概率论进展 | 开篇；线性近似、微分、二阶误差界与测量误差传播；条件化、全概率、Bayes、基率与观测分布的矩阵表示 |
+| 微积分与概率论进展 | 开篇；线性近似、微分、二阶误差界与测量误差传播；中值定理、单调性与一元最优化；条件化、全概率、Bayes；独立重复试验、二项计数、期望、方差、联合分布与协方差 |
+| 第一处交汇 | 重复测量与最小二乘；平方和分解、投影、偏差与均方误差、线性无偏估计和逆方差加权 |
 | 待续 | 特征值、特征向量与对角化；微积分与概率论各自主线的后续章节 |
 | 之后补充 | 行列式与矩阵分解的后续理论；伪逆与数值正交化；矩阵范数、条件数与误差分析；特征值、谱定理、SVD 与数值线性代数；系统性的微积分、概率论与统计推断 |
 | 路线草案 | 核心路线与 A–G 七条高级路线 |
