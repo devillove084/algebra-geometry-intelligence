@@ -1,0 +1,404 @@
+---
+title: "线性近似与误差：切线能相信到什么程度"
+description: "从局部余项到微分、误差尺度、二次修正与复合量的测量误差传播。"
+---
+
+# 切线给出数值以后，还缺什么
+
+上一章得到：若 $f$ 在基准点 $a$ 可导，输入变化 $h$ 引起的输出可以写成
+
+$$
+f(a+h)=f(a)+f'(a)h+r(h),\qquad \frac{r(h)}h\to0\quad(h\to0).
+$$ {#eq-calc-linear-remainder}
+
+现在的问题是：选定一个实际步长以后，丢掉 $r(h)$ 会损失多少？估计偏高还是偏低？如果输入本身来自测量，这份不确定性又怎样传到输出？这些问题要求把“局部像直线”变成可以核查的误差陈述。
+
+定义在 $a$ 处的**线性近似**（切线模型）
+
+$$
+L_a(x)=f(a)+f'(a)(x-a),\qquad f(a+h)\approx L_a(a+h).
+$$ {#eq-calc-linear-model}
+
+严格地说，$L_a$ 通常是仿射函数；真正线性的是增量映射 $h\mapsto f'(a)h$。基准值给出起点，导数给出输入变化的放大系数。MIT 18.01SC 的线性近似页面用“光滑曲线的小段接近切线”解释这一计算方法，并联系导数定义 [@mit1801linear2010]。
+
+可导性只保证 $|r(h)|/|h|\to0$，尚未告诉我们某个指定 $h$ 的误差上限。尤其不能擅自把它换成 $|r(h)|\le Ch^2$：函数 $f(x)=|x|^{3/2}$ 在 $0$ 可导，导数为零，但 $|r(h)|/h^2=1/\sqrt{|h|}$ 无界。平方量级需要额外条件。
+
+# 微分是增量的线性模型
+
+把真实增量与线性预测并排写出来：
+
+$$
+\Delta x=h,\qquad \Delta f=f(a+h)-f(a),\qquad
+\mathrm dx=h,\qquad \mathrm df=f'(a)\,\mathrm dx.
+$$ {#eq-calc-linear-differential}
+
+这里 $\Delta f$ 是函数的真实变化，$\mathrm df$ 是固定基准点 $a$ 后的线性预测，因而
+
+$$
+\Delta f=\mathrm df+r(h).
+$$ {#eq-calc-linear-delta}
+
+不必把 $\mathrm dx$ 想成一种神秘的非零“无限小数”。在这里可以把它选为有限输入扰动 $h$，而微分就是导数这个线性映射作用于该扰动的结果。若输入单位是米、输出单位是秒，那么 $f'(a)$ 的单位是秒每米，$\mathrm df$ 的单位是秒。
+
+$\mathrm df/\mathrm dx$ 的外形像分数，但不能把两个符号当作脱离函数、基准点和变化关系、可以独立约分的普通数。给定非零 $h$ 后，预测增量的数值比确实等于 $f'(a)$；这不使真实差商 $\Delta f/\Delta x$ 也恰好等于它。链式法则中的“消去中间微分”则有导数复合定理作依据，不是仅靠分数外形成立。
+
+例如对 $f(x)=x^2$，在 $a=3$ 处有 $\mathrm df=6\,\mathrm dx$，但在 $a=4$ 处系数就变成 $8$。当 $\mathrm dx=h$ 时，前者的真实增量是 $6h+h^2$。若某个非线性函数在某一步恰有 $\Delta f=\mathrm df$，也不能据此断言整个函数线性。
+
+# 平方根：选择一个容易计算的基准点
+
+估计 $\sqrt{100.8}$ 时，取无量纲输入 $x$，令 $f(x)=\sqrt{x}$。选择 $a=100$，因为 $f(100)=10$，且 $f'(100)=1/20$。于是
+
+$$
+\sqrt{100.8}\approx10+\frac{0.8}{20}=10.04.
+$$ {#eq-calc-linear-sqrt}
+
+实际值约为 $10.0399203184$。选基准点时同时考虑“函数和导数好算”与“离目标足够近”，而不能只选一个整数。若改用 $81$，步长从 $0.8$ 变为 $19.8$，同样的计算公式就面对了更长的一段曲线。
+
+```{python}
+#| label: fig-calc-linear-sqrt
+#| fig-format: svg
+#| fig-cap: "左图按函数值画曲线与切线，右图减去切线并放大纵轴，显示此前难以辨认的余项。两图纵轴不同，右图不是另一条函数值曲线。"
+#| fig-alt: "两幅分镜显示平方根近似。左图在输入 96 到 104 上画出平方根和 100 点切线；右图画输入增量与负余项，在增量 0.8 处标出约负 7.97 乘以十的负五次方。"
+#| code-fold: true
+#| code-summary: "查看切线与余项分镜代码"
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib_inline.backend_inline import set_matplotlib_formats, InlineBackend
+
+InlineBackend.instance().print_figure_kwargs = {
+    "bbox_inches": "tight", "metadata": {"Date": None, "Creator": "AGI calculus"},
+}
+set_matplotlib_formats("svg")
+plt.rcParams.update({
+    "font.family": "sans-serif", "font.sans-serif": ["Noto Sans CJK SC", "DejaVu Sans"],
+    "axes.unicode_minus": False, "svg.hashsalt": "calc-linear-error",
+})
+BLUE, TEAL, CORAL = "#274C77", "#2A9D8F", "#E76F51"
+PAPER = "#FBFAF7"
+
+def show_figure(fig):
+    # 先求解布局再固定位置，避免重复保存时约束布局继续微调。
+    fig.canvas.draw()
+    fig.set_layout_engine("none")
+    plt.show()
+
+def style_axes(axes):
+    for ax in axes:
+        ax.set_facecolor(PAPER)
+        ax.grid(alpha=0.16)
+        ax.spines[["top", "right"]].set_visible(False)
+
+fig, axes = plt.subplots(1, 2, figsize=(10.8, 4.1), layout="constrained")
+fig.set_facecolor(PAPER)
+style_axes(axes)
+x = np.linspace(96, 104, 401)
+axes[0].plot(x, np.sqrt(x), color=BLUE, lw=2.5, label="真实函数")
+axes[0].plot(x, 10 + (x - 100)/20, color=TEAL, ls="--", label="切线预测")
+axes[0].scatter([100, 100.8], [10, np.sqrt(100.8)], color=CORAL, zorder=4)
+axes[0].set(xlabel="输入 x", ylabel="函数值", title="第一镜：先看函数", xlim=(96, 104), ylim=(9.78, 10.22))
+hs = np.linspace(-1, 1, 401)
+# 有理化后的恒等式避免两个很接近的函数值直接相减。
+linear_value = 10 + hs / 20
+residual = -hs**2 / (400 * (np.sqrt(100 + hs) + linear_value))
+axes[1].plot(hs, residual * 1e5, color=CORAL, lw=2.5, label="真实值减预测值")
+axes[1].axhline(0, color=TEAL, ls="--", label="零余项")
+r08 = -0.8**2 / (400 * (np.sqrt(100.8) + 10 + 0.8/20))
+axes[1].scatter([0.8], [r08 * 1e5], color=CORAL, zorder=4)
+axes[1].set(xlabel="输入增量 h", ylabel=r"余项 $r(h)$（单位：$10^{-5}$）", title="第二镜：减去切线看误差", xlim=(-1.05, 1.05), ylim=(-13.5, 1.5))
+axes[0].legend(frameon=False, fontsize=10, loc="upper left")
+axes[1].legend(frameon=False, fontsize=10, loc="lower center")
+show_figure(fig)
+```
+
+@fig-calc-linear-sqrt 特意把余项单独画出：两条曲线在屏幕上几乎重合，不代表它们在指定精度下相等。右图的纵轴扩大了误差尺度，但没有改变误差的定义。
+
+# 误差的绝对、相对与百分比尺度
+
+设真实输出为 $y$，估计值为 $\widehat y$。这里约定有符号估计误差 $e=\widehat y-y$，它与前面的余项 $r=y-\widehat y$ 符号相反。常用的三个尺度是
+
+$$
+E_{\rm abs}=|\widehat y-y|,\qquad
+E_{\rm rel}=\frac{|\widehat y-y|}{|y|}\ (y\ne0),\qquad
+E_{\%}=(100E_{\rm rel})\%.
+$$ {#eq-calc-linear-error-scales}
+
+绝对误差与输出同单位；相对误差无量纲；百分比只是相对误差的另一种表示。平方根例子的绝对误差约为 $7.96816\times10^{-5}$，相对误差约为 $7.93649\times10^{-6}$，百分比误差约为 $0.000793649\%$。
+
+注意分母：标准相对误差使用真实值 $y$；测量时真实值未知，常改用标称值或测得值作参考，此时应明确写“相对于标称值”。若两者很接近且远离零，这种替换在一阶估计中通常可用，但不是定义上的相等。
+
+真实值为零时，相对误差没有定义；真实值接近零时，即使绝对误差很小，相对误差也可能很大。对 $f(x)=x^2$ 在 $a=0$ 处，线性预测为零，绝对误差是 $h^2$，相对于非零真实输出的误差却一直是 $100\%$。可导性从未保证相对于输出的误差很小。
+
+## 半径测量：实际变化与近似遗漏不是同一误差
+
+令圆的标称半径为 $r_0=10\,\mathrm{cm}$，真实半径为 $r_0+h$，已知 $|h|\le0.02\,\mathrm{cm}$。面积 $A(r)=\pi r^2$ 的变化满足精确恒等式
+
+$$
+\Delta A=2\pi r_0h+\pi h^2,\qquad \mathrm dA=2\pi r_0h.
+$$ {#eq-calc-linear-area}
+
+一阶面积变化满足 $|\mathrm dA|\le0.4\pi\,\mathrm{cm^2}$，约为 $1.257\,\mathrm{cm^2}$。除以标称面积 $A_0=100\pi\,\mathrm{cm^2}$，得到一阶相对变化上限 $0.004=0.4\%$，恰是半径相对变化上限 $0.2\%$ 的两倍。
+
+但 $0.4\pi$ 不是实际面积误差的严格上界。遗漏项满足 $|\Delta A-\mathrm dA|\le0.0004\pi\,\mathrm{cm^2}$，所以一个严格界是 $|\Delta A|\le0.4004\pi\,\mathrm{cm^2}$。当 $h=0.02\,\mathrm{cm}$ 时取到等号；当 $h=-0.02\,\mathrm{cm}$ 时，$\Delta A=-0.3996\pi\,\mathrm{cm^2}$。两侧变化并不完全对称。
+
+这里必须分清：**输入测量误差**是 $h$，**输出实际变化**是 $\Delta A$，**用微分估计这个变化的遗漏**才是 $\pi h^2$。把最后一个很小的数当成总测量误差，会严重低估不确定性。
+
+# 从平方误差到二次近似
+
+## 为什么下一项是平方
+
+平方函数已经把答案完整地摊开：
+
+$$
+(a+h)^2=a^2+2ah+h^2.
+$$ {#eq-calc-linear-square}
+
+输入步长减半时，线性项减半，遗漏的 $h^2$ 却缩小到四分之一。对圆面积，末项只多一个系数 $\pi$。这提示我们：若斜率本身随输入变化，切线遗漏的是这份斜率变化在一小段上的累积。
+
+二阶导数 $f''(a)$ 就是斜率 $f'$ 在 $a$ 处的变化率。若附近斜率约为 $f'(a)+f''(a)t$，从 $t=0$ 积到 $t=h$，得到
+
+$$
+Q_a(a+h)=f(a)+f'(a)h+\frac12f''(a)h^2.
+$$ {#eq-calc-linear-quadratic}
+
+这叫**二次 Taylor 近似**。系数 $1/2$ 来自变化斜率的累积，而不是任意规定。$Q_a$ 在基准点与 $f$ 有相同的函数值、一阶导数和二阶导数；对平方函数它恰好精确，对一般函数仍有遗漏。下面会在明确的连续性条件下说明这种遗漏比 $h^2$ 更小，不展开更高阶公式。
+
+平方根满足 $f''(x)=-1/(4x^{3/2})$，所以在 $a=100$ 处
+
+$$
+Q_{100}(100.8)=10+\frac{0.8}{20}-\frac{0.8^2}{8000}=10.03992.
+$$ {#eq-calc-linear-sqrt-quadratic}
+
+它与真实值之差约为 $3.18\times10^{-7}$。负的二次修正还提示：切线预测偏高。不过，一个点的二阶导数不能代表整个区间；要判断整段的方向和大小，必须检查区间上的条件。
+
+## 凸性与凹性：切线在上还是在下
+
+以下讨论都假设 $f$ 在包含所讨论区间的开区间上二阶可导。若 $f''\ge0$，由作用于 $f'$ 的中值定理，$f'$ 单调不减；这种向上弯的情形称为凸。对 $h>0$，$f'(a+t)\ge f'(a)$，所以由微积分基本定理
+
+$$
+r(h)=\int_0^h\bigl[f'(a+t)-f'(a)\bigr]\,\mathrm dt\ge0.
+$$ {#eq-calc-linear-curvature-sign}
+
+对 $h<0$，区间 $[h,0]$ 上被积函数非正，而 $\int_0^h=-\int_h^0$，因此仍有 $r(h)\ge0$。所以**凸函数的切线在图像下方或与之重合**。若 $f''\le0$，导数单调不增，完全反向的论证给出 $r(h)\le0$：凹函数的切线在上方或与之重合。
+
+上述积分合法，因为二阶可导使 $f'$ 连续。这里用导数条件刻画光滑情形的凸凹性；结论适用于整个受控区间，而不只是基准点右边。若二阶导数在区间内变号，就不能把某一点的弯曲方向推广到整段。
+
+```{python}
+#| label: fig-calc-linear-curvature
+#| fig-format: svg
+#| fig-cap: "在同一基准点 x=1 比较两种弯曲方向；两图坐标范围一致，橙色线段表示实际值与切线值之差，左右两侧都要检查。"
+#| fig-alt: "两幅等尺度分镜显示平方函数的切线在曲线下方、平方根函数的切线在曲线上方。基准点为 1，输入 0.5 和 1.5 处用橙色竖线标出误差。"
+#| code-fold: true
+#| code-summary: "查看凸凹性分镜代码"
+fig, axes = plt.subplots(1, 2, figsize=(10.8, 4.2), sharex=True, sharey=True, layout="constrained")
+fig.set_facecolor(PAPER)
+style_axes(axes)
+x = np.linspace(0.3, 1.7, 401)
+models = [(lambda x: x**2, lambda x: 2*x-1, "凸：平方函数，切线低估"),
+          (np.sqrt, lambda x: 1+(x-1)/2, "凹：平方根，切线高估")]
+for ax, (func, tangent, title) in zip(axes, models):
+    ax.plot(x, func(x), color=BLUE, lw=2.5, label="真实函数")
+    ax.plot(x, tangent(x), color=TEAL, ls="--", label="切线预测")
+    for xt in [0.5, 1.5]:
+        ax.vlines(xt, min(func(xt), tangent(xt)), max(func(xt), tangent(xt)), color=CORAL, lw=3)
+        ax.scatter([xt], [func(xt)], color=CORAL, s=25, zorder=4)
+    ax.scatter([1], [1], color=TEAL, zorder=4)
+    ax.set(title=title, xlabel="输入 x", xlim=(0.25, 1.75), ylim=(-0.55, 3.15))
+    ax.legend(frameon=False, loc="upper left", fontsize=10)
+axes[0].set_ylabel("函数值与切线值")
+show_figure(fig)
+```
+
+@fig-calc-linear-curvature 只表达方向，不给出普适的误差大小。把平方函数乘以很大的正常数，凸性不变，切线误差却可以大很多。
+
+# 二阶导数有界，才能给出平方量级保证
+
+**定理。** 设 $f$ 在包含 $a$ 和 $a+h$ 的开区间上二阶可导，并在两点之间的整个闭区间上满足 $|f''(x)|\le M$，其中 $M\ge0$。则
+
+$$
+|r(h)|=|f(a+h)-f(a)-f'(a)h|\le\frac M2|h|^2.
+$$ {#eq-calc-linear-bound}
+
+这里 $M$ 的单位是“输出单位除以输入单位的平方”，所以右边仍是输出单位。该定理不要求二阶导数恒定，也不要求它连续；但有界条件必须覆盖整个区间。
+
+**证明。** $h=0$ 时结论直接成立。对 $h\ne0$，由于 $f'$ 连续，微积分基本定理以及代换 $t=sh$ 给出
+
+$$
+r(h)=\int_0^h[f'(a+t)-f'(a)]\,\mathrm dt
+=h\int_0^1[f'(a+sh)-f'(a)]\,\mathrm ds.
+$$ {#eq-calc-linear-integral-remainder}
+
+这个代换对负的 $h$ 也成立，负号已保留在外面的 $h$ 中。对任意 $s\in(0,1]$，$f'$ 在 $a$ 与 $a+sh$ 之间连续且内部可导，故中值定理给出两点之间的 $\xi_s$，使
+
+$$
+f'(a+sh)-f'(a)=f''(\xi_s)sh,\qquad
+|f'(a+sh)-f'(a)|\le Ms|h|.
+$$
+
+$s=0$ 时同一个不等式显然成立。于是
+
+$$
+|r(h)|\le |h|\int_0^1|f'(a+sh)-f'(a)|\,\mathrm ds
+\le M|h|^2\int_0^1s\,\mathrm ds=\frac M2|h|^2.
+$$
+
+这同时完成了正、负步长的证明。注意我们积分的是连续的 $f'$ 之差，不是未经条件检查就对 $f''$ 积分。
+
+若希望绝对误差不超过指定的 $\varepsilon>0$，且 $M>0$，一个充分条件是 $|h|\le\sqrt{2\varepsilon/M}$，同时这一步必须仍留在给出 $M$ 的区间内。若 $M=0$，导数在该区间恒定，线性模型精确。
+
+## 平方根的数值保证
+
+在 $[100,100.8]$ 上，$|f''(x)|=1/(4x^{3/2})\le1/4000$。因此 @eq-calc-linear-bound 与凹性一起给出
+
+$$
+0\le10.04-\sqrt{100.8}\le\frac{0.8^2}{8000}=0.00008,
+\qquad \sqrt{100.8}\in[10.03992,10.04].
+$$ {#eq-calc-linear-sqrt-bound}
+
+数值计算告诉我们这个例子的误差是多少，导数界则保证误差不会超过什么。区间左端碰巧等于前面的二次近似，但它成为下界的依据是这里的二阶导数界，不能因此宣称任意二次近似都是下界。
+
+## 二次式为什么确实更精细
+
+再假设 $f''$ 在 $a$ 连续。令 $g=f-Q_a$，则 $g(a)=g'(a)=0$，且 $g''(x)=f''(x)-f''(a)$。给定任意 $\eta>0$，连续性保证足够小的邻域内 $|g''(x)|\le\eta$。把已证定理用于 $g$，得
+
+$$
+|f(a+h)-Q_a(a+h)|\le\frac\eta2h^2,
+\qquad \frac{f(a+h)-Q_a(a+h)}{h^2}\to0.
+$$ {#eq-calc-linear-quadratic-remainder}
+
+这就严格说明了二次近似的局部意义。它没有自动给出三次误差界，也没有声称每个有限步长上二次式都优于一次式。若要在指定步长上认证精度，仍须提供相应的区间控制。
+
+# 复合量的误差沿导数传递
+
+设 $u=g(x)$，$y=F(u)$，且两层函数在相应基准点可导。输入基准为 $a$，中间基准为 $u_0=g(a)$。由上一章已经证明的链式法则，
+
+$$
+\mathrm du=g'(a)\,\mathrm dx,\qquad
+\mathrm dy=F'(u_0)\,\mathrm du
+=F'(g(a))g'(a)\,\mathrm dx.
+$$ {#eq-calc-linear-chain}
+
+每层导数都在**同一条基准状态链**上取值。这里复合的是线性映射，不是把第一层的有限真实变化直接当作第二层的无误差输入。若要严格界定最终遗漏，应对复合函数应用误差界，或分别控制每层余项。
+
+## 例一：直径经过半径传到面积
+
+测得直径的标称值为 $D_0=20\,\mathrm{cm}$，输入扰动满足 $|h|\le0.04\,\mathrm{cm}$。两层关系是 $r=D/2$、$A=\pi r^2$，所以
+
+$$
+\mathrm dr=\frac12\mathrm dD,\qquad
+\mathrm dA=2\pi r_0\,\mathrm dr=\pi r_0\,\mathrm dD.
+$$ {#eq-calc-linear-diameter}
+
+在 $r_0=10\,\mathrm{cm}$ 处，一阶面积变化上限为 $0.4\pi\,\mathrm{cm^2}$。第一层是线性的，完全没有余项；第二层才产生 $\pi(h/2)^2$。直接合成为 $A(D)=\pi D^2/4$，也得到同一个导数和余项。
+
+相对于标称面积，$\mathrm dA/A_0=2\,\mathrm dD/D_0$。直径相对变化 $0.2\%$ 仍对应面积一阶相对变化 $0.4\%$；不会因为中间多写了一层半径，就多乘一次放大系数。
+
+## 例二：计时误差经过速度传到动能
+
+假设物体做匀速运动，已知路程 $\ell=10\,\mathrm m$ 和质量 $m=2\,\mathrm{kg}$ 没有误差；只研究用时 $T$ 的测量扰动。两层关系为 $v=\ell/T$、$E=mv^2/2$。标称用时 $T_0=2\,\mathrm s$ 对应 $v_0=5\,\mathrm{m/s}$、$E_0=25\,\mathrm J$。
+
+$$
+\mathrm dv=-\frac{\ell}{T_0^2}\,\mathrm dT,\qquad
+\mathrm dE=mv_0\,\mathrm dv=-\frac{m\ell^2}{T_0^3}\,\mathrm dT,
+\qquad \frac{\mathrm dE}{E_0}=-2\frac{\mathrm dT}{T_0}.
+$$ {#eq-calc-linear-energy}
+
+若用时增大 $0.02\,\mathrm s$，速度一阶变化为 $-0.05\,\mathrm{m/s}$，动能一阶变化为 $-0.5\,\mathrm J$，预测动能为 $24.5\,\mathrm J$。这是带方向的扰动计算；只有 $|h|\le0.02\,\mathrm s$ 时，应报告 $|\mathrm dE|\le0.5\,\mathrm J$，不能固定为负号。
+
+```{python}
+#| label: fig-calc-linear-propagation
+#| fig-format: svg
+#| fig-cap: "同一计时扰动依次影响速度和动能。横轴尺度一致，纵轴分别使用速度变化与动能变化的单位；蓝色表示真实变化，绿色虚线表示微分预测。"
+#| fig-alt: "两幅连续分镜以计时扰动为横轴，先画速度真实变化及其线性预测，再画动能真实变化及其线性预测。正的时间扰动使两者减小，两图橙色线段标出线性遗漏。"
+#| code-fold: true
+#| code-summary: "查看计时误差传播分镜代码"
+fig, axes = plt.subplots(1, 2, figsize=(10.8, 4.2), sharex=True, layout="constrained")
+fig.set_facecolor(PAPER)
+style_axes(axes)
+hs = np.linspace(-0.2, 0.2, 401)
+changes = [(10/(2+hs)-5, -2.5*hs, "第一层：时间到速度", "速度变化（m/s）"),
+           (100/(2+hs)**2-25, -25*hs, "第二层：速度到动能", "动能变化（J）")]
+for ax, (actual, predicted, title, ylabel) in zip(axes, changes):
+    ax.plot(hs, actual, color=BLUE, lw=2.5, label="真实变化")
+    ax.plot(hs, predicted, color=TEAL, ls="--", label="微分预测")
+    ax.vlines(hs[-1], predicted[-1], actual[-1], color=CORAL, lw=3)
+    ax.axvspan(-0.02, 0.02, color=TEAL, alpha=0.12, label="题设扰动范围")
+    ax.axhline(0, color="gray", lw=0.7)
+    ax.set(title=title, xlabel="计时扰动 h（s）", ylabel=ylabel, xlim=(-0.215, 0.215))
+    ax.legend(frameon=False, fontsize=9, loc="upper right")
+show_figure(fig)
+```
+
+@fig-calc-linear-propagation 为显出弯曲，绘制了比题设更宽的输入区间；浅色带才是 $|h|\le0.02\,\mathrm s$ 的范围。图上的可见差距不能代替该范围内的数值保证。
+
+合成后 $E(T)=m\ell^2/(2T^2)$，故 $E''(T)=3m\ell^2/T^4$。在 $[1.98,2.02]\,\mathrm s$ 上，可取 $M=40\,\mathrm{J/s^2}$，因为 $600/(1.98)^4<40$。于是严格有
+
+$$
+|\Delta E-\mathrm dE|\le\frac{40}{2}(0.02)^2=0.008\,\mathrm J,
+\qquad |\Delta E|\le0.508\,\mathrm J.
+$$ {#eq-calc-linear-energy-bound}
+
+若运动并非匀速，$\ell/T$ 只是平均速度，不能直接用来计算某一时刻的动能。这是物理模型假设，不是微分能修补的误差。上述范围也是确定性误差界，不是随机噪声分布或置信区间；计算概率还需要另外给出测量模型。
+
+# 用精确运算核查具体结论
+
+下面的断言不用浮点近似验证等式或不等式。平方根区间通过比较正数的平方核对，计时例子检查实际变化与线性变化的差。这些例子不能代替一般误差界的证明。
+
+```{python}
+#| label: calc-linear-exact-checks
+#| code-fold: true
+#| code-summary: "查看 SymPy 与 Fraction 精确核查"
+from fractions import Fraction as F
+import sympy as sp
+
+x, a, h = sp.symbols("x a h", real=True)
+assert sp.expand((a+h)**2-a**2-2*a*h) == h**2
+assert sp.diff(sp.sqrt(x), x, 2).subs(x, 100) == -sp.Rational(1, 4000)
+assert sp.diff(sp.pi*x**2/4, x) == sp.pi*x/2
+lower, upper, target = F(125499, 12500), F(251, 25), F(504, 5)
+assert lower**2 <= target <= upper**2
+assert upper-lower == F(1, 12500)
+assert (F(10)+F(1, 50))**2-F(100) == F(1001, 2500)
+assert (F(10)-F(1, 50))**2-F(100) == -F(999, 2500)
+assert F(600)/F(99, 50)**4 < 40
+energy_actual = F(100)/F(101, 50)**2
+energy_linear = F(25)-F(25)*F(1, 50)
+assert energy_actual-energy_linear == F(151, 20402)
+assert 0 < energy_actual-energy_linear < F(1, 125)
+assert sp.limit(sp.Abs(h)**sp.Rational(3, 2)/h, h, 0, dir="+") == 0
+assert sp.limit(sp.Abs(h)**sp.Rational(3, 2)/h, h, 0, dir="-") == 0
+print("平方余项、平方根区间、面积变化与动能误差的精确断言全部通过。")
+```
+
+# 自检题与部分解答
+
+1. 在 $a=64$ 处估计 $\sqrt{64.4}$。求切线值，判断高低，并给出二阶导数产生的严格绝对误差界。
+2. 标称半径 $5\,\mathrm{cm}$，$|h|\le0.01\,\mathrm{cm}$。分别报告圆面积的一阶变化上限、线性遗漏界和实际变化的严格界，注明单位及相对误差的分母。
+3. 对 $f(x)=x^2$、$a=0$，为什么绝对误差趋于零而相对误差仍为 $100\%$？若改以输出增量为分母，问题消失了吗？
+4. 若 $f''(a)=0$，能否断言切线误差在附近为零？用 $f(x)=x^4$、$a=0$ 给出反例，并解释这与二阶误差界不矛盾。
+5. 在计时例子中，若扰动为 $-0.02\,\mathrm s$，计算速度和动能的微分。若质量也未知，上面的 $0.508\,\mathrm J$ 还能作为所有误差的总界吗？
+6. 对 $f(x)=1/x$、$a=2$、$|h|\le0.1$，给出切线式、误差方向和合法的 $M$。若希望切线绝对误差不超过 $10^{-4}$，求一个充分的步长限制。
+
+**第 1 题。** 切线值是 $8+0.4/16=8.025$。平方根在正轴上凹，故这是高估。区间上 $|f''|\le1/(4\cdot64^{3/2})=1/2048$，所以
+
+$$
+0\le8.025-\sqrt{64.4}\le\frac{0.4^2}{4096}=\frac1{25600}=0.0000390625.
+$$ {#eq-calc-linear-exercise-sqrt}
+
+**第 2 题。** 一阶变化上限为 $0.1\pi\,\mathrm{cm^2}$，遗漏至多为 $0.0001\pi\,\mathrm{cm^2}$，实际变化至多为 $0.1001\pi\,\mathrm{cm^2}$。以标称面积 $25\pi\,\mathrm{cm^2}$ 为分母，一阶相对上限为 $0.4\%$，严格相对上限为 $0.4004\%$；这不是以未知真实面积为分母的定义值。
+
+**第 4 题。** 此时切线恒为零，余项却是 $h^4$。$f''(0)=0$ 只是单点信息；在 $[-\delta,\delta]$ 上应取 $M=12\delta^2$，而非 $M=0$。区间界与真实余项完全相容。
+
+**第 5 题。** $\mathrm dv=+0.05\,\mathrm{m/s}$，$\mathrm dE=+0.5\,\mathrm J$。此前的严格界只考虑了用时误差，并把路程和质量当作准确常数；一旦改变这些假设，就必须另行计入相应影响，不能沿用总界。
+
+**第 6 题。** $L_2(2+h)=1/2-h/4$；因为 $f''(x)=2/x^3>0$，切线低估。可在 $[1.9,2.1]$ 上取 $M=2/(1.9)^3$。一个充分限制是 $|h|\le\sqrt{10^{-4}(1.9)^3}\approx0.02619$，它也满足原先的 $0.1$ 区间限制。
+
+# 从近似数值到可信结论
+
+一次近似计算应留下四项信息：基准点、使用的局部模型、误差尺度、保证成立的区间与假设。导数给出变化的首项；区间内的凸凹性判断切线偏高还是偏低；有界二阶导数认证平方量级的误差；链式法则把这些局部变化传到复合输出。近似的价值不只是省一次计算，还在于说明输入精度为何足够、输出精度究竟受到什么限制。
+
+## 参考资料
+
+MIT OpenCourseWare，18.01SC，*Session 23: Linear Approximation*，Fall 2010 [@mit1801linear2010]。
+
+::: {#refs}
+:::

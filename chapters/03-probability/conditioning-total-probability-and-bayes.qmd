@@ -1,0 +1,408 @@
+---
+title: "条件化、全概率与 Bayes：阳性来自哪里？"
+description: "用两条生产线的有限检测模型，推导乘法规则、全概率与 Bayes，辨析基率和矩阵反演。"
+---
+
+# 阳性之后，还缺哪一份信息？ {#prob-bayes-question}
+
+前一章把条件化解释为“保留符合信息的结果，再把剩余质量归一化”。若信息不是“至少一次正面”，而是“产品检测阳性”，同样的动作能告诉我们产品是否有缺陷、来自哪条生产线吗？
+
+工厂有两条生产线。一次实验是从混合产品中随机抽取一件，记录它的生产线、真实质量状态和检测结果。令 $L_1,L_2$ 分别表示来自第一、第二条线；$D$ 表示有缺陷，$G=D^c$ 表示合格；$Y$ 表示检测阳性，$N=Y^c$ 表示检测阴性。阳性只是仪器报警，不等于已经确认缺陷。
+
+完整结果是三元组，有限样本空间为
+
+$$
+\Omega=\{1,2\}\times\{D,G\}\times\{Y,N\}.
+$$
+
+例如 $(2,G,Y)$ 表示“第二条线生产、实际合格、检测误报”。表中的条件率和抽样份额是模型假设，不是从八个结果的个数推出来的。
+
+| 模型输入 | 数值 | 含义 |
+|:--|--:|:--|
+| $\mathbb P(L_1),\mathbb P(L_2)$ | 各 $1/2$ | 两条线在这次抽样中份额相同 |
+| $\mathbb P(D\mid L_1)$ | $1/200$ | 第一条线的缺陷率 |
+| $\mathbb P(D\mid L_2)$ | $3/200$ | 第二条线的缺陷率 |
+| $\mathbb P(Y\mid D\cap L_i)$ | $9/10$ | 两条线的缺陷品都以此灵敏度检出 |
+| $\mathbb P(Y\mid G\cap L_i)$ | $1/20$ | 两条线的合格品都以此假阳性率误报 |
+
+这里 $i\in\{1,2\}$。给定真实质量后，仪器的检测率不再随生产线改变；这是额外的模型假设，不是概率公式的结论。各行的补概率给出合格率和阴性率。所有量都是无量纲概率，不是有单位的测量误差界。
+
+我们将回答两个不同的问题：$\mathbb P(D\mid Y)$ 是“阳性件有缺陷的概率”，$\mathbb P(L_2\mid Y)$ 是“阳性件来自第二条线的概率”。质量状态与生产线不能混称为同一种来源。
+
+# 条件化与乘法：筛选质量，再沿路径相乘 {#prob-bayes-conditioning}
+
+对事件 $C$，若 $\mathbb P(C)>0$，条件概率为
+
+$$
+\mathbb P(E\mid C)=\frac{\mathbb P(E\cap C)}{\mathbb P(C)}.
+$$ {#eq-prob-bayes-conditioning}
+
+分子留下同时符合 $E$ 和 $C$ 的质量，分母把保留范围 $C$ 当作新的整体。对有限模型中的每个样本点，令 $w_C(\omega)=w(\omega)/\mathbb P(C)$（当 $\omega\in C$），否则令 $w_C(\omega)=0$。这些新权重非负，而且
+
+$$
+\sum_{\omega\in\Omega}w_C(\omega)
+=\frac{\sum_{\omega\in C}w(\omega)}{\mathbb P(C)}=1.
+$$
+
+所以固定条件后仍得到一个合法的概率模型；保留下来的点之间权重比例不变。若 $\mathbb P(C)=0$，上述定义不能使用，不能把 $0/0$ 擅自设为零或一。
+
+将 @eq-prob-bayes-conditioning 移项，就得到**乘法规则**：
+
+$$
+\mathbb P(E\cap C)=\mathbb P(E\mid C)\mathbb P(C).
+$$ {#eq-prob-bayes-multiplication}
+
+这一步没有假设独立。只有另知 $\mathbb P(E\mid C)=\mathbb P(E)$ 时，才能把右边改写成两个无条件概率的乘积。沿生产线、质量、检测这三层连续应用规则，有
+
+$$
+\mathbb P(L_i\cap D\cap Y)
+=\mathbb P(L_i)\mathbb P(D\mid L_i)\mathbb P(Y\mid L_i\cap D).
+$$ {#eq-prob-bayes-chain}
+
+例如 $(1,D,Y)$ 的质量为 $(1/2)(1/200)(9/10)=9/4000$。写成树时，边上是当前路径条件下的比例，叶子是完整路径的联合概率；不能把第二层的条件率误当成整棵树中的质量。
+
+下面用精确分数给八个结果赋权。按刚才的乘法规则，每层分支的条件率之和为一，逐层求和便知八个权重之和也是一。
+
+```{python}
+#| label: prob-bayes-model
+#| code-fold: true
+#| code-summary: "查看八点模型与绘图设置"
+from fractions import Fraction as F
+from itertools import product
+import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
+from matplotlib_inline.backend_inline import set_matplotlib_formats
+
+line_prior = {1: F(1, 2), 2: F(1, 2)}
+defect_rate = {1: F(1, 200), 2: F(3, 200)}
+sensitivity, false_positive = F(9, 10), F(1, 20)
+weights = {}
+for i, state, observation in product((1, 2), ("D", "G"), ("Y", "N")):
+    state_rate = defect_rate[i] if state == "D" else 1 - defect_rate[i]
+    positive_rate = sensitivity if state == "D" else false_positive
+    test_rate = positive_rate if observation == "Y" else 1 - positive_rate
+    weights[i, state, observation] = line_prior[i] * state_rate * test_rate
+Omega = set(weights)
+L = {i: {s for s in Omega if s[0] == i} for i in (1, 2)}
+D = {s for s in Omega if s[1] == "D"}
+G = Omega - D
+Y = {s for s in Omega if s[2] == "Y"}
+N = Omega - Y
+
+def probability(event):
+    return sum((weights[s] for s in event), F(0))
+
+def conditional(event, given):
+    if probability(given) == 0:
+        raise ValueError("条件事件的概率必须为正")
+    return probability(event & given) / probability(given)
+
+joint = [probability(D & Y), probability(G & Y),
+         probability(D & N), probability(G & N)]
+set_matplotlib_formats("svg")
+plt.rcParams.update({"font.family": "sans-serif", "font.size": 12,
+                     "font.sans-serif": ["Noto Sans CJK SC", "DejaVu Sans"],
+                     "axes.unicode_minus": False, "svg.fonttype": "path",
+                     "svg.hashsalt": "prob-bayes"})
+ink, paper = "#243447", "#FBFAF7"
+colors = ["#E78368", "#4878A8", "#F2C9BC", "#B8CDE0"]
+names = ["缺陷阳性 D,Y", "合格阳性 G,Y", "缺陷阴性 D,N", "合格阴性 G,N"]
+```
+
+# 全概率：必须互斥，也必须穷尽 {#prob-bayes-total}
+
+设 $H_1,\ldots,H_k$ 是有限个事件，彼此互斥且并集为 $\Omega$；这样的事件组称为**互斥完备分割**。先假设各 $\mathbb P(H_i)>0$。任意事件 $E$ 都可以按来源拆开：
+
+$$
+E=\bigcup_{i=1}^k(E\cap H_i),\qquad
+(E\cap H_i)\cap(E\cap H_j)=\varnothing\quad(i\ne j).
+$$ {#eq-prob-bayes-partition}
+
+第一个等式来自 $\bigcup_i H_i=\Omega$：$E$ 中每个结果都在某个分支里。第二个等式来自 $H_i\cap H_j=\varnothing$：同一结果不会重复属于两支。由有限可加性，再逐项使用乘法规则，得到
+
+$$
+\boxed{\mathbb P(E)=\sum_{i=1}^k\mathbb P(E\cap H_i)
+=\sum_{i=1}^k\mathbb P(E\mid H_i)\mathbb P(H_i)}.
+$$ {#eq-prob-bayes-total}
+
+这证明了**全概率公式**。若某个分支概率为零，它的交集概率也为零，可以从求和中省去；不要先写未定义的条件概率再乘零。分支若重叠会重复计数，若不完备会漏项；独立性不能代替这两个集合条件。
+
+先按生产线分割，得到整批抽样的缺陷先验：
+
+$$
+\mathbb P(D)=\frac12\frac1{200}+\frac12\frac3{200}=\frac1{100},
+\qquad \mathbb P(G)=\frac{99}{100}.
+$$ {#eq-prob-bayes-defect-prior}
+
+因为仪器对两条线的缺陷品都取同一个检出率，$\mathbb P(D\cap Y)=\sum_i\mathbb P(L_i\cap D)(9/10)=(9/10)\mathbb P(D)$，所以聚合生产线后 $\mathbb P(Y\mid D)=9/10$。对合格品同理有 $\mathbb P(Y\mid G)=1/20$。这一步确实使用了检测率不随生产线改变的模型假设。
+
+于是按 $D,G$ 分割，四个质量与阳性总质量为
+
+$$
+\begin{aligned}
+\mathbb P(D\cap Y)&=\frac9{1000}, &\mathbb P(D\cap N)&=\frac1{1000},\\
+\mathbb P(G\cap Y)&=\frac{99}{2000}, &\mathbb P(G\cap N)&=\frac{1881}{2000},\\
+\mathbb P(Y)&=\frac9{10}\frac1{100}+\frac1{20}\frac{99}{100}
+=\frac{117}{2000}.
+\end{aligned}
+$$ {#eq-prob-bayes-joint}
+
+在 @fig-prob-bayes-tree 中，第一镜聚合生产线后沿质量与检测分支相乘；第二镜收集两条阳性路径。树的边长只是示意，第二镜的柱高才按概率刻度绘制。
+
+```{python}
+#| label: fig-prob-bayes-tree
+#| fig-format: svg
+#| fig-cap: "上：边上的条件比例相乘，得到叶子的联合质量。下：只收集阳性路径，合格误报的质量大于缺陷检出的质量。"
+#| fig-alt: "上方树分为缺陷、合格，再各分阳性阴性，四叶标出联合分数；下方两根阳性质量柱为 9/1000 和 99/2000。"
+#| code-fold: true
+fig, axes = plt.subplots(2, 1, figsize=(7.6, 8), layout="constrained",
+                         gridspec_kw={"height_ratios": [1.5, 1]})
+fig.set_facecolor(paper)
+ax = axes[0]
+ax.set(xlim=(-0.3, 4.1), ylim=(-0.4, 3.5), title="① 沿路径相乘：叶子记录联合质量")
+ax.axis("off")
+ax.text(0, 1.5, "整体", ha="center", va="center")
+for y, state, prior, color in [(2.5, "D", F(1, 100), colors[0]),
+                              (0.5, "G", F(99, 100), colors[1])]:
+    ax.plot([0.2, 1.35], [1.5, y], color=color, linewidth=2)
+    ax.text(0.65, (1.5 + y) / 2 + (0.18 if state == "D" else -0.22),
+            str(prior), ha="center")
+    ax.text(1.45, y, state, ha="center", va="center", fontsize=15)
+    rate = sensitivity if state == "D" else false_positive
+    for offset, obs, r in [(0.5, "Y", rate), (-0.5, "N", 1 - rate)]:
+        ax.plot([1.55, 2.7], [y, y + offset], color=color, linewidth=2)
+        ax.text(2.05, y + offset / 2 + (0.17 if obs == "Y" else -0.2),
+                str(r), ha="center", fontsize=11)
+        ax.text(2.85, y + offset, f"{state},{obs}：{prior * r}", va="center")
+ax = axes[1]
+ax.set_facecolor(paper)
+ax.bar([0, 1], [float(joint[0]), float(joint[1])], color=colors[:2], width=0.55)
+for x, mass in enumerate(joint[:2]):
+    ax.text(x, float(mass) + 0.002, str(mass), ha="center")
+ax.set(xticks=[0, 1], xticklabels=names[:2], ylim=(0, 0.066),
+       ylabel="原始联合概率", title="② 阳性质量相加：9/1000 + 99/2000 = 117/2000")
+ax.spines[["top", "right"]].set_visible(False)
+ax.grid(axis="y", alpha=0.15)
+plt.show()
+```
+
+也可以在每条生产线内部先按质量分割，得到 $\mathbb P(Y\mid L_1)=217/4000$、$\mathbb P(Y\mid L_2)=251/4000$。再按生产线加权，仍有 $\mathbb P(Y)=(1/2)(217/4000)+(1/2)(251/4000)=117/2000$。两种分割归并了同一批八个权重，因此必须得到同一个总质量。
+
+# Bayes：同一交集的两种写法 {#prob-bayes-rule}
+
+给定互斥完备分割 $H_1,\ldots,H_k$，假设各分支概率为正且证据 $E$ 满足 $\mathbb P(E)>0$。条件概率定义给出 $\mathbb P(H_j\mid E)=\mathbb P(H_j\cap E)/\mathbb P(E)$；分子用乘法规则，分母用全概率公式，便得到
+
+$$
+\boxed{\mathbb P(H_j\mid E)=
+\frac{\mathbb P(E\mid H_j)\mathbb P(H_j)}
+{\sum_{i=1}^k\mathbb P(E\mid H_i)\mathbb P(H_i)}}.
+$$ {#eq-prob-bayes-rule}
+
+这就是 **Bayes 公式**及其证明。检测前的来源权重叫**先验**；给定来源时证据出现的条件率叫该证据的**似然**；分母叫**证据概率**；条件化后的来源权重叫**后验**。似然不是来源的概率分布：例如 $9/10+1/20\ne1$，不能把二者直接当成阳性后的来源权重。
+
+对缺陷状态反推，
+
+$$
+\mathbb P(D\mid Y)
+=\frac{(9/10)(1/100)}{117/2000}
+=\frac{18}{117}=\boxed{\frac2{13}}.
+$$ {#eq-prob-bayes-posterior}
+
+约 $15.38\%$ 的后验显著高于检测前的 $1\%$，却远低于灵敏度 $90\%$。$\mathbb P(Y\mid D)$ 与 $\mathbb P(D\mid Y)$ 分母对应的范围分别是缺陷品和阳性品；交换条件方向就交换了归一化范围。
+
+对真正的生产线来源反推，
+
+$$
+\mathbb P(L_2\mid Y)
+=\frac{(251/4000)(1/2)}{117/2000}=\frac{251}{468}.
+$$ {#eq-prob-bayes-line-posterior}
+
+第二条线缺陷率是第一条线的三倍，但阳性件来自第二条线的概率只略高于一半：两条线大量合格品都会产生误报。若观察到的是“确认有缺陷”，则 $\mathbb P(L_2\mid D)=[(1/2)(3/200)]/(1/100)=3/4$。不同信息不能用同一后验代替。
+
+## 真比例面积与重归一 {#prob-bayes-area}
+
+@fig-prob-bayes-area 的每个条带高度相同，宽度严格按质量绘制。第一镜将两块阳性质量排在一起；第二镜去掉阴性但不改变尺度；第三镜把阳性总质量 $117/2000$ 重新定为一。第三镜中的长度是**阳性内部比例**，不能和前两镜的原始概率混用。细小的缺陷块不人为加宽，名称和精确质量另列在图例中。
+
+```{python}
+#| label: fig-prob-bayes-area
+#| fig-format: svg
+#| fig-cap: "三镜面积都按比例：完整质量、保留阳性、阳性内归一。前两镜用原始总质量作单位，第三镜改用阳性总质量作单位。"
+#| fig-alt: "第一条的四块质量为 18/2000、99/2000、2/2000、1881/2000；第二条只留前两块，其余空白；第三条两块扩展为 2/13 和 11/13。"
+#| code-fold: true
+fig, axes = plt.subplots(3, 1, figsize=(7.6, 7.5), layout="constrained")
+fig.set_facecolor(paper)
+frames = [joint, joint[:2] + [F(0), F(0)],
+          [joint[0] / probability(Y), joint[1] / probability(Y), F(0), F(0)]]
+titles = ["① 完整质量：面积总和 1", "② 只保留阳性：面积总和 117/2000",
+          "③ 除以 117/2000：条件面积总和 1"]
+for ax, masses, title in zip(axes, frames, titles):
+    ax.set_facecolor(paper)
+    left = F(0)
+    for j, mass in enumerate(masses):
+        if mass:
+            ax.barh(0, float(mass), left=float(left), height=0.5,
+                    color=colors[j], edgecolor=ink, linewidth=0.5,
+                    hatch="//" if j >= 2 else None)
+        left += mass
+    ax.set(xlim=(0, 1), ylim=(-0.5, 0.68), yticks=[], xticks=[0, 0.25, 0.5, 0.75, 1],
+           title=title, xlabel="原始总质量的比例" if ax is not axes[2] else "阳性总质量的比例")
+    ax.spines[["top", "right", "left"]].set_visible(False)
+axes[0].legend(handles=[Patch(facecolor=colors[j], edgecolor=ink,
+                             hatch="//" if j >= 2 else None,
+                             label=f"{names[j]}：{joint[j]}") for j in range(4)],
+               loc="lower center", bbox_to_anchor=(0.5, 1.12), ncol=2,
+               fontsize=10, frameon=False)
+axes[2].text(float(F(1, 13)), 0, "D,Y\n2/13", ha="center", va="center")
+axes[2].text(float(F(15, 26)), 0, "G,Y：11/13", ha="center", va="center")
+plt.show()
+```
+
+把联合概率乘以批量 $10000$，便得到便于核对的计数尺度：
+
+| 真实状态 | 阳性 | 阴性 | 合计 |
+|:--|--:|--:|--:|
+| 缺陷 | $90$ | $10$ | $100$ |
+| 合格 | $495$ | $9405$ | $9900$ |
+| 合计 | $585$ | $9415$ | $10000$ |
+
+这些是每件都遵循该模型时的**模型期望计数**，这里仅用“批量乘以概率”的数值尺度理解，不展开期望的一般理论。它们不是保证实测会得到的件数，更不是保证某一万名受检者恰好产生这些人数。真实批次可能偏离这些数；我们也未据此证明任何大样本规律。在这个比例表中，$90/585=2/13$，与 Bayes 的结果一致。
+
+# 基率：为什么高灵敏度不等于高后验？ {#prob-bayes-base-rate}
+
+保留检测性能，只将整个待检群体的缺陷先验改为 $p$，其中 $0\le p\le1$。这是新的质量混合模型，不再固定原来两条线的缺陷率。全概率与 Bayes 给出
+
+$$
+q(p)=\mathbb P(D\mid Y)
+=\frac{(9/10)p}{(9/10)p+(1/20)(1-p)}
+=\frac{18p}{1+17p}.
+$$ {#eq-prob-bayes-base-rate}
+
+| 缺陷先验 $p$ | 阳性概率 | 阳性后缺陷概率 $q(p)$ |
+|:--|--:|--:|
+| $1/1000$ | $1017/20000$ | $2/113$ |
+| $1/100$ | $117/2000$ | $2/13$ |
+| $1/2$ | $19/40$ | $18/19$ |
+
+同样的灵敏度和假阳性率，可以给出完全不同的后验。低基率群体的合格品很多，小的假阳性率乘以大的合格先验，仍可能产生比真阳性更大的质量。忽略这份先验，把阳性直接解释为九成可能缺陷，就是基率错误。
+
+不需要求导也能比较不同先验。若 $0\le a<b\le1$，则
+
+$$
+q(b)-q(a)=\frac{18(b-a)}{(1+17a)(1+17b)}>0.
+$$ {#eq-prob-bayes-monotonic}
+
+分母为正，因此先验增大时后验严格增大。若想让阳性后的缺陷概率超过 $1/2$，直接解 $18p/(1+17p)>1/2$，得到 $p>1/19$。这个门槛依赖当前检测率，不能移用到另一台仪器。
+
+```{python}
+#| label: fig-prob-bayes-prior
+#| fig-format: svg
+#| fig-cap: "两镜分别比较检测前和阳性后的缺陷概率，共用 0 到 1 的纵轴；三种群体使用完全相同的检测性能。"
+#| fig-alt: "三组先验分别为 1/1000、1/100、1/2，下方对应后验为 2/113、2/13、18/19；上下镜同一尺度。"
+#| code-fold: true
+priors = [F(1, 1000), F(1, 100), F(1, 2)]
+
+def positive_posterior(p):
+    return sensitivity * p / (sensitivity * p + false_positive * (1 - p))
+
+posteriors = [positive_posterior(p) for p in priors]
+fig, axes = plt.subplots(2, 1, figsize=(7.6, 6.6), sharey=True, layout="constrained")
+fig.set_facecolor(paper)
+for ax, values, title in zip(axes, [priors, posteriors],
+                            ["① 检测前：不同群体的缺陷先验", "② 阳性后：相同检测性能，不同后验"]):
+    ax.set_facecolor(paper)
+    ax.bar(range(3), [float(v) for v in values], color=colors[0], width=0.5)
+    for x, v in enumerate(values):
+        ax.text(x, float(v) + 0.025, str(v), ha="center")
+    ax.set(xticks=range(3), xticklabels=[f"先验 {p}" for p in priors],
+           ylim=(0, 1.08), yticks=[0, 0.25, 0.5, 0.75, 1], ylabel="缺陷概率", title=title)
+    ax.spines[["top", "right"]].set_visible(False)
+    ax.grid(axis="y", alpha=0.15)
+plt.show()
+```
+
+# 线性代数桥：正向混合不是反向求逆 {#prob-bayes-matrix}
+
+按 $D,G$ 排列真实状态，按 $Y,N$ 排列观测，写出 $2\times2$ 矩阵和 $2\times1$ 先验列向量：
+
+$$
+M=\begin{bmatrix}0.9&0.05\\0.1&0.95\end{bmatrix},\qquad
+\boldsymbol\pi=\begin{bmatrix}0.01\\0.99\end{bmatrix},\qquad
+M\boldsymbol\pi=\begin{bmatrix}117/2000\\1883/2000\end{bmatrix}.
+$$ {#eq-prob-bayes-matrix}
+
+$M$ 的列对应真实状态，行对应检测结果，每个元素是“给定列状态，得到行观测”的条件概率。它非负且每列和为一，称为**列随机矩阵**；这个名称不表示矩阵本身在随机变化。$M\boldsymbol\pi$ 是两列的先验加权和，维度为 $2\times1$，正是全概率公式给出的观测分布。非负性和列和为一保证输出也非负、总和为一。
+
+看到单件产品为阳性时，并不是把完整群体的观测分布改成 $[1,0]^\mathsf T$ 再求逆。正确更新是取阳性这一行的两个条件率，与先验**逐项加权，再归一化**：
+
+$$
+\frac{\begin{bmatrix}(9/10)(1/100)\\(1/20)(99/100)\end{bmatrix}}
+{(9/10)(1/100)+(1/20)(99/100)}
+=\begin{bmatrix}2/13\\11/13\end{bmatrix}.
+$$ {#eq-prob-bayes-normalization}
+
+本例 $\det M=17/20\ne0$，但即便可逆，$M^{-1}[1,0]^\mathsf T=[19/17,-2/17]^\mathsf T$ 也不是概率分布。它试图寻找一个让整个群体必然阳性的先验，而不是解释一次阳性观测。已知准确的总体观测分布、且检测矩阵已知可逆时，解线性方程恢复总体先验是另一个问题；它不等于对单个结果作 Bayes 更新。
+
+# 精确核查与自检 {#prob-bayes-checks}
+
+以下断言核查当前八点模型、两种分割、正反条件方向、不同基率以及矩阵计算。它们是可复算的例子检查；全概率与 Bayes 的一般证明仍是前面的集合分解和代数推导。
+
+```{python}
+#| label: prob-bayes-exact-assertions
+#| code-fold: true
+#| code-summary: "查看 Fraction 精确核查"
+assert len(weights) == 8 and all(w >= 0 for w in weights.values())
+assert probability(Omega) == 1 and probability(D) == F(1, 100)
+assert joint == [F(9, 1000), F(99, 2000), F(1, 1000), F(1881, 2000)]
+assert probability(Y) == F(117, 2000) and probability(N) == F(1883, 2000)
+assert conditional(D, Y) == F(2, 13) and conditional(G, Y) == F(11, 13)
+assert conditional(D, N) == F(2, 1883)
+assert [conditional(Y, L[i]) for i in (1, 2)] == [F(217, 4000), F(251, 4000)]
+assert conditional(L[2], Y) == F(251, 468) and conditional(L[2], D) == F(3, 4)
+for partition in ([D, G], [L[1], L[2]]):
+    assert not (partition[0] & partition[1]) and set.union(*partition) == Omega
+    for event in (Y, N, D, G):
+        assert probability(event) == sum(
+            (conditional(event, h) * probability(h) for h in partition), F(0))
+        for h in partition:
+            assert conditional(h, event) == conditional(event, h) * probability(h) / probability(event)
+assert [10000 * probability(a & b) for a in (D, G) for b in (Y, N)] == [90, 10, 495, 9405]
+cases = [(F(0), F(0)), (F(1, 1000), F(2, 113)), (F(1, 100), F(2, 13)),
+         (F(1, 19), F(1, 2)), (F(1, 2), F(18, 19)), (F(1), F(1))]
+for p, expected in cases:
+    masses = [sensitivity * p, false_positive * (1 - p),
+              (1 - sensitivity) * p, (1 - false_positive) * (1 - p)]
+    assert sum(masses, F(0)) == 1 and all(m >= 0 for m in masses)
+    assert positive_posterior(p) == expected == masses[0] / sum(masses[:2], F(0))
+assert sensitivity * F(1, 1000) + false_positive * F(999, 1000) == F(1017, 20000)
+M = [[F(9, 10), F(1, 20)], [F(1, 10), F(19, 20)]]
+pi = [F(1, 100), F(99, 100)]
+assert all(sum((M[r][c] for r in range(2)), F(0)) == 1 for c in range(2))
+assert [sum((row[c] * pi[c] for c in range(2)), F(0)) for row in M] == [probability(Y), probability(N)]
+assert [row[0] * F(19, 17) - row[1] * F(2, 17) for row in M] == [1, 0]
+try:
+    conditional(D, set())
+except ValueError:
+    pass
+else:
+    raise AssertionError("零概率条件应被拒绝")
+print("精确断言通过：八点模型、两种分割、Bayes、基率与矩阵。")
+```
+
+## 自检题与部分解答 {#prob-bayes-exercises}
+
+1. 已知阴性，缺陷概率是多少？为什么不能说“没有缺陷”？
+2. 只将抽样份额改为 $\mathbb P(L_2)=1/4$，保持两条线的质量率和检测率不变。求缺陷先验、阳性概率和 $\mathbb P(L_2\mid Y)$。
+3. 为什么 $D$ 和 $Y$ 不能作为全概率公式中的两支分割？用当前模型指出重叠和遗漏。
+4. 将假阳性率降为零，保持灵敏度 $9/10$。若缺陷先验为正，阳性后缺陷概率是多少？若先验也为零呢？
+5. 某人以 $9/10+1/20$ 为分母，把 $9/10$ 归一化为 $18/19$。这个答案隐含了什么先验？
+6. 核对 $M^{-1}[1,0]^\mathsf T$ 的负分量，并解释为何它不否定 Bayes 后验的有效性。
+
+**第 1 题。** $\mathbb P(D\mid N)=[(1/10)(1/100)]/(1883/2000)=2/1883$。阴性降低了缺陷概率，但漏报率非零，所以仍保留少量缺陷质量。
+
+**第 2 题。** 新先验为 $(3/4)(1/200)+(1/4)(3/200)=3/400$。新阳性概率为 $(9/10)(3/400)+(1/20)(397/400)=451/8000$；第二条线的阳性联合质量为 $(1/4)(251/4000)=251/16000$，因此来源后验是 $251/902$。
+
+**第 4 题。** 正先验使阳性证据概率 $(9/10)p>0$，而合格阳性质量为零，所以后验为一。若 $p=0$，阳性概率也为零，当前有限模型的条件概率未定义，不能继续相除。
+
+**第 5 题。** 它把两个来源赋予相同先验；共同的 $1/2$ 才能在分子分母中约去。原模型的先验是 $1/100$ 与 $99/100$，不能省略成相同权重。
+
+条件化选择归一化范围，乘法规则拼接路径，全概率收集互斥完备的路径，Bayes 则在这些路径中比较证据来自哪里。这些规则的标准表述可参见 MIT 6.041SC Lecture 2 [@mit6041conditioning2013]。实际使用时，最需要核对的是抽样群体、检测条件率与观测信息是否仍符合模型；公式本身不会保证这些输入真实可靠。

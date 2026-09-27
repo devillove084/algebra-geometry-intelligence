@@ -48,9 +48,11 @@ book:
     - part: "第三部分：微积分"
       chapters:
         - chapters/02-calculus/index.qmd
+        - chapters/02-calculus/linear-approximation-and-error.qmd
     - part: "第四部分：概率论"
       chapters:
         - chapters/03-probability/index.qmd
+        - chapters/03-probability/conditioning-total-probability-and-bayes.qmd
     - part: "附录"
       chapters:
         - appendices/symbol-index.qmd
