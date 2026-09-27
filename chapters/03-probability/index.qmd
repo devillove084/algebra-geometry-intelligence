@@ -1,5 +1,5 @@
 ---
-title: "概率论：两次抛币之后，我们知道什么？"
+title: "有限概率模型"
 description: "从四个有序结果出发，用概率权重理解事件、条件化与正面数的分布。"
 ---
 
@@ -130,7 +130,7 @@ $$
 
 这是有限模型中的不相交可加性。空集没有权重可加，故 $\mathbb P(\varnothing)=0$。不相交的多个事件同样可以逐个相加；有重叠时则必须先处理重复计数。
 
-## 补集公式：完整的一份拆成两份 {#prob-start-complement}
+## 补集公式 {#prob-start-complement}
 
 $E$ 与 $E^c=\Omega\setminus E$ 不相交，且并集为 $\Omega$。所以
 
@@ -141,7 +141,7 @@ $$
 
 这也给出 $\mathbb P(E)\leq1$。本例中“至少一次正面”的补集是“全是反面”，因此可以直接算 $\mathbb P(C)=1-\mathbb P(\{TT\})=1-2/5=3/5$。
 
-## 加法公式：交集只算一次 {#prob-start-addition}
+## 加法公式 {#prob-start-addition}
 
 用 $\dot\cup$ 表示不相交并。把 $E\cup F$ 分成三个互不重叠的部分：
 

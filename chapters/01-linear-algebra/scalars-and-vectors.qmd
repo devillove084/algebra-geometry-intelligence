@@ -441,7 +441,7 @@ $$
 
 因此坐标 $x_i$ 可以理解为标准坐标方向 $\mathbf{e}_i$ 的权重。一般地，$\mathbb{R}^n$ 中任意向量都满足 $\mathbf{x}=\sum_{i=1}^n x_i\mathbf{e}_i$。
 
-# 点积：对应分量相乘再求和
+# 点积
 
 对 $\mathbf{x},\mathbf{y}\in\mathbb{R}^{n}$，点积（也称标准内积）定义为：
 
@@ -508,7 +508,7 @@ $$
 
 因为 $\langle\mathbf{x},\mathbf{x}\rangle=\sum_{i=1}^{n}x_i^2$ 是实数的平方和，每一项 $x_i^2\ge 0$，总和为 $0$ 要求每一项都是 $0$，即每个 $x_i=0$。
 
-# Euclidean 范数：向量的长度
+# Euclidean 范数
 
 向量的 Euclidean 范数定义为：
 

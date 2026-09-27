@@ -44,8 +44,8 @@ number-sections: false
 7. [概率模型、随机变量与统计样本](chapters/00-foundations/probability-statistics-definitions.qmd)；
 8. [线性代数导论](chapters/01-linear-algebra/index.qmd)；
 9. [标量与向量](chapters/01-linear-algebra/scalars-and-vectors.qmd)及第二部分的后续章节；
-10. 第三部分：[微积分：变化与累积](chapters/02-calculus/index.qmd)、[线性近似与误差](chapters/02-calculus/linear-approximation-and-error.qmd)；
-11. 第四部分：[概率论：两次抛币之后，我们知道什么？](chapters/03-probability/index.qmd)、[条件化、全概率与 Bayes](chapters/03-probability/conditioning-total-probability-and-bayes.qmd)。
+10. 第三部分：[变化与累积](chapters/02-calculus/index.qmd)、[线性近似与误差](chapters/02-calculus/linear-approximation-and-error.qmd)；
+11. 第四部分：[有限概率模型](chapters/03-probability/index.qmd)、[条件化、全概率与 Bayes](chapters/03-probability/conditioning-total-probability-and-bayes.qmd)。
 
 第一部分的微积分与概率统计页面保留为全书总纲；第三、第四部分从具体问题出发展开。线性代数、微积分与概率论有各自的入口，也在局部线性近似、加权求和和连续累积等问题中相互连接。
 

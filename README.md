@@ -167,7 +167,7 @@ Gram 矩阵与协方差
 第一部分“数学语言”中的微积分、概率统计总纲保持不变。第三部分和第四部分独立展开，不以读完全部线性代数为前提，也不把三个领域割裂开来。
 
 - **第三部分：微积分**——从[变化与累积](chapters/02-calculus/index.qmd)进入，再到[线性近似与误差](chapters/02-calculus/linear-approximation-and-error.qmd)，讨论切线模型、二阶误差界、凸凹性和复合量的误差传播。参考 Strang 的 [Calculus Open Textbook](https://ocw.mit.edu/courses/res-18-001-calculus-fall-2023/) 和 MIT 18.01SC 的[导数入门](https://ocw.mit.edu/courses/18-01sc-single-variable-calculus-fall-2010/pages/1.-differentiation/part-a-definition-and-basic-rules/session-1-introduction-to-derivatives/)与[线性近似](https://ocw.mit.edu/courses/18-01sc-single-variable-calculus-fall-2010/pages/unit-2-applications-of-differentiation/part-a-approximation-and-curve-sketching/session-23-linear-approximation/)。
-- **第四部分：概率论**——从[两次抛币之后，我们知道什么？](chapters/03-probability/index.qmd)进入，再到[条件化、全概率与 Bayes](chapters/03-probability/conditioning-total-probability-and-bayes.qmd)，讨论观测信息如何改变来源判断。参考 MIT 6.041SC 的[概率模型与公理](https://ocw.mit.edu/courses/6-041sc-probabilistic-systems-analysis-and-applied-probability-fall-2013/pages/unit-i/lecture-1/)和[条件化与 Bayes](https://ocw.mit.edu/courses/6-041sc-probabilistic-systems-analysis-and-applied-probability-fall-2013/pages/unit-i/lecture-2/)。
+- **第四部分：概率论**——从[有限概率模型](chapters/03-probability/index.qmd)进入，再到[条件化、全概率与 Bayes](chapters/03-probability/conditioning-total-probability-and-bayes.qmd)，讨论观测信息如何改变来源判断。参考 MIT 6.041SC 的[概率模型与公理](https://ocw.mit.edu/courses/6-041sc-probabilistic-systems-analysis-and-applied-probability-fall-2013/pages/unit-i/lecture-1/)和[条件化与 Bayes](https://ocw.mit.edu/courses/6-041sc-probabilistic-systems-analysis-and-applied-probability-fall-2013/pages/unit-i/lecture-2/)。
 
 两部分已经从开篇进入第二章，但仍不表示已覆盖完整课程。后续逐步展开求导规则、积分理论、分布和期望，再在多元导数、连续概率与最小二乘等具体问题中连接三个领域。
 

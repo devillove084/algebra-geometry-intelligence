@@ -1,5 +1,5 @@
 ---
-title: "内积的几何：长度、夹角与直线投影"
+title: "内积、长度、夹角与直线投影"
 description: "从沿直线移动的落脚点出发，推导正交分解、点积的有符号分量、最近点与 Cauchy–Schwarz，解释换基时怎样保持同一几何长度。"
 ---
 
@@ -589,7 +589,7 @@ $$
 
 取 $\mathbf b=\mathbf H_\varepsilon\mathbf x$，则解误差长为 $\sqrt2$，残差为 $(0,\varepsilon)^{\mathsf T}$，长为 $\varepsilon$。定义了长度并不会让“小残差必然代表小解误差”变成真命题。
 
-# 自检：沿着同一幅图改变条件
+# 内积与投影自检
 
 1. 对 $\mathbf u=(2,1)^{\mathsf T}$、$\mathbf v=(1,3)^{\mathsf T}$，分别写出投影系数、有符号长度、投影向量和正交残余。
 2. 将 $\mathbf u$ 换成 $-2\mathbf u$。哪些量不变，哪些量变号，哪些量还改变绝对值？

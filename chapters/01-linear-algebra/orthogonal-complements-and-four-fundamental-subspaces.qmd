@@ -260,7 +260,7 @@ $$ {#eq-subspace-nearest-point}
 
 ![两个环境空间各自正交分解：行空间与零空间位于输入侧，列空间与左零空间位于输出侧。](../../images/linear-algebra/four-subspaces-input-output.svg){#fig-four-subspaces-input-output fig-alt="本例输入 R3 分成一维行空间与二维零空间，输出 R2 分成一维列空间与一维左零空间。A 在行空间和列空间之间给出双射，将零空间送到零；左零空间与全部可达输出正交。这是结构示意而非等比例几何图。" width="100%"}
 
-## 逐行读方程：零空间就是行空间的正交补
+## 零空间与行空间正交补
 
 记矩阵第 $i$ 行为 $\mathbf r_i^{\mathsf T}$。则
 
@@ -288,7 +288,7 @@ $$ {#eq-row-null-orthogonality}
 
 若秩为 $r$，这与已有维数结论完全吻合：行空间维数为 $r$，零空间维数为 $n-r$。维数不是额外的画图猜测，而是核对两种描述的一致性。
 
-## 逐列读转置：左零空间就是列空间的正交补
+## 左零空间与列空间正交补
 
 将上述结论应用于 $\mathbf A^{\mathsf T}$，注意转置的行空间是原矩阵的列空间，得到
 
@@ -330,7 +330,7 @@ $$ {#eq-consistency-left-null}
 
 只要找到一个左零向量满足 $\mathbf y^{\mathsf T}\mathbf b\neq0$，就得到无解的证据。相反，与某一个左零向量内积为零未必足够；必须检查整个左零空间的一组基。
 
-## 贯穿例子：第二行必须是第一行的两倍
+## 右端分量的相容性条件
 
 对 @eq-four-spaces-running-matrix，
 

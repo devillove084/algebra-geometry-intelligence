@@ -189,7 +189,7 @@ $$ {#eq-implication-as-or}
 
 函数 `implies` 正是按 @eq-implication-as-or 实现的。
 
-## 蕴含：充分条件与必要条件
+## 充分条件与必要条件
 
 ### 蕴含的真值条件
 
